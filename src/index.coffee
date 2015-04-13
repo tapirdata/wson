@@ -1,6 +1,7 @@
 'use strict'
 
 assert = require 'assert'
+_ = require 'lodash'
 
 mustRegExpQuote = ((chars) ->
   o = {}
@@ -54,9 +55,41 @@ class TSON
       char = @charOfQu[qu]
       assert char?, "unxpected qu: '#{qu}'"
       char
-  
+
+  serializeArray: (x) ->
+    '[' + (_.map(x, @serialize, @).join '|') + ']'
+
+  serializeObject: (x) ->
+    keys = _.keys(x).sort()
+    parts = []
+    for key in keys
+      value = x[key]
+      if value == true
+        parts.push @quote key
+      else if value != undefined
+        parts.push "#{@quote key}:#{@serialize value}"
+    '{' + (parts.join '|') + '}'
+
   serialize: (x) ->
-    String x
+    switch
+      when x == null
+        '#n'
+      when x == undefined
+        '#u'
+      when x == true
+        '#t'
+      when x == false
+        '#f'
+      when _.isNumber x
+        '#' + x.toString()
+      when _.isString x
+        @quote x
+      when _.isArray x
+        @serializeArray x
+      when _.isObject x
+        @serializeObject x
+      else
+        throw new Error "cannot serialize #{typeof x}: '#{x}' #{if _.isObject x then 'by ' + x.constructor.toString()}"
 
   deserialize: (s) ->
 

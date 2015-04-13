@@ -8,8 +8,7 @@
     "build": "coffee -c -b -o lib src/*.coffee",
     "prepublish": "npm run build"
   },
-  "keywords": [
-  ],
+  "keywords": [],
   "repository": {
     "type": "github",
     "url": "https://github.com/tapirdata/tson"
@@ -21,6 +20,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "lodash": "^3.6.0"
   },
   "devDependencies": {
     "chai": "^2.1.1",

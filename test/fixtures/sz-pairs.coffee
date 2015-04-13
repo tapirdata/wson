@@ -5,5 +5,11 @@ module.exports = [
   [true,  '#t']
   [false, '#f']
   [null,  '#n']
+  [undefined,  '#u']
+  ['ab:c', 'ab`ic']
+  [['ab', 'c'], '[ab|c]']
+  [['ab', 3, true, 'c', null], '[ab|#3|#t|c|#n]']
+  [{a: 3, b: 4}, '{a:#3|b:#4}']
+  [{a: '3', b: true}, '{a:3|b}']
 ]
 
