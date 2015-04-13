@@ -1,0 +1,30 @@
+{
+  "name": "tson",
+  "version": "0.0.1",
+  "description": "A serializer/deserializer",
+  "main": "./lib",
+  "scripts": {
+    "test": "mocha --compilers coffee:coffee-script/register",
+    "build": "coffee -c -b -o lib src/*.coffee",
+    "prepublish": "npm run build"
+  },
+  "keywords": [
+  ],
+  "repository": {
+    "type": "github",
+    "url": "https://github.com/tapirdata/tson"
+  },
+  "author": {
+    "name": "Andreas Riedl",
+    "email": "office@tapirdata.com",
+    "url": "https://github.com/tapirdata"
+  },
+  "license": "MIT",
+  "dependencies": {
+  },
+  "devDependencies": {
+    "chai": "^2.1.1",
+    "coffee-script": "^1.9.1",
+    "mocha": "^2.2.1"
+  }
+}
