@@ -13,6 +13,8 @@ describe 'TSON serialize', ->
     szPairs = require './fixtures/sz-pairs'
     for [x, s] in szPairs
       do (x, s) ->
+        if x == '__fail__'
+          return
         if s == '__fail__'
           it "should fail to serialize '#{JSON.stringify x}'", ->
             expect(-> tson.serialize x).to.throw()
