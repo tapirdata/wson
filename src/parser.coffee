@@ -2,6 +2,7 @@
 
 assert = require 'assert'
 _ = require 'lodash'
+grammar = require './grammar'
 
 regExpQuoteSet = do (chars='-\\()+*.?[]^$') ->
   o = {}
@@ -111,18 +112,7 @@ class ValueStage extends Stage
       text: ->
         part = @source.part
         @source.next()
-        switch part
-          when 't'
-            @result = true
-          when 'f'
-            @result = false
-          when 'n'
-            @result = null
-          when 'u'
-          else
-            @result = Number part
-            if _.isNaN @result
-              @throwError @
+        @result = @source.parser.literal part
         @state = 'end'
         @
       terminal: ->
@@ -273,19 +263,43 @@ class Parser
     q: '`'
   prefix: '`'  
 
-  unescape: (s) ->  
+  unescape: (s) ->
     s.replace @xarRe, (all, xar) =>
       char = @charOfXar[xar]
       assert char?, "unxpected xar: '#{xar}'"
       char
 
-  parse: (s) ->
+  literal: (s) ->
+    switch s
+      when 't'
+        true
+      when 'f'
+        false
+      when 'n'
+        null
+      when 'u'
+      else
+        result = Number s
+        if _.isNaN result
+          throw new Error "unexpected literal '#{s}'"
+        result      
+
+  myParse: (s) ->
     source = new Source @, s
     stage = new ValueStage source
     loop
       stage = stage.next()
       if stage.done
         return stage.result
+
+  pegParse: (s) ->
+    options = 
+      unescape: (s) => @unescape s
+      literal: (s) => @literal s
+    grammar.parse s, options  
+
+  parse: (s) ->
+    @myParse s
 
 do ->    
   splitBrick = ''
