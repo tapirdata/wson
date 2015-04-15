@@ -3,15 +3,14 @@
 assert = require 'assert'
 _ = require 'lodash'
 
-mustRegExpQuote = ((chars) ->
+regExpQuoteSet = do (chars='-\\()+*.?[]^$') ->
   o = {}
   for c in chars
     o[c] = true
   o
-)('-\\()+*.?[]^$')
 
 quoteRegExp = (char) ->
-  if mustRegExpQuote[char]
+  if regExpQuoteSet[char]
     '\\' + char
   else
     char
@@ -63,7 +62,7 @@ class ValueStage extends Stage
   handlers:
     start:
       text: ->
-        @result = @machine.tson.unquote @machine.part
+        @result = @machine.tson.unescape @machine.part
         @machine.next()
         @state = 'end'
         @
@@ -123,7 +122,7 @@ class ArrayStage extends Stage
     @pop()
 
   handleText: ->
-    @putValue @machine.tson.unquote @machine.part
+    @putValue @machine.tson.unescape @machine.part
     @machine.next()
     @
 
@@ -170,7 +169,7 @@ class ObjectStage extends Stage
     @pop()
 
   handleKey: ->
-    @key = @machine.tson.unquote @machine.part
+    @key = @machine.tson.unescape @machine.part
     @result[@key] = true
     @machine.next()
     @state = 'key'
@@ -184,7 +183,7 @@ class ObjectStage extends Stage
     @
 
   handleText: ->
-    @putValue @machine.tson.unquote @machine.part
+    @putValue @machine.tson.unescape @machine.part
     @machine.next()
     @
 
@@ -223,7 +222,7 @@ class ObjectStage extends Stage
         @
 
 
-class DeMachine
+class ParseMachine
 
   throwError: (extra) ->
     parts = @parts
@@ -256,7 +255,7 @@ class DeMachine
     @term = term  
     return
 
-  deserialize: ->
+  parse: ->
     @partIdx = -1
     @next()
     stage = new ValueStage @
@@ -267,8 +266,8 @@ class DeMachine
 
 
 class TSON
-  charOfQu:
-  #qu: char
+  charOfXar:
+  #xar: char
     b: '{'
     c: '}'
     a: '['
@@ -279,21 +278,21 @@ class TSON
     q: '`'
   prefix: '`'  
 
-  quote: (s) ->  
-    s.replace @charRe, (char) => @prefix + @quOfChar[char]
+  escape: (s) ->  
+    s.replace @charRe, (char) => @prefix + @xarOfChar[char]
 
-  unquote: (s) ->  
-    s.replace @quRe, (all, qu) =>
-      char = @charOfQu[qu]
-      assert char?, "unxpected qu: '#{qu}'"
+  unescape: (s) ->  
+    s.replace @xarRe, (all, xar) =>
+      char = @charOfXar[xar]
+      assert char?, "unxpected xar: '#{xar}'"
       char
 
   serializeArray: (x) ->
-    '[' + (_.map(x, @serialize, @).join '|') + ']'
+    '[' + (_.map(x, @stringify, @).join '|') + ']'
 
   serializeKey: (x) ->
     if x
-      @quote x
+      @escape x
     else
       '#'
 
@@ -305,10 +304,10 @@ class TSON
       if value == true
         parts.push @serializeKey key
       else if value != undefined
-        parts.push "#{@serializeKey key}:#{@serialize value}"
+        parts.push "#{@serializeKey key}:#{@stringify value}"
     '{' + (parts.join '|') + '}'
 
-  serialize: (x) ->
+  stringify: (x) ->
     switch
       when x == null
         '#n'
@@ -324,34 +323,33 @@ class TSON
         if x.length == 0
           '#'
         else  
-          @quote x
+          @escape x
       when _.isArray x
         @serializeArray x
       when _.isObject x
         @serializeObject x
       else
-        throw new Error "cannot serialize #{typeof x}: '#{x}' #{if _.isObject x then 'by ' + x.constructor.toString()}"
+        throw new Error "cannot stringify #{typeof x}: '#{x}' #{if _.isObject x then 'by ' + x.constructor.toString()}"
 
-  deserialize: (s) ->
-    assert _.isString(s), 'deserialize expects a string, got: ' + s
+  parse: (s) ->
+    assert _.isString(s), 'parse expects a string, got: ' + s
     parts = s.split @splitRe
-    machine = new DeMachine @, parts
-    machine.deserialize()
+    machine = new ParseMachine @, parts
+    machine.parse()
 
 
 do ->    
-  quOfChar = {}
+  xarOfChar = {}
   charBrick = ''
-  quBrick = ''
   splitBrick = ''
-  for qu, char of TSON::charOfQu
-    quOfChar[char] = qu
+  for xar, char of TSON::charOfXar
+    xarOfChar[char] = xar
     charBrick += quoteRegExp char
     if char != TSON::prefix
       splitBrick += quoteRegExp char 
-  TSON::quOfChar = quOfChar  
+  TSON::xarOfChar = xarOfChar  
   TSON::charRe = new RegExp '[' + charBrick + ']', 'gm'
-  TSON::quRe = new RegExp quoteRegExp(TSON::prefix) + '(.)', 'gm'
+  TSON::xarRe = new RegExp quoteRegExp(TSON::prefix) + '(.)', 'gm'
   TSON::splitRe = new RegExp '([' + splitBrick + '])'
 
 
