@@ -288,7 +288,15 @@ class TSON
       char
 
   serializeArray: (x) ->
-    '[' + (_.map(x, @stringify, @).join '|') + ']'
+    result = '['
+    first = true
+    for elem in x
+      if first
+        first = false
+      else
+        result += '|'
+      result += @stringify elem
+    result + ']'
 
   serializeKey: (x) ->
     if x
@@ -298,38 +306,46 @@ class TSON
 
   serializeObject: (x) ->
     keys = _.keys(x).sort()
-    parts = []
+    result = '{'
+    first = true
     for key in keys
+      if first
+        first = false
+      else
+        result += '|'
       value = x[key]
       if value == true
-        parts.push @serializeKey key
+        result += @serializeKey key
       else if value != undefined
-        parts.push "#{@serializeKey key}:#{@stringify value}"
-    '{' + (parts.join '|') + '}'
+        result += "#{@serializeKey key}:#{@stringify value}"
+    result + '}'
 
   stringify: (x) ->
-    switch
-      when x == null
-        '#n'
-      when x == undefined
-        '#u'
-      when x == true
-        '#t'
-      when x == false
-        '#f'
-      when _.isNumber x
-        '#' + x.toString()
-      when _.isString x
-        if x.length == 0
-          '#'
-        else  
-          @escape x
-      when _.isArray x
-        @serializeArray x
-      when _.isObject x
-        @serializeObject x
-      else
-        throw new Error "cannot stringify #{typeof x}: '#{x}' #{if _.isObject x then 'by ' + x.constructor.toString()}"
+    if x == null
+      '#n'
+    else  
+      switch typeof x
+        when 'undefined'
+          '#u'
+        when 'boolean'
+          if x
+            '#t'
+          else  
+            '#f'
+        when 'number'
+          '#' + x.toString()
+        when 'string'
+          if x.length == 0
+            '#'
+          else  
+            @escape x
+        else    
+          if _.isArray x
+            @serializeArray x
+          else if _.isObject x
+            @serializeObject x
+          else
+            throw new Error "cannot stringify #{typeof x}: '#{x}' #{if _.isObject x then 'by ' + x.constructor.toString()}"
 
   parse: (s) ->
     assert _.isString(s), 'parse expects a string, got: ' + s
