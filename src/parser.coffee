@@ -26,12 +26,12 @@ class Source
       ++idx
       if idx >= parts.length
         part = 'end'
-        term = true
+        term = false
         break
       part = parts[idx]
-      term = idx % 2 == 1
+      term = idx % 2 == 0
       # console.log "  part=#{part}, idx=#{idx}"
-      if term or part.length > 0
+      if not term or part.length > 0
         break
     @partIdx = idx
     @part = part  
@@ -61,11 +61,11 @@ class Stage
     source = @source
     handlers = @handlers[@state]
     if source.term
+      handler = handlers.text
+    else  
       handler = handlers[source.part]
       if not handler
         handler = handlers.terminal
-    else  
-      handler = handlers.text
     # console.log "%s.next part='%s'", @, source.part
     if not handler
       @source.throwError @
@@ -111,8 +111,11 @@ class ValueStage extends Stage
     literal:
       text: ->
         part = @source.part
+        try
+          @result = @source.parser.literal part
+        catch err
+          @source.throwError @
         @source.next()
-        @result = @source.parser.literal part
         @state = 'end'
         @
       terminal: ->
