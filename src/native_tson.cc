@@ -12,7 +12,7 @@ using v8::String;
 using v8::Value;
 using v8::FunctionTemplate;
 
-typedef std::vector<uint16_t> ucs2;
+typedef std::vector<uint16_t> usc2vector;
 
 inline uint16_t getEscapeChar(uint16_t c) {
   switch (c) {
@@ -38,7 +38,7 @@ inline uint16_t getEscapeChar(uint16_t c) {
 
 class TargetBuffer {
   private:
-    ucs2 buffer_;
+    usc2vector buffer_;
 
   public:
 
@@ -100,19 +100,60 @@ class TargetBuffer {
     }
 };
 
+class Serializer {
+  public:
+    TargetBuffer target;
+
+    void putValue(Handle<Value> x) {
+      if (x->IsUndefined()) {
+        target.push('#');
+        target.push('u');
+      } else if (x->IsNull()) {
+        target.push('#');
+        target.push('n');
+      } else if (x->IsBoolean()) {
+        target.push('#');
+        if (x->BooleanValue()) {
+          target.push('t');
+        } else {
+          target.push('f');
+        }
+      } else if (x->IsString()) {
+        target.appendHandleEscaped(Handle<String>::Cast(x));
+      } else if (x->IsNumber()) {
+        target.push('#');
+        Local<String> s = x->ToString();
+        target.appendHandleEscaped(s);
+      }
+    }  
+};  
+
+
 NAN_METHOD(Escape) {
   TargetBuffer target;
   if (args.Length() > 0) {
-    if (args[0]->IsString()) {
+    Handle<Value> x = args[0];
+    if (x->IsString()) {
       target.appendHandleEscaped(Local<String>::Cast(args[0]));
     }
   }
   NanReturnValue(target.getHandle());
 }
 
+NAN_METHOD(Serialize) {
+  Serializer serializer;
+  if (args.Length() > 0) {
+    serializer.putValue(args[0]);
+  }
+  NanReturnValue(serializer.target.getHandle());
+}
+
+
+
 int square (int x) {
   return x * x;
 }
+
 
 NAN_METHOD(Foo) {
   std::string monty("montü");
@@ -142,6 +183,7 @@ NAN_METHOD(Foo) {
 void Init(Handle<Object> exports) {
   exports->Set(NanNew("foo"), NanNew<FunctionTemplate>(Foo)->GetFunction());
   exports->Set(NanNew("escape"), NanNew<FunctionTemplate>(Escape)->GetFunction());
+  exports->Set(NanNew("serialize"), NanNew<FunctionTemplate>(Serialize)->GetFunction());
 }
 
 NODE_MODULE(native_tson, Init)
