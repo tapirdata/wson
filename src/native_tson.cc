@@ -124,6 +124,17 @@ class Serializer {
         target.push('#');
         Local<String> s = x->ToString();
         target.appendHandleEscaped(s);
+      } else if (x->IsArray()) {
+        Handle<Array> y = Handle<Array>::Cast(x);
+        int len = y->Length();
+        target.push('[');
+        for (int i=0; i<len; ++i) {
+          putValue(y->Get(i));
+          if (i + 1 != len) {
+            target.push('|');
+          }  
+        }
+        target.push(']');
       }
     }  
 };  
