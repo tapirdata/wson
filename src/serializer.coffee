@@ -1,11 +1,12 @@
 'use strict'
 
 _ = require 'lodash'
+nativeTson = require('bindings') 'native_tson'
 
 class Serializer 
-
   escape: (s) ->  
-    s.replace @charRe, (char) => @prefix + @xarOfChar[char]
+    nativeTson.escape s
+    # s.replace @charRe, (char) => @prefix + @xarOfChar[char]
 
   serializeArray: (x) ->
     result = '['
