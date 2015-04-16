@@ -36,23 +36,30 @@ inline uint16_t getEscapeChar(uint16_t c) {
   return 0;
 }
 
-class Target {
+class TargetBuffer {
   private:
     ucs2 buffer_;
 
   public:
-    void push(uint16_t c) {
+
+    TargetBuffer() {}
+
+    inline void push(uint16_t c) {
       buffer_.push_back(c);
     }
 
     template<typename S>
     void append(const S& source, int start=0, int length=-1) {
+      if (length < 0) {
+        length = source.size() - start;
+      }
       typename S::const_iterator sourceBegin = source.begin() + start;
-      typename S::const_iterator sourceEnd = length < 0 ? source.end() : sourceBegin + length;
+      typename S::const_iterator sourceEnd = sourceBegin + length;
+      buffer_.reserve(buffer_.size() + length);
       buffer_.insert(buffer_.end(), sourceBegin, sourceEnd);
     }
 
-    void appendHandle(Handle<String> source, int start=0, int length=-1) {
+    inline void appendHandle(Handle<String> source, int start=0, int length=-1) {
       size_t oldSize = buffer_.size();
       if (length < 0) {
         length = source->Length() - start;
@@ -63,27 +70,27 @@ class Target {
 
     template<typename S>
     void appendEscaped(const S& source, int start=0, int length=-1) {
+      if (length < 0) {
+        length = source.size() - start;
+      }
       typename S::const_iterator sourceBegin = source.begin() + start;
-      typename S::const_iterator sourceEnd = length < 0 ? source.end() : sourceBegin + length;
+      typename S::const_iterator sourceEnd = sourceBegin + length;
       typename S::const_iterator sourcePick = sourceBegin;
+      buffer_.reserve(buffer_.size() + length  + 10);
       while (sourcePick != sourceEnd) {
-        uint16_t c = *sourcePick;
+        uint16_t c = *sourcePick++;
         uint16_t xc = getEscapeChar(c);
         if (xc) {
-           buffer_.insert(buffer_.end(), sourceBegin, sourcePick);
-          ++sourcePick; 
-          sourceBegin = sourcePick;
           push('`');
           push(xc);
         } else {
-          ++sourcePick; 
-        }
+          push (c);
+        }  
       }  
-      buffer_.insert(buffer_.end(), sourceBegin, sourceEnd);
     }
 
     void appendHandleEscaped(Handle<String> source, int start=0, int length=-1) {
-      Target source1;
+      TargetBuffer source1;
       source1.appendHandle(source, start, length);
       appendEscaped(source1.buffer_);
     }
@@ -94,14 +101,12 @@ class Target {
 };
 
 NAN_METHOD(Escape) {
-  Target target;
+  TargetBuffer target;
   if (args.Length() > 0) {
     if (args[0]->IsString()) {
-      Local<String> arg0 = Local<String>::Cast(args[0]);
-      target.appendHandleEscaped(arg0);
+      target.appendHandleEscaped(Local<String>::Cast(args[0]));
     }
   }
-  // Local<String> tt = target.get();
   NanReturnValue(target.getHandle());
 }
 
