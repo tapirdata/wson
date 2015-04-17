@@ -3,26 +3,49 @@
 assert = require 'assert'
 _ = require 'lodash'
 
-tsonParser = require './parser'
-tsonSerializer = require './serializer'
+nativeTson = require('bindings') 'native_tson'
 
-class TSON
+if true
+  tsonParser = require './parser'
 
-  constructor: ->
-    @serializer = tsonSerializer()
-    @parser = tsonParser()
+  class TSON
 
-  escape: (s) ->  
-    @serializer.escape s
+    constructor: ->
+      @parser = tsonParser()
 
-  unescape: (s) ->  
-    @parser.unescape s
+    escape: (s) ->  
+      nativeTson.escape s
 
-  stringify: (x) ->
-    @serializer.serializeValue x
+    unescape: (s) ->  
+      @parser.unescape s
 
-  parse: (s) ->
-    @parser.parse s
+    stringify: (x) ->
+      nativeTson.serialize x
+
+    parse: (s) ->
+      @parser.parse s
+else  
+
+  tsonParser = require './parser'
+  tsonSerializer = require './serializer'
+
+  class TSON
+
+    constructor: ->
+      @serializer = tsonSerializer()
+      @parser = tsonParser()
+
+    escape: (s) ->  
+      @serializer.escape s
+
+    unescape: (s) ->  
+      @parser.unescape s
+
+    stringify: (x) ->
+      @serializer.serializeValue x
+
+    parse: (s) ->
+      @parser.parse s
 
 
 factory = (options) ->

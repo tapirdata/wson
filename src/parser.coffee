@@ -2,7 +2,6 @@
 
 assert = require 'assert'
 _ = require 'lodash'
-grammar = require './grammar'
 
 regExpQuoteSet = do (chars='-\\()+*.?[]^$') ->
   o = {}
@@ -295,11 +294,13 @@ class Parser
       if stage.done
         return stage.result
 
+  ###
   pegParse: (s) ->
     options = 
       unescape: (s) => @unescape s
       literal: (s) => @literal s
     grammar.parse s, options  
+  ###    
 
   parse: (s) ->
     @myParse s

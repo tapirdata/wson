@@ -42,7 +42,9 @@ class TargetBuffer {
 
   public:
 
-    TargetBuffer() {}
+    TargetBuffer() {
+      // buffer_.reserve(60);
+    }
 
     inline void push(uint16_t c) {
       buffer_.push_back(c);
@@ -104,6 +106,14 @@ class Serializer {
   public:
     TargetBuffer target;
 
+    void putEscaped(Handle<String> s) {
+      if (s->Length() == 0) {
+        target.push('#');
+      } else {  
+        target.appendHandleEscaped(s);
+      }
+    }
+
     void putValue(Handle<Value> x) {
       if (x->IsUndefined()) {
         target.push('#');
@@ -119,34 +129,67 @@ class Serializer {
           target.push('f');
         }
       } else if (x->IsString()) {
-        target.appendHandleEscaped(Handle<String>::Cast(x));
+        putEscaped(Handle<String>::Cast(x));
       } else if (x->IsNumber()) {
         target.push('#');
         Local<String> s = x->ToString();
-        target.appendHandleEscaped(s);
+        target.appendHandle(s);
       } else if (x->IsArray()) {
-        Handle<Array> y = Handle<Array>::Cast(x);
-        int len = y->Length();
+        Handle<Array> array = Handle<Array>::Cast(x);
+        int len = array->Length();
         target.push('[');
         for (int i=0; i<len; ++i) {
-          putValue(y->Get(i));
+          putValue(array->Get(i));
           if (i + 1 != len) {
             target.push('|');
           }  
         }
         target.push(']');
+      } else if (x->IsObject()) {
+        Handle<Object> obj = Handle<Object>::Cast(x);
+        Local<Array> keys = obj->GetOwnPropertyNames();
+        target.push('{');
+        Local<Value> sortArgs[] = { keys };
+        NanNew(Serializer::sortArray)->Call(NanGetCurrentContext()->Global(), 1, sortArgs);
+        int len = keys->Length();
+        for (int i=0; i<len; ++i) {
+          Local<String> key = keys->Get(i).As<String>();
+          putEscaped(key);
+          Local<Value> value = obj->Get(key);
+          if (!value->IsBoolean() || !value->BooleanValue()) {
+            target.push(':');
+            putValue(value);
+          }
+          if (i + 1 != len) {
+            target.push('|');
+          }  
+        }
+        target.push('}');
       }
     }  
+
+    static v8::Persistent<v8::Function> sortArray;
+    static void Init();
 };  
+
+v8::Persistent<v8::Function> Serializer::sortArray;
+
+void Serializer::Init() {
+  Local<String> sortArrayCode = NanNew("(function(array) {array.sort(); })");
+  v8::Local<Value> sortArray = NanCompileScript(sortArrayCode)->Run();
+  v8::Local<v8::Function> sortArrayFn = v8::Local<v8::Function>::Cast(sortArray);
+  NanAssignPersistent(Serializer::sortArray, sortArrayFn);
+}
 
 
 NAN_METHOD(Escape) {
   TargetBuffer target;
   if (args.Length() > 0) {
     Handle<Value> x = args[0];
-    if (x->IsString()) {
-      target.appendHandleEscaped(Local<String>::Cast(args[0]));
+    if (!x->IsString()) {
+      return NanThrowTypeError("First argument should be a string");
     }
+    target.appendHandleEscaped(Local<String>::Cast(args[0]));
   }
   NanReturnValue(target.getHandle());
 }
@@ -190,8 +233,10 @@ NAN_METHOD(Foo) {
   NanReturnValue(obj);
 }
 
+// v8::Persistent<String> moo;
 
 void Init(Handle<Object> exports) {
+  Serializer::Init();
   exports->Set(NanNew("foo"), NanNew<FunctionTemplate>(Foo)->GetFunction());
   exports->Set(NanNew("escape"), NanNew<FunctionTemplate>(Escape)->GetFunction());
   exports->Set(NanNew("serialize"), NanNew<FunctionTemplate>(Serialize)->GetFunction());

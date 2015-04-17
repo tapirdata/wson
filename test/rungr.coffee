@@ -1,4 +1,4 @@
-
+###
 parser = require '../src/grammar'
 
 # parser = p()
@@ -28,5 +28,6 @@ for s in strs
     console.log "failed: '%s': %s", s, err
     continue
   console.log "ok: '%s' -> %j ", s, x
+###  
 
 
