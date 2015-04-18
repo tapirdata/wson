@@ -1,8 +1,7 @@
-#include <iostream>
-#include <string>
-#include <vector>
-#include <algorithm>
+
 #include "serializer.h"
+#include "target_buffer.h"
+
 
 // using namespace v8;
 using v8::Handle;
@@ -12,8 +11,7 @@ using v8::Array;
 using v8::String;
 using v8::Value;
 
-typedef std::vector<uint16_t> usc2vector;
-
+/*
 bool compareUsc2vector(const usc2vector& a, const usc2vector& b) {
   int aLen = a.size();
   int bLen = b.size();
@@ -30,103 +28,10 @@ bool compareUsc2vector(const usc2vector& a, const usc2vector& b) {
   }
   return aLen < bLen;
 }
+*/
 
 
-inline uint16_t getEscapeChar(uint16_t c) {
-  switch (c) {
-    case '{':
-      return 'b';
-    case '}':
-      return 'c';
-    case '[':
-      return 'a';
-    case ']':
-      return 'e';
-    case ':':
-      return 'i';
-    case '#':
-      return 'n';
-    case '|':
-      return 'p';
-    case '`':
-      return 'q';
-  }  
-  return 0;
-}
-
-class TargetBuffer {
-
-  public:
-
-    TargetBuffer()
-    {
-      // buffer_.reserve(60);
-    }
-
-    inline void push(uint16_t c) {
-      buffer_.push_back(c);
-    }
-
-    template<typename S>
-    void append(const S& source, int start=0, int length=-1) {
-      if (length < 0) {
-        length = source.size() - start;
-      }
-      typename S::const_iterator sourceBegin = source.begin() + start;
-      typename S::const_iterator sourceEnd = sourceBegin + length;
-      buffer_.reserve(buffer_.size() + length);
-      buffer_.insert(buffer_.end(), sourceBegin, sourceEnd);
-      }
-
-    inline void appendHandle(Handle<String> source, int start=0, int length=-1) {
-      size_t oldSize = buffer_.size();
-      if (length < 0) {
-        length = source->Length() - start;
-      }
-      buffer_.resize(oldSize + length);
-      source->Write(buffer_.data() + oldSize, start, length, String::NO_NULL_TERMINATION);
-    }
-
-    template<typename S>
-    void appendEscaped(const S& source, int start=0, int length=-1) {
-      if (length < 0) {
-        length = source.size() - start;
-      }
-      typename S::const_iterator sourceBegin = source.begin() + start;
-      typename S::const_iterator sourceEnd = sourceBegin + length;
-      typename S::const_iterator sourcePick = sourceBegin;
-      buffer_.reserve(buffer_.size() + length  + 10);
-      while (sourcePick != sourceEnd) {
-        uint16_t c = *sourcePick++;
-        uint16_t xc = getEscapeChar(c);
-        if (xc) {
-          push('`');
-          push(xc);
-        } else {
-          push (c);
-        }  
-      }  
-    }
-
-    void appendHandleEscaped(Handle<String> source, int start=0, int length=-1) {
-      TargetBuffer source1;
-      source1.appendHandle(source, start, length);
-      appendEscaped(source1.buffer_);
-    }
-
-    static bool compare(const TargetBuffer& a, const TargetBuffer& b) {
-      return compareUsc2vector(a.buffer_, b.buffer_);
-    }
-
-    Local<String> getHandle() {
-      return NanNew<String>(buffer_.data(), buffer_.size());
-    }
-
-  private:
-    usc2vector buffer_;
-
-};
-
+/*
 class Sorter {
   public:
     size_t len;
@@ -145,8 +50,7 @@ class Sorter {
     }
 
     inline bool operator()(size_t a, size_t b) {
-      return a < b;
-      // return TargetBuffer::compare(targets[a], targets[b]);
+      return TargetBuffer::compare(targets[a], targets[b]);
     }
 
     void sort() {
@@ -161,6 +65,8 @@ class Sorter {
       }
     }
 };
+*/
+
 
 class Serializer {
   public:
@@ -171,6 +77,7 @@ class Serializer {
         target.push('#');
       } else {  
         target.appendHandleEscaped(s);
+        // target.simpleAppendHandleEscaped(s);
       }
     }
 
@@ -179,11 +86,13 @@ class Serializer {
       NanNew(Serializer::sortArray)->Call(NanGetCurrentContext()->Global(), 1, sortArgs);
     }
 
+    /*
     void sort2(Handle<Array> array) {
       Sorter sorter(array);
       sorter.sort();
       sorter.readout(array);
-    }  
+    }
+    */
 
     void putValue(Handle<Value> x) {
       if (x->IsUndefined()) {
@@ -220,7 +129,6 @@ class Serializer {
         Handle<Object> obj = Handle<Object>::Cast(x);
         Local<Array> keys = obj->GetOwnPropertyNames();
         sort1(keys);
-        // sort2(keys);
         target.push('{');
         int len = keys->Length();
         for (int i=0; i<len; ++i) {
