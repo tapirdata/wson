@@ -11,62 +11,6 @@ using v8::Array;
 using v8::String;
 using v8::Value;
 
-/*
-bool compareUsc2vector(const usc2vector& a, const usc2vector& b) {
-  int aLen = a.size();
-  int bLen = b.size();
-  for (int idx=0; idx<aLen; ++idx) {
-    if (idx == bLen)
-      return true;
-    uint16_t aVal = a[idx];
-    uint16_t bVal = b[idx];
-    if (aVal < bVal) {
-      return true;
-    } else if (aVal > bVal) {
-      return false;
-    }
-  }
-  return aLen < bLen;
-}
-*/
-
-
-/*
-class Sorter {
-  public:
-    size_t len;
-    std::vector<TargetBuffer> targets;
-    std::vector<size_t> indices;
-
-    Sorter(Handle<Array> array):
-      len(array->Length()),
-      targets(len),
-      indices(len)
-    {
-      for (size_t i=0; i<len; ++i) {
-        indices[i] = i;
-        targets[i].appendHandle(array->Get(i).As<String>());
-      } 
-    }
-
-    inline bool operator()(size_t a, size_t b) {
-      return TargetBuffer::compare(targets[a], targets[b]);
-    }
-
-    void sort() {
-      std::sort(indices.begin(), indices.end(), *this);
-    }  
-
-    void readout(Handle<Array> array) {
-      for (size_t i=0; i<len; ++i) {
-        if (indices[i] != i) {
-          array->Set(i, targets[indices[i]].getHandle());
-        }
-      }
-    }
-};
-*/
-
 
 class Serializer {
   public:
@@ -77,22 +21,14 @@ class Serializer {
         target.push('#');
       } else {  
         target.appendHandleEscaped(s);
-        // target.simpleAppendHandleEscaped(s);
       }
     }
+
 
     void sort1(Handle<Array> array) {
       Local<Value> sortArgs[] = { array };
       NanNew(Serializer::sortArray)->Call(NanGetCurrentContext()->Global(), 1, sortArgs);
     }
-
-    /*
-    void sort2(Handle<Array> array) {
-      Sorter sorter(array);
-      sorter.sort();
-      sorter.readout(array);
-    }
-    */
 
     void putValue(Handle<Value> x) {
       if (x->IsUndefined()) {
@@ -162,13 +98,11 @@ void Serializer::Init() {
 
 NAN_METHOD(Escape) {
   TargetBuffer target;
-  if (args.Length() > 0) {
-    Handle<Value> x = args[0];
-    if (!x->IsString()) {
-      return NanThrowTypeError("First argument should be a string");
-    }
-    target.appendHandleEscaped(Local<String>::Cast(args[0]));
-  }
+  if (args.Length() < 1 || !(args[0]->IsString())) {
+    return NanThrowTypeError("First argument should be a string");
+  }    
+  Local<String> s = args[0].As<String>();
+  target.appendHandleEscaped(s);
   NanReturnValue(target.getHandle());
 }
 

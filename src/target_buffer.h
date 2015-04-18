@@ -1,7 +1,7 @@
 #ifndef TSON_TARGET_BUFFER_H_
 #define TSON_TARGET_BUFFER_H_
 
-#include "types.h"
+#include "base_buffer.h"
 #include <iostream>
 
 using v8::Handle;
@@ -52,38 +52,11 @@ inline uint16_t getUnescapeChar(uint16_t c) {
   return 0;
 }
 
-class TargetBuffer {
+class TargetBuffer: public BaseBuffer {
 
   public:
 
-    TargetBuffer()
-    {
-      // buffer_.reserve(60);
-    }
-
-    inline void push(uint16_t c) {
-      buffer_.push_back(c);
-    }
-
-    template<typename S>
-    void append(const S& source, int start=0, int length=-1) {
-      if (length < 0) {
-        length = source.size() - start;
-      }
-      typename S::const_iterator sourceBegin = source.begin() + start;
-      typename S::const_iterator sourceEnd = sourceBegin + length;
-      buffer_.reserve(buffer_.size() + length);
-      buffer_.insert(buffer_.end(), sourceBegin, sourceEnd);
-      }
-
-    inline void appendHandle(Handle<String> source, int start=0, int length=-1) {
-      size_t oldSize = buffer_.size();
-      if (length < 0) {
-        length = source->Length() - start;
-      }
-      buffer_.resize(oldSize + length);
-      source->Write(buffer_.data() + oldSize, start, length, String::NO_NULL_TERMINATION);
-    }
+    TargetBuffer() {}
 
     template<typename S>
     void appendEscaped(const S& source, int start=0, int length=-1) {
@@ -134,11 +107,13 @@ class TargetBuffer {
       return 0;
     }
 
+    /* 
     void simpleAppendHandleEscaped(Handle<String> source, int start=0, int length=-1) {
       TargetBuffer source1;
       source1.appendHandle(source, start, length);
       appendEscaped(source1.buffer_);
     }
+    */
 
     void appendHandleEscaped(Handle<String> source, int start=0, int length=-1) {
       size_t oldSize = buffer_.size();
@@ -191,13 +166,6 @@ class TargetBuffer {
       return compareUsc2vector(a.buffer_, b.buffer_);
     }
     */
-
-    Handle<String> getHandle() {
-      return NanNew<String>(buffer_.data(), buffer_.size());
-    }
-
-  private:
-    usc2vector buffer_;
 
 };
 
