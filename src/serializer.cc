@@ -1,7 +1,8 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <nan.h>
+#include <algorithm>
+#include "serializer.h"
 
 // using namespace v8;
 using v8::Handle;
@@ -10,9 +11,26 @@ using v8::Object;
 using v8::Array;
 using v8::String;
 using v8::Value;
-using v8::FunctionTemplate;
 
 typedef std::vector<uint16_t> usc2vector;
+
+bool compareUsc2vector(const usc2vector& a, const usc2vector& b) {
+  int aLen = a.size();
+  int bLen = b.size();
+  for (int idx=0; idx<aLen; ++idx) {
+    if (idx == bLen)
+      return true;
+    uint16_t aVal = a[idx];
+    uint16_t bVal = b[idx];
+    if (aVal < bVal) {
+      return true;
+    } else if (aVal > bVal) {
+      return false;
+    }
+  }
+  return aLen < bLen;
+}
+
 
 inline uint16_t getEscapeChar(uint16_t c) {
   switch (c) {
@@ -37,12 +55,11 @@ inline uint16_t getEscapeChar(uint16_t c) {
 }
 
 class TargetBuffer {
-  private:
-    usc2vector buffer_;
 
   public:
 
-    TargetBuffer() {
+    TargetBuffer()
+    {
       // buffer_.reserve(60);
     }
 
@@ -59,7 +76,7 @@ class TargetBuffer {
       typename S::const_iterator sourceEnd = sourceBegin + length;
       buffer_.reserve(buffer_.size() + length);
       buffer_.insert(buffer_.end(), sourceBegin, sourceEnd);
-    }
+      }
 
     inline void appendHandle(Handle<String> source, int start=0, int length=-1) {
       size_t oldSize = buffer_.size();
@@ -97,8 +114,51 @@ class TargetBuffer {
       appendEscaped(source1.buffer_);
     }
 
+    static bool compare(const TargetBuffer& a, const TargetBuffer& b) {
+      return compareUsc2vector(a.buffer_, b.buffer_);
+    }
+
     Local<String> getHandle() {
       return NanNew<String>(buffer_.data(), buffer_.size());
+    }
+
+  private:
+    usc2vector buffer_;
+
+};
+
+class Sorter {
+  public:
+    size_t len;
+    std::vector<TargetBuffer> targets;
+    std::vector<size_t> indices;
+
+    Sorter(Handle<Array> array):
+      len(array->Length()),
+      targets(len),
+      indices(len)
+    {
+      for (size_t i=0; i<len; ++i) {
+        indices[i] = i;
+        targets[i].appendHandle(array->Get(i).As<String>());
+      } 
+    }
+
+    inline bool operator()(size_t a, size_t b) {
+      return a < b;
+      // return TargetBuffer::compare(targets[a], targets[b]);
+    }
+
+    void sort() {
+      std::sort(indices.begin(), indices.end(), *this);
+    }  
+
+    void readout(Handle<Array> array) {
+      for (size_t i=0; i<len; ++i) {
+        if (indices[i] != i) {
+          array->Set(i, targets[indices[i]].getHandle());
+        }
+      }
     }
 };
 
@@ -113,6 +173,17 @@ class Serializer {
         target.appendHandleEscaped(s);
       }
     }
+
+    void sort1(Handle<Array> array) {
+      Local<Value> sortArgs[] = { array };
+      NanNew(Serializer::sortArray)->Call(NanGetCurrentContext()->Global(), 1, sortArgs);
+    }
+
+    void sort2(Handle<Array> array) {
+      Sorter sorter(array);
+      sorter.sort();
+      sorter.readout(array);
+    }  
 
     void putValue(Handle<Value> x) {
       if (x->IsUndefined()) {
@@ -148,9 +219,9 @@ class Serializer {
       } else if (x->IsObject()) {
         Handle<Object> obj = Handle<Object>::Cast(x);
         Local<Array> keys = obj->GetOwnPropertyNames();
+        sort1(keys);
+        // sort2(keys);
         target.push('{');
-        Local<Value> sortArgs[] = { keys };
-        NanNew(Serializer::sortArray)->Call(NanGetCurrentContext()->Global(), 1, sortArgs);
         int len = keys->Length();
         for (int i=0; i<len; ++i) {
           Local<String> key = keys->Get(i).As<String>();
@@ -181,7 +252,6 @@ void Serializer::Init() {
   NanAssignPersistent(Serializer::sortArray, sortArrayFn);
 }
 
-
 NAN_METHOD(Escape) {
   TargetBuffer target;
   if (args.Length() > 0) {
@@ -202,46 +272,7 @@ NAN_METHOD(Serialize) {
   NanReturnValue(serializer.target.getHandle());
 }
 
-
-
-int square (int x) {
-  return x * x;
-}
-
-
-NAN_METHOD(Foo) {
-  std::string monty("montü");
-  std::cout << "Foo" << std::endl;
-  NanScope();
-  Local<Object> obj = NanNew<Object>();
-  Local<Object> a = NanNew<Array>(10);
-  a->Set(2, NanNew("a0"));
-  a->Set(5, NanNew(monty));
-  obj->Set(NanNew("planet"), NanNew("world"));
-  obj->Set(NanNew("a"), a);
-  if (args.Length() > 0) {
-    obj->Set(NanNew("len"), NanNew(args.Length()));
-    // Local<String> arg0 = Local<String>::Cast(args[0]);
-    v8::String::Utf8Value s0(args[0]->ToString()); 
-    std::string s(*s0);
-    std::cout << "args[0]: " << s << std::endl;
-  }
-  if (args.Length() > 1) {
-    int x = args[1]->NumberValue();
-    a->Set(0, NanNew(square(x)));
-  }
-  NanReturnValue(obj);
-}
-
-// v8::Persistent<String> moo;
-
-void Init(Handle<Object> exports) {
+void InitSerializer() {
   Serializer::Init();
-  exports->Set(NanNew("foo"), NanNew<FunctionTemplate>(Foo)->GetFunction());
-  exports->Set(NanNew("escape"), NanNew<FunctionTemplate>(Escape)->GetFunction());
-  exports->Set(NanNew("serialize"), NanNew<FunctionTemplate>(Serialize)->GetFunction());
 }
-
-NODE_MODULE(native_tson, Init)
-
 

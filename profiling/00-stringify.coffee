@@ -1,18 +1,31 @@
 'use strict'
 
-timed = require './timed'
-tson = require('../src')()
+timerFactory = require './timer'
+tsonFactory = require '../src'
 
-x =
-  a: 42
-  b: 'foobar'
-  c: [1, 4, 9, 16]
-  rest:
-    x: true
-    y: false
-    z: ['foo', 'bar', null, 'baz']
+nativeTson = tsonFactory()
+jsTson = tsonFactory native: false
 
+timer = timerFactory()
 
-for i in [0..4]
-  timed (-> JSON.stringify x), 10000, 'JSON.stringify'
-  timed (-> tson.stringify x), 10000, 'tson.stringify'
+# JSON.stringify x
+# jsTson.stringify x
+# nativeTson.stringify x
+
+for i in [0..100]
+  x =
+    i: i
+    a: 42
+    b: 'foobar' + i
+    c: [1, 4, 9, 16, i]
+    rest:
+      x: true
+      y: false
+      z: [i, 'foo', 'bar', null, 'baz']
+      i: i
+
+  timer.put 'JSON.stringify      ', (-> JSON.stringify x), 500
+  timer.put 'jsTson.stringify    ', (-> jsTson.stringify x), 500
+  timer.put 'nativeTson.stringify', (-> nativeTson.stringify x), 500
+
+timer.report()  

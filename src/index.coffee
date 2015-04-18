@@ -5,47 +5,23 @@ _ = require 'lodash'
 
 nativeTson = require('bindings') 'native_tson'
 
-if true
-  tsonParser = require './parser'
+class TSON
 
-  class TSON
+  constructor: (options) ->
+    options or= {}
+    if options.native == false
+      serializer = require('./serializer')()
+      @escape = (s) -> serializer.escape s
+      @stringify = (x) -> serializer.serializeValue x
+    else  
+      @escape = nativeTson.escape
+      @stringify = nativeTson.serialize
 
-    constructor: ->
-      @parser = tsonParser()
+    if true or options.native == false
+      parser = require('./parser')()
+      @unescape = (s) -> parser.unescape s
+      @parse = (s) -> parser.parse s
 
-    escape: (s) ->  
-      nativeTson.escape s
-
-    unescape: (s) ->  
-      @parser.unescape s
-
-    stringify: (x) ->
-      nativeTson.serialize x
-
-    parse: (s) ->
-      @parser.parse s
-else  
-
-  tsonParser = require './parser'
-  tsonSerializer = require './serializer'
-
-  class TSON
-
-    constructor: ->
-      @serializer = tsonSerializer()
-      @parser = tsonParser()
-
-    escape: (s) ->  
-      @serializer.escape s
-
-    unescape: (s) ->  
-      @parser.unescape s
-
-    stringify: (x) ->
-      @serializer.serializeValue x
-
-    parse: (s) ->
-      @parser.parse s
 
 
 factory = (options) ->
