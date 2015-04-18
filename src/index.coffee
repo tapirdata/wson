@@ -17,9 +17,13 @@ class TSON
       @escape = nativeTson.escape
       @stringify = nativeTson.serialize
 
-    if true or options.native == false
+    if options.native == false
       parser = require('./parser')()
       @unescape = (s) -> parser.unescape s
+      @parse = (s) -> parser.parse s
+    else  
+      @unescape = nativeTson.unescape
+      parser = require('./parser')()
       @parse = (s) -> parser.parse s
 
 
