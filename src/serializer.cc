@@ -26,6 +26,9 @@ class Serializer {
 
 
     void sort1(Handle<Array> array) {
+      if (array->Length() < 2) {
+        return;
+      } 
       Local<Value> sortArgs[] = { array };
       NanNew(Serializer::sortArray)->Call(NanGetCurrentContext()->Global(), 1, sortArgs);
     }

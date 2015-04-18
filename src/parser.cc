@@ -29,17 +29,18 @@ class Parser {
       }
       Local<Array> v = NanNew<Array>();
       int idx = 0;
+      TargetBuffer iTarget;
       while (true) {
-        std::cout << "nextIdx=" << source.nextIdx << " nextType=" << source.nextType << std::endl;
+        iTarget.clear();
+        // std::cout << "nextIdx=" << source.nextIdx << " nextType=" << source.nextType << std::endl;
         if (source.nextType == SourceBuffer::TEXT) {
-          TargetBuffer iTarget;
           err = source.pullUnescaped(iTarget);
           if (err) {
             return err;
           }
           v->Set(idx++, iTarget.getHandle());
         } else {
-          v->Set(idx++, NanNew<Number>(source.nextType));
+          // v->Set(idx++, NanNew<Number>(source.nextType));
           if (source.nextType == SourceBuffer::END) {
             break;
           }

@@ -23,8 +23,9 @@ class TSON
       @parse = (s) -> parser.parse s
     else  
       @unescape = nativeTson.unescape
-      parser = require('./parser')()
-      @parse = (s) -> parser.parse s
+      # parser = require('./parser')()
+      # @parse = (s) -> parser.parse s
+      @parse = nativeTson.parse
 
 
 

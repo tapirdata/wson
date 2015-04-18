@@ -22,7 +22,7 @@ timer = timerFactory()
 
 # JSON.parse sj
 # jsTson.parse st
-# nativeTson.parse st
+console.log 'native:', nativeTson.parse st
 
 for i in [0..100]
   timer.put 'JSON.parse      ', (-> JSON.parse sj), 100

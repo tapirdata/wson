@@ -57,7 +57,7 @@ class SourceBuffer: public BaseBuffer {
           }
           uint16_t c = buffer_[nextIdx++];
           nextChar = getUnescapeChar(c);
-          std::cout << "next: nextIdx=" << nextIdx << " c=" << (char)c << " nextChar=" << nextChar << std::endl;
+          // std::cout << "next: nextIdx=" << nextIdx << " c=" << (char)c << " nextChar=" << nextChar << std::endl;
           if (!nextChar) {
             return SYNTAX_ERROR;
           }
