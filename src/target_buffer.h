@@ -107,14 +107,6 @@ class TargetBuffer: public BaseBuffer {
       return 0;
     }
 
-    /* 
-    void simpleAppendHandleEscaped(Handle<String> source, int start=0, int length=-1) {
-      TargetBuffer source1;
-      source1.appendHandle(source, start, length);
-      appendEscaped(source1.buffer_);
-    }
-    */
-
     void appendHandleEscaped(Handle<String> source, int start=0, int length=-1) {
       size_t oldSize = buffer_.size();
       if (length < 0) {
