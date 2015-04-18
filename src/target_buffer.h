@@ -8,49 +8,6 @@ using v8::Handle;
 using v8::Local;
 using v8::String;
 
-inline uint16_t getEscapeChar(uint16_t c) {
-  switch (c) {
-    case '{':
-      return 'b';
-    case '}':
-      return 'c';
-    case '[':
-      return 'a';
-    case ']':
-      return 'e';
-    case ':':
-      return 'i';
-    case '#':
-      return 'n';
-    case '|':
-      return 'p';
-    case '`':
-      return 'q';
-  }  
-  return 0;
-}
-
-inline uint16_t getUnescapeChar(uint16_t c) {
-  switch (c) {
-    case 'b':
-      return '{';
-    case 'c':
-      return '}';
-    case 'a':
-      return '[';
-    case 'e':
-      return ']';
-    case 'i':
-      return ':';
-    case 'n':
-      return '#';
-    case 'p':
-      return '|';
-    case 'q':
-      return '`';
-  }  
-  return 0;
-}
 
 class TargetBuffer: public BaseBuffer {
 

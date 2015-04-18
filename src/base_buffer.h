@@ -38,6 +38,54 @@ class BaseBuffer {
       return NanNew<String>(buffer_.data(), buffer_.size());
     }
 
+    const usc2vector& getBuffer() {
+      return buffer_;
+    }
+
+    static inline uint16_t getEscapeChar(uint16_t c) {
+    switch (c) {
+      case '{':
+        return 'b';
+      case '}':
+        return 'c';
+      case '[':
+        return 'a';
+      case ']':
+        return 'e';
+      case ':':
+        return 'i';
+      case '#':
+        return 'n';
+      case '|':
+        return 'p';
+      case '`':
+        return 'q';
+    }  
+    return 0;
+  }
+
+  static inline uint16_t getUnescapeChar(uint16_t c) {
+    switch (c) {
+      case 'b':
+        return '{';
+      case 'c':
+        return '}';
+      case 'a':
+        return '[';
+      case 'e':
+        return ']';
+      case 'i':
+        return ':';
+      case 'n':
+        return '#';
+      case 'p':
+        return '|';
+      case 'q':
+        return '`';
+    }  
+    return 0;
+  }
+  
   protected:
 
     usc2vector buffer_;
