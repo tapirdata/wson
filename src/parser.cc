@@ -22,25 +22,35 @@ class Parser {
     SourceBuffer source;
     Handle<Value> value;
 
-    void parse() {
-      source.next();
+    int parse() {
+      int err = source.next();
+      if (err) {
+        return err;
+      }
       Local<Array> v = NanNew<Array>();
       int idx = 0;
       while (true) {
         std::cout << "nextIdx=" << source.nextIdx << " nextType=" << source.nextType << std::endl;
         if (source.nextType == SourceBuffer::TEXT) {
           TargetBuffer iTarget;
-          source.pullUnescaped(iTarget);
+          err = source.pullUnescaped(iTarget);
+          if (err) {
+            return err;
+          }
           v->Set(idx++, iTarget.getHandle());
         } else {
           v->Set(idx++, NanNew<Number>(source.nextType));
           if (source.nextType == SourceBuffer::END) {
             break;
           }
-          source.next();
+          err = source.next();
+          if (err) {
+            return err;
+          }
         }
       }
       value = v;
+      return 0;
     }
 
     static void Init();
@@ -56,7 +66,7 @@ NAN_METHOD(Unescape) {
   }
   Local<String> s = args[0].As<String>();
   int err = target.appendHandleUnescaped(s);
-  if (err < 0) {
+  if (err) {
     return NanThrowError("Unexpected escape sequence");
   }
   NanReturnValue(target.getHandle());
@@ -68,7 +78,10 @@ NAN_METHOD(Parse) {
   }
   Local<String> s = args[0].As<String>();
   Parser parser(s);
-  parser.parse();
+  int err = parser.parse();
+  if (err) {
+    return NanThrowError("Syntax Error");
+  }
   NanReturnValue(parser.value);
 }
 
