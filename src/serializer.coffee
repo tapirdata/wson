@@ -1,10 +1,9 @@
 'use strict'
 
 _ = require 'lodash'
+pp = require './pp'
 
 class Serializer 
-  escape: (s) ->  
-    s.replace @charRe, (char) => @prefix + @xarOfChar[char]
 
   serializeArray: (x) ->
     result = '['
@@ -19,7 +18,7 @@ class Serializer
 
   serializeKey: (x) ->
     if x
-      @escape x
+      pp.escape x
     else
       '#'
 
@@ -57,7 +56,7 @@ class Serializer
           if x.length == 0
             '#'
           else  
-            @escape x
+            pp.escape x
         else    
           if _.isArray x
             @serializeArray x
@@ -66,16 +65,6 @@ class Serializer
           else
             throw new Error "cannot stringify #{typeof x}: '#{x}' #{if _.isObject x then 'by ' + x.constructor.toString()}"
 
-do ->    
-  Parser = require('./parser').Parser
-  xarOfChar = {}
-  charBrick = ''
-  for xar, char of Parser::charOfXar
-    xarOfChar[char] = xar
-    charBrick += Parser.quoteRegExp char
-  Serializer::prefix = Parser::prefix
-  Serializer::xarOfChar = xarOfChar  
-  Serializer::charRe = new RegExp '[' + charBrick + ']', 'gm'
 
 
 factory = () ->

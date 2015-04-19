@@ -2,274 +2,33 @@
 
 assert = require 'assert'
 _ = require 'lodash'
+pp = require './pp'
 
-regExpQuoteSet = do (chars='-\\()+*.?[]^$') ->
-  o = {}
-  for c in chars
-    o[c] = true
-  o
 
 class Source
 
-  constructor: (@parser, s) ->
+  constructor: (s) ->
     assert typeof s == 'string', 'parse expects a string, got: ' + s
-    @parts = s.split @parser.splitRe
-    @partIdx = -1
+    @parts = s.split pp.splitRe
+    @partIdx = 0
     @next()
 
   next: ->
     parts = @parts
     idx = @partIdx
-    # console.log "parts=#{parts}, idx=#{idx}"
     loop
-      ++idx
       if idx >= parts.length
         part = 'end'
         term = false
         break
-      part = parts[idx]
       term = idx % 2 == 0
-      # console.log "  part=#{part}, idx=#{idx}"
+      part = parts[idx++]
       if not term or part.length > 0
         break
     @partIdx = idx
     @part = part  
     @term = term  
     return
-
-  throwError: (extra) ->
-    parts = @parts
-    idx = @partIdx
-    part = @part
-    msg = "unexpected '#{part}' in '#{parts.slice(0, idx).join('') + '^' + parts.slice(idx).join('')}'"
-    if extra
-      msg = "#{msg} #{extra}"
-    throw new Error msg
-
-
-class Stage
-
-  constructor: (@source, @parent) ->
-    @done = false
-    @state = 'start'
-    @init()
-
-  init: ->
-
-  next: ->  
-    source = @source
-    handlers = @handlers[@state]
-    if source.term
-      handler = handlers.text
-    else  
-      handler = handlers[source.part]
-      if not handler
-        handler = handlers.terminal
-    # console.log "%s.next part='%s'", @, source.part
-    if not handler
-      @source.throwError @
-    handler.call @
-
-   pop: ->
-     parent = @parent
-     # console.log 'pop @=%s, parent=%s', @, parent
-     if not parent
-       @source.throwError @
-     parent.putValue @result
-     parent
-
-   toString: ->
-     "#{@name}(state=#{@state}, result=#{JSON.stringify(@result)})"
-
-
-class ValueStage extends Stage
-
-  name: 'ValueStage'
-
-  putValue: (value) ->
-    @result = value
-    @state = 'end'
-
-  handlers:
-    start:
-      text: ->
-        @result = @source.parser.unescape @source.part
-        @source.next()
-        @state = 'end'
-        @
-      '#': -> 
-        @source.next()
-        @state = 'literal'
-        @
-      '[': ->
-        @source.next()
-        new ArrayStage @source, @
-      '{': ->
-        @source.next()
-        new ObjectStage @source, @
-    literal:
-      text: ->
-        part = @source.part
-        try
-          @result = @source.parser.literal part
-        catch err
-          @source.throwError @
-        @source.next()
-        @state = 'end'
-        @
-      terminal: ->
-        @result = ''
-        @state = 'end'
-        @
-    end:
-      end: ->
-        @done = true
-        @
-      terminal: ->
-        @pop()
-
-
-class ArrayStage extends Stage
-
-  name: 'ArrayStage'
-
-  init: ->
-    @result = []
-
-  putValue: (value) ->
-    @result.push value
-    @state = 'have'
-
-  handleClose: ->
-    @source.next()
-    @pop()
-
-  handleText: ->
-    @putValue @source.parser.unescape @source.part
-    @source.next()
-    @
-
-  handleValue: ->
-    stage = new ValueStage @source, @
-    stage.next()
-
-  handlers:
-    start:
-      ']': -> @handleClose()
-      text: -> @handleText()
-      '#': -> @handleValue()
-      '[': -> @handleValue()
-      '{': -> @handleValue()
-    next:
-      text: -> @handleText()
-      '#': -> @handleValue()
-      '[': -> @handleValue()
-      '{': -> @handleValue()
-    have:
-      ']': -> @handleClose()
-      '|': ->
-        @source.next()
-        @state = 'next'
-        @
-
-
-class ObjectStage extends Stage
-
-  name: 'ObjectStage'
-
-  init: ->
-    @result = {}
-
-  putValue: (value) ->
-    if not @key?
-      @source.throwError @
-    @result[@key] = value
-    @state = 'have'
-    @key = null
-
-  handleClose: ->
-    @source.next()
-    @pop()
-
-  handleKey: ->
-    @key = @source.parser.unescape @source.part
-    @result[@key] = true
-    @source.next()
-    @state = 'key'
-    @
-
-  handleEmptyKey: ->
-    @key = ''
-    @result[@key] = true
-    @source.next()
-    @state = 'key'
-    @
-
-  handleText: ->
-    @putValue @source.parser.unescape @source.part
-    @source.next()
-    @
-
-  handleValue: ->
-    stage = new ValueStage @source, @
-    stage.next()
-
-  handlers:
-    start:
-      '}': -> @handleClose()
-      text: -> @handleKey()
-      '#': -> @handleEmptyKey()
-    next:
-      text: -> @handleKey()
-      '#': -> @handleEmptyKey()
-    key:
-      '}': -> @handleClose()
-      '|': ->
-        @source.next()
-        @state = 'next'
-        @
-      ':': ->
-        @source.next()
-        @state = 'colon'
-        @
-    colon:
-      text: -> @handleText()
-      '#': -> @handleValue()
-      '[': -> @handleValue()
-      '{': -> @handleValue()
-    have:
-      '}': -> @handleClose()
-      '|': ->
-        @source.next()
-        @state = 'next'
-        @
-
-
-class Parser
-
-  @quoteRegExp: (char) ->
-    if regExpQuoteSet[char]
-      '\\' + char
-    else
-      char
-
-  charOfXar:
-  #xar: char
-    b: '{'
-    c: '}'
-    a: '['
-    e: ']'
-    i: ':'
-    n: '#'
-    p: '|'
-    q: '`'
-  prefix: '`'  
-
-  unescape: (s) ->
-    s.replace @xarRe, (all, xar) =>
-      char = @charOfXar[xar]
-      assert char?, "unxpected xar: '#{xar}'"
-      char
 
   literal: (s) ->
     switch s
@@ -286,32 +45,198 @@ class Parser
           throw new Error "unexpected literal '#{s}'"
         result      
 
-  myParse: (s) ->
-    source = new Source @, s
-    stage = new ValueStage source
-    loop
-      stage = stage.next()
-      if stage.done
-        return stage.result
+  throwError: (extra) ->
+    parts = @parts
+    idx = @partIdx
+    part = @part
+    msg = "unexpected '#{part}' in '#{parts.slice(0, idx).join('') + '^' + parts.slice(idx).join('')}'"
+    if extra
+      msg = "#{msg} #{extra}"
+    throw new Error msg
 
-  ###
-  pegParse: (s) ->
-    options = 
-      unescape: (s) => @unescape s
-      literal: (s) => @literal s
-    grammar.parse s, options  
-  ###    
+
+class State
+
+  constructor: (@source, @stage, @value, @parent) ->
+
+  next: ->  
+    source = @source
+    stage = @stage
+    if source.term
+      handler = stage.text
+    else  
+      handler = stage[source.part]
+      if not handler
+        handler = stage.default
+    if not handler
+      @source.throwError @
+    handler.call @
+
+  pop: ->
+    parent = @parent
+    if not parent
+      @source.throwError @
+    parent.stage.putValue.call parent, @value
+
+  putArrayValue: (x) ->   
+    @value.push x
+    @stage = stages.arrayHave
+    @
+
+  putObjectValue: (x) ->   
+    @value[@key] = x
+    @stage = stages.objectHave
+    @
+
+  arrayText: ->
+    @value.push pp.unescape @source.part
+    @source.next()
+    @stage = stages.arrayHave
+    @
+
+  arrayValue: ->
+    new State @source, stages.valueStart, undefined, @
+
+  arrayNext: ->
+    @source.next()
+    @stage = stages.arrayNext
+    @
+
+  arrayClose: ->
+    @source.next()
+    @pop()
+
+  objectClose: ->
+    @source.next()
+    @pop()
+
+  objectKey: ->
+    @key = pp.unescape @source.part
+    @value[@key] = true
+    @source.next()
+    @stage = stages.objectKey
+    @
+
+  objectEmptyKey: ->
+    @key = ''
+    @value[@key] = true
+    @source.next()
+    @stage = stages.objectKey
+    @
+
+  objectColon: ->
+    @source.next()
+    @stage = stages.objectColon
+    @
+
+  objectText: ->
+    @value[@key] = pp.unescape @source.part
+    @source.next()
+    @stage = stages.objectHave
+    @
+
+  objectValue: ->
+    new State @source, stages.valueStart, undefined, @
+
+  objectNext: ->
+    @source.next()
+    @stage = stages.objectNext
+    @
+
+
+stages = 
+  valueStart:
+    text: ->
+      @value = pp.unescape @source.part
+      @source.next()
+      @stage = stages.valueEnd
+      @
+    '#': -> 
+      @source.next()
+      @stage = stages.valueLiteral
+      @
+    '[': ->
+      @source.next()
+      new State @source, stages.arrayStart, [], @
+    '{': ->
+      @source.next()
+      new State @source, stages.objectStart, {}, @
+    putValue: (value) ->
+      @value = value
+      @stage = stages.valueEnd
+      @
+  valueLiteral:
+    text: ->
+      part = @source.part
+      try
+        @value = @source.literal part
+      catch err
+        @source.throwError @
+      @source.next()
+      @stage = stages.valueEnd
+      @
+    default: ->
+      @value = ''
+      @stage = stages.valueEnd
+      @
+  valueEnd:
+    end: ->
+      @done = true
+      @
+    default: ->
+      @pop()
+
+  arrayStart:    
+    text: -> @arrayText()
+    '#': -> @arrayValue()
+    '[': -> @arrayValue()
+    '{': -> @arrayValue()
+    ']': -> @arrayClose()
+    putValue: (x) -> @putArrayValue(x)
+  arrayNext:  
+    text: -> @arrayText()
+    '#': -> @arrayValue()
+    '[': -> @arrayValue()
+    '{': -> @arrayValue()
+    putValue: (x) -> @putArrayValue(x)
+  arrayHave:
+    '|': -> @arrayNext()
+    ']': -> @arrayClose()
+
+  objectStart:
+    text: -> @objectKey()
+    '#': -> @objectEmptyKey()
+    '}': -> @objectClose()
+  objectNext:
+    text: -> @objectKey()
+    '#': -> @objectEmptyKey()
+  objectKey:
+    '|': -> @objectNext()
+    '}': -> @objectClose()
+    ':': -> @objectColon()
+  objectColon:
+    text: -> @objectText()
+    '#': -> @objectValue()
+    '[': -> @objectValue()
+    '{': -> @objectValue()
+    putValue: (x) -> @putObjectValue(x)
+  objectHave:
+    '}': -> @objectClose()
+    '|': -> @objectNext()
+
+
+class Parser
 
   parse: (s) ->
-    @myParse s
+    source = new Source s
+    state = new State source, stages.valueStart
+    loop
+      state = state.next()
+      if state.done
+        return state.value
 
-do ->    
-  splitBrick = ''
-  for xar, char of Parser::charOfXar
-    if char != Parser::prefix
-      splitBrick += Parser.quoteRegExp char 
-  Parser::xarRe = new RegExp Parser.quoteRegExp(Parser::prefix) + '(.)', 'gm'
-  Parser::splitRe = new RegExp '([' + splitBrick + '])'
+  unescape: (s) ->
+    unescaper.unescape s
 
 
 factory = () ->
@@ -319,4 +244,11 @@ factory = () ->
 factory.Parser = Parser  
 
 module.exports = factory
+
+###
+factory.makeState = (s) ->
+  source = new Source s
+  new State source, stages.valueStart
+###  
+
 

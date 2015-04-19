@@ -11,7 +11,7 @@ class TSON
     options or= {}
     if options.native == false
       serializer = require('./serializer')()
-      @escape = (s) -> serializer.escape s
+      @escape = (s) -> require('./pp').escape s
       @stringify = (x) -> serializer.serializeValue x
     else  
       @escape = nativeTson.escape
@@ -19,17 +19,15 @@ class TSON
 
     if options.native == false
       parser = require('./parser')()
-      @unescape = (s) -> parser.unescape s
+      @unescape = (s) -> require('./pp').unescape s
       @parse = (s) -> parser.parse s
     else  
       @unescape = nativeTson.unescape
-      # parser = require('./parser')()
-      # @parse = (s) -> parser.parse s
       @parse = nativeTson.parse
 
 
-
 factory = (options) ->
+  options = native: false
   new TSON options
 factory.TSON = TSON
 
