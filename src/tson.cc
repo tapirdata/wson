@@ -7,6 +7,7 @@ using v8::FunctionTemplate;
 
 void Init(Handle<Object> exports) {
   InitSerializer();
+  InitParser();
   exports->Set(NanNew("escape"), NanNew<FunctionTemplate>(Escape)->GetFunction());
   exports->Set(NanNew("serialize"), NanNew<FunctionTemplate>(Serialize)->GetFunction());
   exports->Set(NanNew("unescape"), NanNew<FunctionTemplate>(Unescape)->GetFunction());

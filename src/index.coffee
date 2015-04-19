@@ -27,7 +27,6 @@ class TSON
 
 
 factory = (options) ->
-  options = native: false
   new TSON options
 factory.TSON = TSON
 

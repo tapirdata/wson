@@ -12,17 +12,65 @@ using v8::Boolean;
 using v8::Array;
 using v8::Object;
 
+class Stage;
+
+class State {
+  public:
+    typedef void (State::*txFn)();
+
+    State(SourceBuffer& source, Stage* stage):
+      source_(source),
+      stage_(stage)
+    {}  
+    SourceBuffer& source_;
+    Stage *stage_;
+    Handle<Value> value_;
+    Handle<String> key_;
+    void valueText() {};
+    void valueLiteral() {};
+};
+
+class Stage {
+  public:
+    Stage(State::txFn* transitions):
+      transitions_(transitions)
+    {}  
+    State::txFn* transitions_;
+
+    enum ExtraCtype {
+      DEFAULT = SourceBuffer::END + 1
+    };
+};
+
+State::txFn valueStartTx[] = {
+  &State::valueText, // TEXT
+  NULL, // OBJECT
+  NULL, // ENDOBJECT
+  NULL, // ARRAY
+  NULL, // ENDARRAY
+  NULL, // IS
+  &State::valueLiteral, // LITERAL
+  NULL, // PIPE
+  NULL, // QUOTE
+  NULL, // END
+  NULL  // DEFAULT
+};  
+
+Stage valueStart(valueStartTx);
+
+
 class Parser {
 
   public:  
-    Parser(Handle<String> s) {
-      source.appendHandle(s);
-    }
+    Parser() {}
 
-    SourceBuffer source;
     Handle<Value> value;
 
-    int parse() {
+    int parse(Handle<String> s) {
+      SourceBuffer source;
+      source.appendHandle(s);
+      State state(source, &valueStart);
+
       int err = source.next();
       if (err) {
         return err;
@@ -78,8 +126,8 @@ NAN_METHOD(Parse) {
     return NanThrowTypeError("First argument should be a string");
   }
   Local<String> s = args[0].As<String>();
-  Parser parser(s);
-  int err = parser.parse();
+  Parser parser;
+  int err = parser.parse(s);
   if (err) {
     return NanThrowError("Syntax Error");
   }
@@ -87,6 +135,7 @@ NAN_METHOD(Parse) {
 }
 
 void InitParser() {
+  // std::cout << "DEFAULT=" << DEFAULT << std::endl;
   Parser::Init();
 }
 
