@@ -20,13 +20,13 @@ class SourceBuffer: public BaseBuffer {
 
     static inline Ctype getCtype(uint16_t c) {
       switch (c) {
-        case '[':
-          return OBJECT;
-        case ']':
-          return ENDOBJECT;
         case '{':
-          return ARRAY;
+          return OBJECT;
         case '}':
+          return ENDOBJECT;
+        case '[':
+          return ARRAY;
+        case ']':
           return ENDARRAY;
         case ':':
           return IS;
@@ -57,7 +57,6 @@ class SourceBuffer: public BaseBuffer {
           }
           uint16_t c = buffer_[nextIdx++];
           nextChar = getUnescapeChar(c);
-          // std::cout << "next: nextIdx=" << nextIdx << " c=" << (char)c << " nextChar=" << nextChar << std::endl;
           if (!nextChar) {
             return SYNTAX_ERROR;
           }
@@ -80,26 +79,37 @@ class SourceBuffer: public BaseBuffer {
       }
       return 0;
     }
-    /*
-        uint16_t c = buffer_[idx++];
-        if (nextType == TEXT) {
-          textBeginIdx = idx - 1;
-          while (idx < len) {
-            c = buffer_[idx++];
-            // std::cout << "next: idx:" << idx << " c=" << (char)c << " " << SourceBuffer::getCtype(c) << std::endl;
-            if (SourceBuffer::getCtype(c) != TEXT) {
-              --idx;
-              break;
-            }
-          }
-          textEndIdx = idx;
-        } 
-    */    
+
+    inline int pullUnescaped(std::string& target) {
+      while (true) {
+        target.push_back(nextChar);
+        int err = next();
+        if (err) {
+          return err;
+        }
+        if (nextType != TEXT) {
+          break;
+        }
+      }
+      return 0;
+    }
+
+    inline int pullUnescapedBuffer() {
+      nextBuffer.clear();
+      return pullUnescaped(nextBuffer);
+    }  
+
+    inline int pullUnescapedString() {
+      nextString.clear();
+      return pullUnescaped(nextString);
+    }  
+
 
     size_t nextIdx;
     uint16_t nextChar;
     Ctype nextType;
-
+    TargetBuffer nextBuffer;
+    std::string nextString;
 };
 
 

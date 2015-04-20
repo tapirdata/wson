@@ -38,7 +38,7 @@ class BaseBuffer {
       return NanNew<String>(buffer_.data(), buffer_.size());
     }
 
-    const usc2vector& getBuffer() {
+    const usc2vector& getBuffer() const {
       return buffer_;
     }
 
