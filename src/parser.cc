@@ -41,15 +41,26 @@ class State {
     int toArrayNext();
     int toArrayClose();
 
+    int toObjectStart();
+    int toObjectKeyEmpty();
+    int toObjectColon();
+    int toObjectNext();
+    int toObjectClose();
+
     int fetchValueText();
     int fetchValueLiteralEmpty();
     int fetchValueLiteral();
 
     int fetchArrayText();
-    int fetchArrayValue();
+    int fetchArrayChild();
+
+    int fetchObjectKey();
+    int fetchObjectText();
+    int fetchObjectChild();
 
     int putValue(Handle<Value>);
     int putArrayValue(Handle<Value>);
+    int putObjectValue(Handle<Value>);
 
     int scan();
 };
@@ -84,7 +95,7 @@ class Stage {
 
 State::Tx txsValueStart[] = {
   &State::fetchValueText, // TEXT
-  NULL, // OBJECT
+  &State::toObjectStart,  // OBJECT
   NULL, // ENDOBJECT
   &State::toArrayStart,   // ARRAY
   NULL, // ENDARRAY
@@ -125,13 +136,13 @@ State::Tx txsValueEnd[] = {
 };  
 
 State::Tx txsArrayStart[] = {
-  &State::fetchArrayText, // TEXT
-  NULL, // OBJECT
+  &State::fetchArrayText,  // TEXT
+  &State::fetchArrayChild, // OBJECT
   NULL, // ENDOBJECT
-  &State::fetchArrayValue,// ARRAY
-  &State::toArrayClose,   // ENDARRAY
+  &State::fetchArrayChild, // ARRAY
+  &State::toArrayClose,    // ENDARRAY
   NULL, // IS
-  &State::fetchArrayValue, // LITERAL
+  &State::fetchArrayChild, // LITERAL
   NULL, // PIPE
   NULL, // QUOTE
   NULL, // END
@@ -139,13 +150,13 @@ State::Tx txsArrayStart[] = {
 }; 
 
 State::Tx txsArrayNext[] = {
-  &State::fetchArrayText, // TEXT
-  NULL, // OBJECT
+  &State::fetchArrayText,  // TEXT
+  &State::fetchArrayChild, // OBJECT
   NULL, // ENDOBJECT
-  &State::fetchArrayValue,// ARRAY
+  &State::fetchArrayChild, // ARRAY
   NULL, // ENDARRAY
   NULL, // IS
-  &State::fetchArrayValue, // LITERAL
+  &State::fetchArrayChild, // LITERAL
   NULL, // PIPE
   NULL, // QUOTE
   NULL, // END
@@ -161,6 +172,77 @@ State::Tx txsArrayHave[] = {
   NULL, // IS
   NULL, // LITERAL
   &State::toArrayNext,  // PIPE
+  NULL, // QUOTE
+  NULL, // END
+  NULL  // DEFAULT
+}; 
+
+State::Tx txsObjectStart[] = {
+  &State::fetchObjectKey,   // TEXT
+  NULL, // OBJECT
+  &State::toObjectClose,    // ENDOBJECT
+  NULL, // ARRAY
+  NULL, // ENDARRAY
+  NULL, // IS
+  &State::toObjectKeyEmpty, // LITERAL
+  NULL, // PIPE
+  NULL, // QUOTE
+  NULL, // END
+  NULL  // DEFAULT
+}; 
+
+State::Tx txsObjectNext[] = {
+  &State::fetchObjectKey, // TEXT
+  NULL, // OBJECT
+  NULL, // ENDOBJECT
+  NULL, // ARRAY
+  NULL, // ENDARRAY
+  NULL, // IS
+  &State::toObjectKeyEmpty, // LITERAL
+  NULL, // PIPE
+  NULL, // QUOTE
+  NULL, // END
+  NULL  // DEFAULT
+}; 
+
+
+State::Tx txsObjectHaveKey[] = {
+  NULL, // TEXT
+  NULL, // OBJECT
+  &State::toObjectClose, // ENDOBJECT
+  NULL, // ARRAY
+  NULL, // ENDARRAY
+  &State::toObjectColon, // IS
+  NULL, // LITERAL
+  &State::toObjectNext, // PIPE
+  NULL, // QUOTE
+  NULL, // END
+  NULL  // DEFAULT
+}; 
+
+State::Tx txsObjectHaveColon[] = {
+  &State::fetchObjectText, // TEXT
+  &State::fetchObjectChild, // OBJECT
+  NULL, // ENDOBJECT
+  &State::fetchObjectChild, // ARRAY
+  NULL, // ENDARRAY
+  NULL, // IS
+  &State::fetchObjectChild, // LITERAL
+  NULL, // PIPE
+  NULL, // QUOTE
+  NULL, // END
+  NULL  // DEFAULT
+}; 
+
+State::Tx txsObjectHaveValue[] = {
+  NULL, // TEXT
+  NULL, // OBJECT
+  &State::toObjectClose, // ENDOBJECT
+  NULL, // ARRAY
+  NULL, // ENDARRAY
+  NULL, // IS
+  NULL, // LITERAL
+  &State::toObjectNext, // PIPE
   NULL, // QUOTE
   NULL, // END
   NULL  // DEFAULT
@@ -186,6 +268,11 @@ Stage stageValueEnd(txsValueEnd);
 Stage stageArrayStart(txsArrayStart, &State::putArrayValue);
 Stage stageArrayNext(txsArrayNext, &State::putArrayValue);
 Stage stageArrayHave(txsArrayHave);
+Stage stageObjectStart(txsObjectStart);
+Stage stageObjectNext(txsObjectNext);
+Stage stageObjectHaveKey(txsObjectHaveKey);
+Stage stageObjectHaveColon(txsObjectHaveColon, &State::putObjectValue);
+Stage stageObjectHaveValue(txsObjectHaveValue);
 
 int State::toEnd() {
   done_ = true;
@@ -203,7 +290,7 @@ int State::toValueClose() {
     return SYNTAX_ERROR;
   }
   State::Put put = parent_->stage_->getPut();
-  if (!put) {
+  if (put == NULL) {
     return SYNTAX_ERROR;
   }
   done_ = true;
@@ -229,6 +316,46 @@ int State::toArrayClose() {
     return SYNTAX_ERROR;
   }
   State::Put put = parent_->stage_->getPut();
+  if (put == NULL) {
+    return SYNTAX_ERROR;
+  }
+  done_ = true;
+  return (parent_->*put)(value);
+}  
+
+int State::toObjectStart() {
+  source_.next();
+  State state(source_, &stageObjectStart, this);
+  state.value = NanNew<Object>();
+  return state.scan();
+}  
+
+int State::toObjectKeyEmpty() {
+  source_.next();
+  key_ = NanNew<String>();
+  value.As<Object>()->Set(key_, NanTrue());
+  stage_ = &stageObjectHaveKey;
+  return 0;
+}  
+
+int State::toObjectColon() {
+  source_.next();
+  stage_ = &stageObjectHaveColon;
+  return 0;
+}  
+
+int State::toObjectNext() {
+  source_.next();
+  stage_ = &stageObjectNext;
+  return 0;
+}  
+
+int State::toObjectClose() {
+  source_.next();
+  if (!parent_) {
+    return SYNTAX_ERROR;
+  }
+  State::Put put = parent_->stage_->getPut();
   if (!put) {
     return SYNTAX_ERROR;
   }
@@ -237,7 +364,10 @@ int State::toArrayClose() {
 }  
 
 int State::fetchValueText() {
-  source_.pullUnescapedBuffer();
+  int err = source_.pullUnescapedBuffer();
+  if (err) {
+    return err;
+  }
   value = source_.nextBuffer.getHandle();
   stage_ = &stageValueEnd;
   return 0;
@@ -250,7 +380,12 @@ int State::fetchValueLiteralEmpty() {
 }  
 
 int State::fetchValueLiteral() {
-  source_.pullUnescapedString();
+  int err = source_.pullUnescapedString();
+  if (err) {
+    return err;
+  }
+  value = source_.nextBuffer.getHandle();
+  stage_ = &stageValueEnd;
   const std::string& text = source_.nextString;
   bool valueOk = false;
   if (text.size() == 1) {
@@ -297,11 +432,40 @@ int State::fetchValueLiteral() {
 };
 
 int State::fetchArrayText() {
-  source_.pullUnescapedBuffer();
+  int err = source_.pullUnescapedBuffer();
+  if (err) {
+    return err;
+  }
   return putArrayValue(source_.nextBuffer.getHandle());
 }
 
-int State::fetchArrayValue() {
+int State::fetchArrayChild() {
+  State state(source_, &stageValueStart, this);
+  return state.scan();
+}  
+
+int State::fetchObjectKey() {
+  int err = source_.pullUnescapedBuffer();
+  if (err) {
+    return err;
+  }
+  key_ = source_.nextBuffer.getHandle();
+  value.As<Object>()->Set(key_, NanTrue());
+  stage_ = &stageObjectHaveKey;
+  return 0;
+}
+
+int State::fetchObjectText() {
+  int err = source_.pullUnescapedBuffer();
+  if (err) {
+    return err;
+  }
+  value.As<Object>()->Set(key_, source_.nextBuffer.getHandle());
+  stage_ = &stageObjectHaveValue;
+  return 0;
+}  
+
+int State::fetchObjectChild() {
   State state(source_, &stageValueStart, this);
   return state.scan();
 }  
@@ -316,6 +480,12 @@ int State::putArrayValue(Handle<Value> x) {
   Handle<Array> arrayValue = value.As<Array>();
   arrayValue->Set(arrayValue->Length(), x);
   stage_ = &stageArrayHave;
+  return 0;
+}  
+
+int State::putObjectValue(Handle<Value> x) {
+  value.As<Object>()->Set(key_, x);
+  stage_ = &stageObjectHaveValue;
   return 0;
 }  
 
@@ -400,6 +570,7 @@ NAN_METHOD(Parse) {
   TargetBuffer errorMsg;
   Parser parser;
   parser.parse(s, result, errorMsg);
+  // std::cout << "parse: err.size()=" << errorMsg.getBuffer().size() << std::endl;
   if (errorMsg.getBuffer().size()) {
     return NanThrowError(errorMsg.getHandle());
   }    
