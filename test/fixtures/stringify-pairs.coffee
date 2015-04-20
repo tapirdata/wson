@@ -30,7 +30,7 @@ module.exports = [
   [{a:{a:['b',{c:3}],b:{c:[8,2]}}}, '{a:{a:[b|{c:#3}]|b:{c:[#8|#2]}}}']
   [{'[a]':'[b]'}, '{`aa`e:`ab`e}']
   # fail
-  # ['__fail__', ''] # TODO: native dumps core
+  ['__fail__', '']
   ['__fail__', '#123x']
   ['__fail__', '#[x]']
   ['__fail__', '[']

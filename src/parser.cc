@@ -502,7 +502,6 @@ int State::scan() {
     if (err) {
       return err;
     } else if (done_) {
-      // std::cout << "scan done" << std::endl;
       return 0;
     }
   }  
@@ -516,12 +515,16 @@ class Parser {
     Parser() {}
 
     void MakeError(const SourceBuffer& source, TargetBuffer& msg) {
+      size_t errIdx = source.nextIdx > 0 ? source.nextIdx - 1 : 0; 
+      uint16_t errChar = source.nextIdx > 0 ? source.nextChar : 0; 
       msg.append(std::string("Unexpected '"));
-      msg.push(source.nextChar);
+      if (errChar) {
+        msg.push(source.nextChar);
+      }
       msg.append(std::string("' at '"));
-      msg.append(source.getBuffer(), 0, source.nextIdx - 1);
+      msg.append(source.getBuffer(), 0, errIdx);
       msg.push('^');
-      msg.append(source.getBuffer(), source.nextIdx - 1);
+      msg.append(source.getBuffer(), errIdx);
       msg.append(std::string("'"));
     }  
 
@@ -531,12 +534,14 @@ class Parser {
       source.appendHandle(s);
       err = source.next();
       if (err) {
-        return MakeError(source, errorMsg);
+        MakeError(source, errorMsg);
+        return;
       }
       State state(source, &stageValueStart);
       err = state.scan();
       if (err) {
-        return MakeError(source, errorMsg);
+        MakeError(source, errorMsg);
+        return;
       }
       result = state.value;
     }
@@ -570,7 +575,6 @@ NAN_METHOD(Parse) {
   TargetBuffer errorMsg;
   Parser parser;
   parser.parse(s, result, errorMsg);
-  // std::cout << "parse: err.size()=" << errorMsg.getBuffer().size() << std::endl;
   if (errorMsg.getBuffer().size()) {
     return NanThrowError(errorMsg.getHandle());
   }    
