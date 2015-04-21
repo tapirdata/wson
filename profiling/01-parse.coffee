@@ -1,7 +1,9 @@
 'use strict'
 
-timerFactory = require './timer'
+Benchmark = require 'benchmark'
 tsonFactory = require '../src'
+
+suite = new Benchmark.Suite()
 
 x =
   a: 42
@@ -18,16 +20,14 @@ jsTson = tsonFactory native: false
 sj = JSON.stringify x
 st = jsTson.stringify x
 
-timer = timerFactory()
+suite.add 'JSON.parse', -> JSON.parse sj
+suite.add 'jsTson.parse', -> jsTson.parse st
+suite.add 'nativeTson.parse', -> nativeTson.parse st
 
-# JSON.parse sj
-# jsTson.parse st
-console.log 'native:', nativeTson.parse st
+suite.on 'cycle', (event) ->
+  console.log String(event.target)
+# suite.on 'complete', ->
+#   console.log 'Fastest is ' + @filter('fastest').pluck('name')
 
-for i in [0..100]
-  timer.put 'JSON.parse      ', (-> JSON.parse sj), 100
-  timer.put 'jsTson.parse    ', (-> jsTson.parse st), 100
-  timer.put 'nativeTson.parse', (-> nativeTson.parse st), 100
-
-timer.report()  
+suite.run async: true
 

@@ -1,7 +1,6 @@
 #ifndef TSON_TYPES_H_
 #define TSON_TYPES_H_
 
-#include <exception>
 #include <vector>
 
 typedef std::vector<uint16_t> usc2vector;
