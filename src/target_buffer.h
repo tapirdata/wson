@@ -10,8 +10,9 @@ class TargetBuffer: public BaseBuffer {
 
     TargetBuffer() {}
 
+    /*
     template<typename S>
-    void appendEscaped(const S& source, int start=0, int length=-1) {
+    inline void appendEscaped(const S& source, int start=0, int length=-1) {
       if (length < 0) {
         length = source.size() - start;
       }
@@ -30,9 +31,10 @@ class TargetBuffer: public BaseBuffer {
         }  
       }  
     }
+    */
 
     template<typename S>
-    int appendUnescaped(const S& source, int start=0, int length=-1) {
+    inline int appendUnescaped(const S& source, int start=0, int length=-1) {
       if (length < 0) {
         length = source.size() - start;
       }
@@ -59,7 +61,7 @@ class TargetBuffer: public BaseBuffer {
       return 0;
     }
 
-    void appendHandleEscaped(v8::Handle<v8::String> source, int start=0, int length=-1) {
+    inline void appendHandleEscaped(v8::Handle<v8::String> source, int start=0, int length=-1) {
       size_t oldSize = buffer_.size();
       if (length < 0) {
         length = source->Length() - start;
@@ -99,19 +101,13 @@ class TargetBuffer: public BaseBuffer {
       }
     }  
 
-    int appendHandleUnescaped(v8::Handle<v8::String> source, int start=0, int length=-1) {
+    inline int appendHandleUnescaped(v8::Handle<v8::String> source, int start=0, int length=-1) {
       TargetBuffer source1;
       source1.appendHandle(source, start, length);
       return appendUnescaped(source1.buffer_);
     }
 
-    /*
-    static bool compare(const TargetBuffer& a, const TargetBuffer& b) {
-      return compareUsc2vector(a.buffer_, b.buffer_);
-    }
-    */
-
-    void clear() {
+    inline void clear() {
       buffer_.resize(0);
     }
 

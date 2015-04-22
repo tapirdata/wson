@@ -10,23 +10,28 @@ class TSON
   constructor: (options) ->
     options or= {}
     if options.native == false
-      serializer = require('./serializer')()
-      @escape = (s) -> require('./pp').escape s
-      @stringify = (x) -> serializer.serializeValue x
+      @escape = (s) -> require('./transcribe').escape s
+      @unescape = (s) -> require('./transcribe').unescape s
+
+      stringifier = require('./stringifier')()
+      @stringify = (x) -> stringifier.stringify x
+
+      parser = require('./parser')()
+      @parse = (s) -> parser.parse s
+
     else  
       @escape = nativeTson.escape
-      @stringify = nativeTson.serialize
-
-    if options.native == false
-      parser = require('./parser')()
-      @unescape = (s) -> require('./pp').unescape s
-      @parse = (s) -> parser.parse s
-    else  
       @unescape = nativeTson.unescape
-      @parse = nativeTson.parse
+
+      stringifier = nativeTson.createStringifier()
+      @stringify = stringifier.stringify
+
+      parser = nativeTson.createParser()
+      @parse = parser.parse
 
 
 factory = (options) ->
+  # options = native: false
   new TSON options
 factory.TSON = TSON
 

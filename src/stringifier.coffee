@@ -1,11 +1,11 @@
 'use strict'
 
 _ = require 'lodash'
-pp = require './pp'
+transcribe = require './transcribe'
 
-class Serializer 
+class Stringifier 
 
-  serializeArray: (x) ->
+  stringifyArray: (x) ->
     result = '['
     first = true
     for elem in x
@@ -13,16 +13,16 @@ class Serializer
         first = false
       else
         result += '|'
-      result += @serializeValue elem
+      result += @stringify elem
     result + ']'
 
-  serializeKey: (x) ->
+  stringifyKey: (x) ->
     if x
-      pp.escape x
+      transcribe.escape x
     else
       '#'
 
-  serializeObject: (x) ->
+  stringifyObject: (x) ->
     keys = _.keys(x).sort()
     result = '{'
     first = true
@@ -32,13 +32,13 @@ class Serializer
       else
         result += '|'
       value = x[key]
-      result += @serializeKey key
+      result += @stringifyKey key
       if value != true
         result += ':' 
-        result += @serializeValue value
+        result += @stringify value
     result + '}'
 
-  serializeValue: (x) ->
+  stringify: (x) ->
     if x == null
       '#n'
     else  
@@ -56,20 +56,20 @@ class Serializer
           if x.length == 0
             '#'
           else  
-            pp.escape x
+            transcribe.escape x
         else    
           if _.isArray x
-            @serializeArray x
+            @stringifyArray x
           else if _.isObject x
-            @serializeObject x
+            @stringifyObject x
           else
             throw new Error "cannot stringify #{typeof x}: '#{x}' #{if _.isObject x then 'by ' + x.constructor.toString()}"
 
 
 
 factory = () ->
-  new Serializer()
-factory.Serializer = Serializer  
+  new Stringifier()
+factory.Stringifier = Stringifier  
 
 module.exports = factory
 

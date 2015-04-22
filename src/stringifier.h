@@ -1,25 +1,25 @@
-#ifndef TSON_PARSER_H_
-#define TSON_PARSER_H_
+#ifndef TSON_SERIALIZER_H_
+#define TSON_SERIALIZER_H_
 
 #include <nan.h>
 
-class Parser : public node::ObjectWrap {
+class Stringifier : public node::ObjectWrap {
   public:
     static void Init();
     static v8::Local<v8::Object> NewInstance(v8::Local<v8::Value> arg);
     double Val() const { return val_; }
 
   private:
-    Parser();
-    ~Parser();
+    Stringifier();
+    ~Stringifier();
 
     static v8::Persistent<v8::Function> constructor;
-    static v8::Persistent<v8::Function> parse;
+    static v8::Persistent<v8::Function> stringify;
     static NAN_METHOD(New);
-    static NAN_METHOD(Parse);
+    static NAN_METHOD(Stringify);
     double val_;
 };
 
-#endif // TSON_PARSER_H_
 
+#endif // TSON_SERIALIZER_H_
 

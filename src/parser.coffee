@@ -2,14 +2,14 @@
 
 assert = require 'assert'
 _ = require 'lodash'
-pp = require './pp'
+transcribe = require './transcribe'
 
 
 class Source
 
   constructor: (s) ->
     assert typeof s == 'string', 'parse expects a string, got: ' + s
-    @parts = s.split pp.splitRe
+    @parts = s.split transcribe.splitRe
     @partIdx = 0
     @next()
 
@@ -89,7 +89,7 @@ class State
     @
 
   arrayText: ->
-    @value.push pp.unescape @source.part
+    @value.push transcribe.unescape @source.part
     @source.next()
     @stage = stages.arrayHave
     @
@@ -111,7 +111,7 @@ class State
     @pop()
 
   objectKey: ->
-    @key = pp.unescape @source.part
+    @key = transcribe.unescape @source.part
     @value[@key] = true
     @source.next()
     @stage = stages.objectKey
@@ -130,7 +130,7 @@ class State
     @
 
   objectText: ->
-    @value[@key] = pp.unescape @source.part
+    @value[@key] = transcribe.unescape @source.part
     @source.next()
     @stage = stages.objectHave
     @
@@ -147,7 +147,7 @@ class State
 stages = 
   valueStart:
     text: ->
-      @value = pp.unescape @source.part
+      @value = transcribe.unescape @source.part
       @source.next()
       @stage = stages.valueEnd
       @

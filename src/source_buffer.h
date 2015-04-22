@@ -5,19 +5,6 @@ class SourceBuffer: public BaseBuffer {
 
   public:
 
-    enum Ctype {
-      TEXT,
-      OBJECT,
-      ENDOBJECT,
-      ARRAY,
-      ENDARRAY,
-      IS,
-      LITERAL,
-      PIPE,
-      QUOTE,
-      END,
-    };
-
     static inline Ctype getCtype(uint16_t c) {
       switch (c) {
         case '{':
@@ -115,12 +102,6 @@ class SourceBuffer: public BaseBuffer {
       msg.append(getBuffer(), errIdx);
       msg.append(std::string("'"));
     }  
-
-    v8::Handle<v8::Value> getLiteral();
-    v8::Handle<v8::Array> getArray();
-    v8::Handle<v8::Object> getObject();
-    v8::Handle<v8::Value> getValue();
-
 
     int err;
     size_t nextIdx;
