@@ -3,7 +3,6 @@
 
 #include <nan.h>
 
-NAN_METHOD(Unescape);
 NAN_METHOD(Parse);
 void InitParser();
 

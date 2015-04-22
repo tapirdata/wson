@@ -1,3 +1,4 @@
+#include "transcribe.h"
 #include "serializer.h"
 #include "parser.h"
 

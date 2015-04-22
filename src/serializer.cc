@@ -2,8 +2,6 @@
 #include "serializer.h"
 #include "target_buffer.h"
 
-
-// using namespace v8;
 using v8::Handle;
 using v8::Local;
 using v8::Object;
@@ -98,14 +96,9 @@ void Serializer::Init() {
   NanAssignPersistent(Serializer::sortArray, sortArrayFn);
 }
 
-NAN_METHOD(Escape) {
-  TargetBuffer target;
-  if (args.Length() < 1 || !(args[0]->IsString())) {
-    return NanThrowTypeError("First argument should be a string");
-  }    
-  Local<String> s = args[0].As<String>();
-  target.appendHandleEscaped(s);
-  NanReturnValue(target.getHandle());
+
+void InitSerializer() {
+  Serializer::Init();
 }
 
 NAN_METHOD(Serialize) {
@@ -116,7 +109,4 @@ NAN_METHOD(Serialize) {
   NanReturnValue(serializer.target.getHandle());
 }
 
-void InitSerializer() {
-  Serializer::Init();
-}
 
