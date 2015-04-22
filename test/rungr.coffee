@@ -17,17 +17,17 @@ strs = [
   # 'abc]'
 ]
 
-options = 
+options =
   unescape: (s) -> s
   literal: (s) -> Number s
 
 for s in strs
   try
     x = parser.parse s, options
-  catch err  
+  catch err
     console.log "failed: '%s': %s", s, err
     continue
   console.log "ok: '%s' -> %j ", s, x
-###  
+###
 
 

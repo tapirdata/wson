@@ -16,7 +16,7 @@ describe 'TSON parse', ->
         if x == '__fail__'
           it "should fail to parse '#{s}'", ->
             expect(-> tson.parse s).to.throw()
-        else  
+        else
           it "should parse '#{s}' as '#{JSON.stringify x}'", ->
             expect(tson.parse s).to.be.deep.equal x
 

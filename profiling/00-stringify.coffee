@@ -8,7 +8,7 @@ jsTson = tsonFactory native: false
 
 suite = new Benchmark.Suite()
 
-x = 
+x =
   a: 42
   b: 'foobar'
   c: [1, 4, 9, 16]
@@ -16,6 +16,9 @@ x =
     x: true
     y: false
     z: ['foo', 'bar', null, 'baz']
+
+# x = ['foo', 'bar', 123, true, ['a', 'b']]
+# x = {a: true, b: true, c:true, d: true}
 
 suite.add 'JSON.stringify', -> JSON.stringify x
 suite.add 'jsTson.stringify', -> jsTson.stringify x

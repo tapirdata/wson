@@ -31,15 +31,15 @@ v8::Local<v8::Value> ParserSource::getLiteral() {
         source.next();
         value = NanUndefined();
         break;
-      case 'n': 
+      case 'n':
         source.next();
         value = NanNull();
         break;
-      case 'f': 
+      case 'f':
         source.next();
         value = NanFalse();
         break;
-      case 't': 
+      case 't':
         source.next();
         value = NanTrue();
         break;
@@ -58,16 +58,16 @@ v8::Local<v8::Value> ParserSource::getLiteral() {
           if (end == begin + source.nextString.size()) {
             value = NanNew<v8::Number>(x);
             break;
-          }  
+          }
         }
         source.err = SYNTAX_ERROR;
-      }  
+      }
     }
   } else {
     value = NanNew<v8::String>();
   }
   return NanEscapeScope(value);
-}  
+}
 
 v8::Local<v8::Array> ParserSource::getArray() {
   NanEscapableScope();
@@ -78,10 +78,10 @@ v8::Local<v8::Array> ParserSource::getArray() {
       break;
     default:
       goto stageNext;
-  }      
+  }
   goto end;
 
-stageNext:  
+stageNext:
   switch (source.nextType) {
     case TEXT:
       source.pullUnescapedBuffer();
@@ -104,12 +104,12 @@ stageNext:
       value->Set(value->Length(), getObject());
       if (source.err) goto end;
       goto stageHave;
-    default:  
+    default:
       source.err = SYNTAX_ERROR;
   }
   goto end;
 
-stageHave:  
+stageHave:
   switch (source.nextType) {
     case ENDARRAY:
       source.next();
@@ -119,12 +119,12 @@ stageHave:
       goto stageNext;
     default:
       source.err = SYNTAX_ERROR;
-  }      
+  }
   goto end;
 
-end:    
+end:
   return NanEscapeScope(value);
-}  
+}
 
 v8::Local<v8::Object> ParserSource::getObject() {
   NanEscapableScope();
@@ -137,10 +137,10 @@ v8::Local<v8::Object> ParserSource::getObject() {
       break;
     default:
       goto stageNext;
-  }      
+  }
   goto end;
 
-stageNext:  
+stageNext:
   switch (source.nextType) {
     case TEXT:
       source.pullUnescapedBuffer();
@@ -152,12 +152,12 @@ stageNext:
       source.next();
       key = NanNew<v8::String>();
       goto stageHaveKey;
-    default:  
+    default:
       source.err = SYNTAX_ERROR;
   }
   goto end;
 
-stageHaveKey:  
+stageHaveKey:
   switch (source.nextType) {
     case ENDOBJECT:
       source.next();
@@ -170,14 +170,14 @@ stageHaveKey:
     case IS:
       source.next();
       goto stageHaveColon;
-    default:  
+    default:
       source.err = SYNTAX_ERROR;
   }
   goto end;
 
-stageHaveColon:  
+stageHaveColon:
   switch (source.nextType) {
-    case TEXT: 
+    case TEXT:
       source.pullUnescapedBuffer();
       if (source.err)
         break;
@@ -198,12 +198,12 @@ stageHaveColon:
       value->Set(key, getObject());
       if (source.err) goto end;
       goto stageHaveValue;
-    default:  
+    default:
       source.err = SYNTAX_ERROR;
   }
   goto end;
 
-stageHaveValue:  
+stageHaveValue:
   switch (source.nextType) {
     case ENDOBJECT:
       source.next();
@@ -211,14 +211,14 @@ stageHaveValue:
     case PIPE:
       source.next();
       goto stageNext;
-    default:  
+    default:
       source.err = SYNTAX_ERROR;
   }
   goto end;
 
-end:    
+end:
   return NanEscapeScope(value);
-}  
+}
 
 v8::Local<v8::Value> ParserSource::getValue() {
   NanEscapableScope();
@@ -242,7 +242,7 @@ v8::Local<v8::Value> ParserSource::getValue() {
       source.next();
       value = getObject();
       break;
-    default:  
+    default:
       source.err = SYNTAX_ERROR;
   }
   if (source.nextType != END) {
@@ -250,7 +250,7 @@ v8::Local<v8::Value> ParserSource::getValue() {
   }
   return NanEscapeScope(value);
 }
- 
+
 
 
 

@@ -12,7 +12,7 @@ quoteRegExp = (char) ->
   else
     char
 
-charOfXar = 
+charOfXar =
 #xar: char
   b: '{'
   c: '}'
@@ -23,9 +23,9 @@ charOfXar =
   p: '|'
   q: '`'
 
-prefix = '`'  
+prefix = '`'
 
-module.exports = do ->    
+module.exports = do ->
   charBrick = ''
   splitBrick = ''
   xarOfChar = {}
@@ -33,11 +33,11 @@ module.exports = do ->
     xarOfChar[char] = xar
     charBrick += quoteRegExp char
     if char != prefix
-      splitBrick += quoteRegExp char 
-  return { 
+      splitBrick += quoteRegExp char
+  return {
     prefix: prefix
     charOfXar: charOfXar
-    xarOfChar: xarOfChar  
+    xarOfChar: xarOfChar
     charRe: new RegExp '[' + charBrick + ']', 'gm'
     xarRe: new RegExp quoteRegExp(prefix) + '(.)', 'gm'
     splitRe: new RegExp '([' + splitBrick + '])'
@@ -46,7 +46,7 @@ module.exports = do ->
         char = @charOfXar[xar]
         assert char?, "unxpected xar: '#{xar}'"
         char
-    escape: (s) ->  
+    escape: (s) ->
       s.replace @charRe, (char) => @prefix + @xarOfChar[char]
-  }    
+  }
 

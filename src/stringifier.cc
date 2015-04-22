@@ -2,7 +2,6 @@
 #include "stringifier.h"
 #include "target_buffer.h"
 
-using v8::Handle;
 using v8::Local;
 using v8::Value;
 using v8::String;
@@ -15,7 +14,7 @@ class StringifierTarget {
   public:
     inline void putText(Local<String>);
     inline void putValue(Local<Value>);
-    
+
     static void Init();
     static inline void Sort(Local<Array>);
 
@@ -23,13 +22,13 @@ class StringifierTarget {
 
   private:
     static v8::Persistent<Function> sort;
-};    
+};
 
 void StringifierTarget::Sort(Local<Array> array) {
   NanScope();
   if (array->Length() < 2) {
     return;
-  } 
+  }
   Local<Value> args[] = { array };
   NanNew(sort)->Call(NanGetCurrentContext()->Global(), 1, args);
 }
@@ -37,14 +36,19 @@ void StringifierTarget::Sort(Local<Array> array) {
 void StringifierTarget::putText(Local<String> s) {
   if (s->Length() == 0) {
     target.push('#');
-  } else {  
+  } else {
     target.appendHandleEscaped(s);
   }
 }
 
 void StringifierTarget::putValue(Local<Value> x) {
   NanScope();
-  if (x->IsUndefined()) {
+  if (x->IsString()) {
+    putText(x.As<String>());
+  } else if (x->IsNumber()) {
+    target.push('#');
+    target.appendHandle(x->ToString());
+  } else if (x->IsUndefined()) {
     target.push('#');
     target.push('u');
   } else if (x->IsNull()) {
@@ -57,20 +61,15 @@ void StringifierTarget::putValue(Local<Value> x) {
     } else {
       target.push('f');
     }
-  } else if (x->IsString()) {
-    putText(x.As<String>());
-  } else if (x->IsNumber()) {
-    target.push('#');
-    target.appendHandle(x->ToString());
   } else if (x->IsArray()) {
     Local<Array> array = x.As<Array>();
-    int len = array->Length();
+    uint32_t len = array->Length();
     target.push('[');
-    for (int i=0; i<len; ++i) {
+    for (uint32_t i=0; i<len; ++i) {
       putValue(array->Get(i));
       if (i + 1 != len) {
         target.push('|');
-      }  
+      }
     }
     target.push(']');
   } else if (x->IsObject()) {
@@ -78,8 +77,8 @@ void StringifierTarget::putValue(Local<Value> x) {
     Local<Array> keys = obj->GetOwnPropertyNames();
     Sort(keys);
     target.push('{');
-    int len = keys->Length();
-    for (int i=0; i<len; ++i) {
+    uint32_t len = keys->Length();
+    for (uint32_t i=0; i<len; ++i) {
       Local<String> key = keys->Get(i).As<String>();
       putText(key);
       Local<Value> value = obj->Get(key);
@@ -89,11 +88,11 @@ void StringifierTarget::putValue(Local<Value> x) {
       }
       if (i + 1 != len) {
         target.push('|');
-      }  
+      }
     }
     target.push('}');
   }
-}  
+}
 
 void StringifierTarget::Init() {
   NanScope();
@@ -124,6 +123,7 @@ NAN_METHOD(Stringifier::New) {
 NAN_METHOD(Stringifier::Stringify) {
   NanScope();
   StringifierTarget st;
+  st.target.reserve(128);
   st.putValue(args[0]);
   NanReturnValue(st.target.getHandle());
 }

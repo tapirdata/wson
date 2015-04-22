@@ -15,7 +15,7 @@ describe 'TSON unescape', ->
         if s?
           it "should unescape '#{xs}' as '#{s}' ", ->
             expect(tson.unescape xs).to.be.equal s
-        else    
+        else
           it "should not unescape '#{xs}'", ->
             expect(-> tson.unescape xs).to.throw()
 

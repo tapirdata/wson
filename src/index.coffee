@@ -19,7 +19,7 @@ class TSON
       parser = require('./parser')()
       @parse = (s) -> parser.parse s
 
-    else  
+    else
       @escape = nativeTson.escape
       @unescape = nativeTson.unescape
 

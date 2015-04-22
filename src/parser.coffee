@@ -26,8 +26,8 @@ class Source
       if not term or part.length > 0
         break
     @partIdx = idx
-    @part = part  
-    @term = term  
+    @part = part
+    @term = term
     return
 
   literal: (s) ->
@@ -43,7 +43,7 @@ class Source
         result = Number s
         if _.isNaN result
           throw new Error "unexpected literal '#{s}'"
-        result      
+        result
 
   throwError: (extra) ->
     parts = @parts
@@ -59,12 +59,12 @@ class State
 
   constructor: (@source, @stage, @value, @parent) ->
 
-  next: ->  
+  next: ->
     source = @source
     stage = @stage
     if source.term
       handler = stage.text
-    else  
+    else
       handler = stage[source.part]
       if not handler
         handler = stage.default
@@ -78,12 +78,12 @@ class State
       @source.throwError @
     parent.stage.putValue.call parent, @value
 
-  putArrayValue: (x) ->   
+  putArrayValue: (x) ->
     @value.push x
     @stage = stages.arrayHave
     @
 
-  putObjectValue: (x) ->   
+  putObjectValue: (x) ->
     @value[@key] = x
     @stage = stages.objectHave
     @
@@ -144,14 +144,14 @@ class State
     @
 
 
-stages = 
+stages =
   valueStart:
     text: ->
       @value = transcribe.unescape @source.part
       @source.next()
       @stage = stages.valueEnd
       @
-    '#': -> 
+    '#': ->
       @source.next()
       @stage = stages.valueLiteral
       @
@@ -186,14 +186,14 @@ stages =
     default: ->
       @pop()
 
-  arrayStart:    
+  arrayStart:
     text: -> @arrayText()
     '#': -> @arrayValue()
     '[': -> @arrayValue()
     '{': -> @arrayValue()
     ']': -> @arrayClose()
     putValue: (x) -> @putArrayValue(x)
-  arrayNext:  
+  arrayNext:
     text: -> @arrayText()
     '#': -> @arrayValue()
     '[': -> @arrayValue()
@@ -241,7 +241,7 @@ class Parser
 
 factory = () ->
   new Parser()
-factory.Parser = Parser  
+factory.Parser = Parser
 
 module.exports = factory
 
@@ -249,6 +249,6 @@ module.exports = factory
 factory.makeState = (s) ->
   source = new Source s
   new State source, stages.valueStart
-###  
+###
 
 

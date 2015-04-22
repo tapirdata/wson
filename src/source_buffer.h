@@ -23,7 +23,7 @@ class SourceBuffer: public BaseBuffer {
           return PIPE;
         case '`':
           return QUOTE;
-      }  
+      }
       return TEXT;
     }
 
@@ -77,16 +77,16 @@ class SourceBuffer: public BaseBuffer {
     inline void pullUnescapedBuffer() {
       nextBuffer.clear();
       pullUnescaped(nextBuffer);
-    }  
+    }
 
     inline void pullUnescapedString() {
       nextString.clear();
       pullUnescaped(nextString);
-    }  
+    }
 
     void makeError(TargetBuffer& msg) {
       size_t errIdx = nextIdx;
-      uint16_t errChar = nextChar; 
+      uint16_t errChar = nextChar;
       if (nextType == END) {
         errChar = 0;
       } else {
@@ -101,7 +101,7 @@ class SourceBuffer: public BaseBuffer {
       msg.push('^');
       msg.append(getBuffer(), errIdx);
       msg.append(std::string("'"));
-    }  
+    }
 
     int err;
     size_t nextIdx;

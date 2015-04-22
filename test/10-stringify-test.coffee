@@ -18,7 +18,7 @@ describe 'TSON stringify', ->
         if s == '__fail__'
           it "should fail to stringify '#{JSON.stringify x}'", ->
             expect(-> tson.stringify x).to.throw()
-        else  
+        else
           it "should stringify '#{JSON.stringify x}' as '#{s}' ", ->
             expect(tson.stringify x).to.be.equal s
 

@@ -3,7 +3,7 @@
 _ = require 'lodash'
 transcribe = require './transcribe'
 
-class Stringifier 
+class Stringifier
 
   stringifyArray: (x) ->
     result = '['
@@ -34,30 +34,30 @@ class Stringifier
       value = x[key]
       result += @stringifyKey key
       if value != true
-        result += ':' 
+        result += ':'
         result += @stringify value
     result + '}'
 
   stringify: (x) ->
     if x == null
       '#n'
-    else  
+    else
       switch typeof x
         when 'undefined'
           '#u'
         when 'boolean'
           if x
             '#t'
-          else  
+          else
             '#f'
         when 'number'
           '#' + x.toString()
         when 'string'
           if x.length == 0
             '#'
-          else  
+          else
             transcribe.escape x
-        else    
+        else
           if _.isArray x
             @stringifyArray x
           else if _.isObject x
@@ -69,7 +69,7 @@ class Stringifier
 
 factory = () ->
   new Stringifier()
-factory.Stringifier = Stringifier  
+factory.Stringifier = Stringifier
 
 module.exports = factory
 

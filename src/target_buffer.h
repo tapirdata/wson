@@ -28,10 +28,9 @@ class TargetBuffer: public BaseBuffer {
           push(xc);
         } else {
           push (c);
-        }  
-      }  
+        }
+      }
     }
-    */
 
     template<typename S>
     inline int appendUnescaped(const S& source, int start=0, int length=-1) {
@@ -56,12 +55,13 @@ class TargetBuffer: public BaseBuffer {
           push (c);
         } else {
           push (xc);
-        }  
-      }  
+        }
+      }
       return 0;
     }
+    */
 
-    inline void appendHandleEscaped(v8::Handle<v8::String> source, int start=0, int length=-1) {
+    inline void appendHandleEscaped(v8::Local<v8::String> source, int start=0, int length=-1) {
       size_t oldSize = buffer_.size();
       if (length < 0) {
         length = source->Length() - start;
@@ -93,19 +93,46 @@ class TargetBuffer: public BaseBuffer {
           if (xc) {
             *--replTo = xc;
             *--replTo = '`';
-            --escCount;  
+            --escCount;
           } else {
             *--replTo = c;
           }
         }
       }
-    }  
-
-    inline int appendHandleUnescaped(v8::Handle<v8::String> source, int start=0, int length=-1) {
-      TargetBuffer source1;
-      source1.appendHandle(source, start, length);
-      return appendUnescaped(source1.buffer_);
     }
+
+    inline int appendHandleUnescaped(v8::Local<v8::String> source, int start=0, int length=-1) {
+      size_t oldSize = buffer_.size();
+      if (length < 0) {
+        length = source->Length() - start;
+      }
+      buffer_.resize(oldSize + length);
+      uint16_t* putBegin = buffer_.data() + oldSize;
+      source->Write(putBegin, start, length, v8::String::NO_NULL_TERMINATION);
+
+      uint16_t* replTo = putBegin;
+      uint16_t* replFrom = putBegin;
+      uint16_t* replEnd = putBegin + length;
+      while (replFrom != replEnd) {
+        uint16_t xc = *replFrom++;
+        if (xc == '`') {
+          if (replFrom == replEnd) {
+            return SYNTAX_ERROR;
+          }
+          xc = *replFrom++;
+          uint16_t c = getUnescapeChar(xc);
+          if (!c) {
+            return SYNTAX_ERROR;
+          }
+          *replTo++ = c;
+        } else {
+          *replTo++ = xc;
+        }
+      }
+      buffer_.resize(oldSize + (replTo - putBegin));
+      return 0;
+    }
+
 
     inline void clear() {
       buffer_.resize(0);
