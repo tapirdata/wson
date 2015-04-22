@@ -24,7 +24,6 @@ class Serializer {
       }
     }
 
-
     void sort1(Handle<Array> array) {
       if (array->Length() < 2) {
         return;

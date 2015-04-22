@@ -41,6 +41,7 @@ class SourceBuffer: public BaseBuffer {
     }
 
     SourceBuffer():
+      err(0),
       nextIdx(0)
     {}
 
@@ -66,45 +67,62 @@ class SourceBuffer: public BaseBuffer {
       return 0;
     }
 
-    inline int pullUnescaped(TargetBuffer& target) {
+    inline void pullUnescaped(TargetBuffer& target) {
       while (true) {
         target.push(nextChar);
-        int err = next();
-        if (err) {
-          return err;
-        }
-        if (nextType != TEXT) {
+        next();
+        if (err || nextType != TEXT) {
           break;
         }
       }
-      return 0;
     }
 
-    inline int pullUnescaped(std::string& target) {
+    inline void pullUnescaped(std::string& target) {
       while (true) {
         target.push_back(nextChar);
-        int err = next();
-        if (err) {
-          return err;
-        }
-        if (nextType != TEXT) {
+        next();
+        if (err || nextType != TEXT) {
           break;
         }
       }
-      return 0;
     }
 
-    inline int pullUnescapedBuffer() {
+    inline void pullUnescapedBuffer() {
       nextBuffer.clear();
-      return pullUnescaped(nextBuffer);
+      pullUnescaped(nextBuffer);
     }  
 
-    inline int pullUnescapedString() {
+    inline void pullUnescapedString() {
       nextString.clear();
-      return pullUnescaped(nextString);
+      pullUnescaped(nextString);
     }  
 
+    void makeError(TargetBuffer& msg) {
+      size_t errIdx = nextIdx;
+      uint16_t errChar = nextChar; 
+      if (nextType == END) {
+        errChar = 0;
+      } else {
+        --errIdx;
+      }
+      msg.append(std::string("Unexpected '"));
+      if (errChar) {
+        msg.push(nextChar);
+      }
+      msg.append(std::string("' at '"));
+      msg.append(getBuffer(), 0, errIdx);
+      msg.push('^');
+      msg.append(getBuffer(), errIdx);
+      msg.append(std::string("'"));
+    }  
 
+    v8::Handle<v8::Value> getLiteral();
+    v8::Handle<v8::Array> getArray();
+    v8::Handle<v8::Object> getObject();
+    v8::Handle<v8::Value> getValue();
+
+
+    int err;
     size_t nextIdx;
     uint16_t nextChar;
     Ctype nextType;

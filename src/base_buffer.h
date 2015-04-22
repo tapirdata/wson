@@ -3,9 +3,6 @@
 
 #include "types.h"
 
-using v8::Handle;
-using v8::String;
-
 class BaseBuffer {
 
   public:
@@ -25,17 +22,17 @@ class BaseBuffer {
       buffer_.insert(buffer_.end(), sourceBegin, sourceEnd);
       }
 
-    inline void appendHandle(Handle<String> source, int start=0, int length=-1) {
+    inline void appendHandle(v8::Handle<v8::String> source, int start=0, int length=-1) {
       size_t oldSize = buffer_.size();
       if (length < 0) {
         length = source->Length() - start;
       }
       buffer_.resize(oldSize + length);
-      source->Write(buffer_.data() + oldSize, start, length, String::NO_NULL_TERMINATION);
+      source->Write(buffer_.data() + oldSize, start, length, v8::String::NO_NULL_TERMINATION);
     }
 
-    Handle<String> getHandle() {
-      return NanNew<String>(buffer_.data(), buffer_.size());
+    v8::Handle<v8::String> getHandle() {
+      return NanNew<v8::String>(buffer_.data(), buffer_.size());
     }
 
     const usc2vector& getBuffer() const {

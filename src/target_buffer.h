@@ -4,11 +4,6 @@
 #include "base_buffer.h"
 #include <iostream>
 
-using v8::Handle;
-using v8::Local;
-using v8::String;
-
-
 class TargetBuffer: public BaseBuffer {
 
   public:
@@ -64,14 +59,14 @@ class TargetBuffer: public BaseBuffer {
       return 0;
     }
 
-    void appendHandleEscaped(Handle<String> source, int start=0, int length=-1) {
+    void appendHandleEscaped(v8::Handle<v8::String> source, int start=0, int length=-1) {
       size_t oldSize = buffer_.size();
       if (length < 0) {
         length = source->Length() - start;
       }
       buffer_.resize(oldSize + length);
       uint16_t* putBegin = buffer_.data() + oldSize;
-      source->Write(putBegin, start, length, String::NO_NULL_TERMINATION);
+      source->Write(putBegin, start, length, v8::String::NO_NULL_TERMINATION);
 
       uint16_t* checkIt = putBegin;
       int escCount = 0;
@@ -104,7 +99,7 @@ class TargetBuffer: public BaseBuffer {
       }
     }  
 
-    int appendHandleUnescaped(Handle<String> source, int start=0, int length=-1) {
+    int appendHandleUnescaped(v8::Handle<v8::String> source, int start=0, int length=-1) {
       TargetBuffer source1;
       source1.appendHandle(source, start, length);
       return appendUnescaped(source1.buffer_);
