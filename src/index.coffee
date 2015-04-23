@@ -23,11 +23,11 @@ class TSON
       @escape = nativeTson.escape
       @unescape = nativeTson.unescape
 
-      stringifier = nativeTson.createStringifier()
-      @stringify = stringifier.stringify
+      stringifier = new nativeTson.Stringifier()
+      @stringify = (x) -> stringifier.stringify x
 
-      parser = nativeTson.createParser()
-      @parse = parser.parse
+      parser = new nativeTson.Parser()
+      @parse = (x) -> parser.parse x
 
 
 factory = (options) ->

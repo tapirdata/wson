@@ -31,6 +31,7 @@ module.exports = [
   [{'[a]':'[b]'}, '{`aa`e:`ab`e}']
   # fail
   ['__fail__', '']
+  ['__fail__', '#x']
   ['__fail__', '#123x']
   ['__fail__', '#[x]']
   ['__fail__', '[']
@@ -42,6 +43,7 @@ module.exports = [
   ['__fail__', 'a#b']
   ['__fail__', 'a|b']
   ['__fail__', 'a[b]']
+  ['__fail__', '[]a']
   ['__fail__', '[]]']
   ['__fail__', '[a:4]']
   ['__fail__', '{[}]']

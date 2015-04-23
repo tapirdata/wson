@@ -39,6 +39,10 @@ class BaseBuffer {
       return buffer_;
     }
 
+    size_t size() {
+      return buffer_.size();
+    }
+
     void reserve(size_t x) {
       buffer_.reserve(x);
     }

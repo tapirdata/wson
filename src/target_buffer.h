@@ -10,7 +10,6 @@ class TargetBuffer: public BaseBuffer {
 
     TargetBuffer() {}
 
-    /*
     template<typename S>
     inline void appendEscaped(const S& source, int start=0, int length=-1) {
       if (length < 0) {
@@ -59,7 +58,6 @@ class TargetBuffer: public BaseBuffer {
       }
       return 0;
     }
-    */
 
     inline void appendHandleEscaped(v8::Local<v8::String> source, int start=0, int length=-1) {
       size_t oldSize = buffer_.size();
