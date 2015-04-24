@@ -66,10 +66,5 @@ class Stringifier
             throw new Error "cannot stringify #{typeof x}: '#{x}' #{if _.isObject x then 'by ' + x.constructor.toString()}"
 
 
-
-factory = () ->
-  new Stringifier()
-factory.Stringifier = Stringifier
-
-module.exports = factory
+module.exports = Stringifier
 

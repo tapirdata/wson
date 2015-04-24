@@ -1,14 +1,14 @@
 'use strict'
 
 # JSON = require 'JSON'
-tsonFactory = require '../src'
+Tson = require '../src'
 
 chai = require 'chai'
 expect = chai.expect
 
 
-describe 'TSON stringify', ->
-  tson = tsonFactory()
+describe 'Tson stringify', ->
+  tson = new Tson()
   describe 'stringify', ->
     pairs = require './fixtures/stringify-pairs'
     for [x, s] in pairs

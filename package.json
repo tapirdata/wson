@@ -1,6 +1,6 @@
 {
   "name": "tson",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "A serializer/deserializer",
   "main": "./lib",
   "scripts": {
@@ -20,17 +20,16 @@
   },
   "license": "MIT",
   "dependencies": {
-    "bindings": "~1.2.1",
-    "lodash": "^3.6.0",
-    "nan": "~1.3.0"
+    "lodash": "^3.6.0"
   },
   "devDependencies": {
     "benchmark": "^1.0.0",
     "chai": "^2.1.1",
     "coffee-script": "^1.9.1",
     "microtime": "^1.3.0",
-    "mocha": "^2.2.1",
-    "pegjs": "^0.8.0"
+    "mocha": "^2.2.1"
   },
-  "gypfile": true
+  "optionalDependencies": {
+    "hitson": "file:../hitson"
+  }
 }

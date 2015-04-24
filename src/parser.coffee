@@ -225,9 +225,5 @@ class Parser
     state.getValue()
 
 
-factory = () ->
-  new Parser()
-factory.Parser = Parser
-
-module.exports = factory
+module.exports = Parser
 

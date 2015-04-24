@@ -3,36 +3,46 @@
 assert = require 'assert'
 _ = require 'lodash'
 
-nativeTson = require('bindings') 'native_tson'
+try
+  hitson = require 'hitson'
+catch
+  hitson = null
 
-class TSON
+
+class Tson
 
   constructor: (options) ->
     options or= {}
-    if options.native == false
-      @escape = (s) -> require('./transcribe').escape s
-      @unescape = (s) -> require('./transcribe').unescape s
 
-      stringifier = require('./stringifier')()
+    useHi = options.hi
+
+    if hitson
+      useHi = useHi != false
+    else  
+      if useHi == true
+        console.warn 'hitson not found; using js-tson'
+        useHi = false
+
+    if useHi
+      stringifier = new hitson.Stringifier()
+      parser = new hitson.Parser()
+
+      @escape = hitson.escape
+      @unescape = hitson.unescape
       @stringify = (x) -> stringifier.stringify x
-
-      parser = require('./parser')()
-      @parse = (s) -> parser.parse s
-
-    else
-      @escape = nativeTson.escape
-      @unescape = nativeTson.unescape
-
-      stringifier = new nativeTson.Stringifier()
-      @stringify = (x) -> stringifier.stringify x
-
-      parser = new nativeTson.Parser()
       @parse = (x) -> parser.parse x
 
+    else
+      transcribe = require './transcribe'
+      Stringifier = require './stringifier'
+      Parser = require './parser'
+      stringifier = new Stringifier()
+      parser = new Parser()
 
-factory = (options) ->
-  # options = native: false
-  new TSON options
-factory.TSON = TSON
+      @escape = (s) -> transcribe.escape s
+      @unescape = (s) -> transcribe.unescape s
+      @stringify = (x) -> stringifier.stringify x
+      @parse = (s) -> parser.parse s
 
-module.exports = factory
+      
+module.exports = Tson

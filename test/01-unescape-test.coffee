@@ -1,13 +1,13 @@
 'use strict'
 
-tsonFactory = require '../src'
+Tson = require '../src'
 
 chai = require 'chai'
 expect = chai.expect
 
 
-describe 'TSON unescape', ->
-  tson = tsonFactory()
+describe 'Tson unescape', ->
+  tson = new Tson()
   describe 'unescape', ->
     pairs = require './fixtures/escape-pairs'
     for [s, xs] in pairs

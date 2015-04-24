@@ -1,7 +1,7 @@
 'use strict'
 
 Benchmark = require 'benchmark'
-tsonFactory = require '../src'
+Tson = require '../src'
 
 suite = new Benchmark.Suite()
 
@@ -14,15 +14,15 @@ x =
     y: false
     z: ['foo', 'bar', null, 'baz']
 
-nativeTson = tsonFactory()
-jsTson = tsonFactory native: false
+hiTson = new Tson hi: true
+jsTson = new Tson hi: false
 
 sj = JSON.stringify x
 st = jsTson.stringify x
 
 suite.add 'JSON.parse', -> JSON.parse sj
 suite.add 'jsTson.parse', -> jsTson.parse st
-suite.add 'nativeTson.parse', -> nativeTson.parse st
+suite.add 'hiTson.parse', -> hiTson.parse st
 
 suite.on 'cycle', (event) ->
   console.log String(event.target)
