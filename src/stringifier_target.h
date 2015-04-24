@@ -61,18 +61,7 @@ class StringifierTarget {
       }  
       --oaIdx_;
     } 
-
-    // static v8::Persistent<v8::Function> sort;
 };
-
-// void StringifierTarget::Sort(v8::Local<v8::Array> array) {
-//   NanScope();
-//   if (array->Length() < 2) {
-//     return;
-//   }
-//   v8::Local<v8::Value> args[] = { array };
-//   NanNew(sort)->Call(NanGetCurrentContext()->Global(), 1, args);
-// }
 
 void StringifierTarget::putText(v8::Local<v8::String> s) {
   if (s->Length() == 0) {
@@ -90,7 +79,6 @@ void StringifierTarget::putText(const usc2vector& buffer, size_t start, size_t l
 }
 
 void StringifierTarget::putValue(v8::Local<v8::Value> x) {
-  NanScope();
   if (x->IsString()) {
     putText(x.As<v8::String>());
   } else if (x->IsNumber()) {
@@ -130,7 +118,6 @@ void StringifierTarget::putValue(v8::Local<v8::Value> x) {
 }
 
 void ObjectAdaptor::putObject(v8::Local<v8::Object> obj) {
-  // NanScope();
   v8::Local<v8::Array> keys = obj->GetOwnPropertyNames();
   uint32_t len = keys->Length();
   entries.resize(len);

@@ -1,7 +1,6 @@
 #include "parser_source.h"
 
 v8::Local<v8::Value> ParserSource::getLiteral() {
-  NanEscapableScope();
   v8::Local<v8::Value> value;
   if (source.nextType == TEXT) {
     switch (source.nextChar) {
@@ -44,11 +43,10 @@ v8::Local<v8::Value> ParserSource::getLiteral() {
   } else {
     value = NanNew<v8::String>();
   }
-  return NanEscapeScope(value);
+  return value;
 }
 
 v8::Local<v8::Array> ParserSource::getArray() {
-  NanEscapableScope();
   v8::Local<v8::Array> value = NanNew<v8::Array>();
   switch (source.nextType) {
     case ENDARRAY:
@@ -101,11 +99,10 @@ stageHave:
   goto end;
 
 end:
-  return NanEscapeScope(value);
+  return value;
 }
 
 v8::Local<v8::Object> ParserSource::getObject() {
-  NanEscapableScope();
   v8::Local<v8::Object> value = NanNew<v8::Object>();
   v8::Local<v8::String> key;
 
@@ -195,11 +192,10 @@ stageHaveValue:
   goto end;
 
 end:
-  return NanEscapeScope(value);
+  return value;
 }
 
 v8::Local<v8::Value> ParserSource::getValue() {
-  NanEscapableScope();
   v8::Local<v8::Value> value;
   switch (source.nextType) {
     case TEXT:
@@ -226,6 +222,6 @@ v8::Local<v8::Value> ParserSource::getValue() {
   if (source.nextType != END) {
     source.err = SYNTAX_ERROR;
   }
-  return NanEscapeScope(value);
+  return value;
 }
 
