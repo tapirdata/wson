@@ -8,235 +8,221 @@ transcribe = require './transcribe'
 class Source
 
   constructor: (s) ->
-    assert typeof s == 'string', 'parse expects a string, got: ' + s
     @parts = s.split transcribe.splitRe
-    @partIdx = 0
+    @nextIdx = 0
     @next()
 
   next: ->
     parts = @parts
-    idx = @partIdx
+    idx = @nextIdx
     loop
       if idx >= parts.length
         part = 'end'
-        term = false
+        isText = false
         break
-      term = idx % 2 == 0
+      isText = idx % 2 == 0
       part = parts[idx++]
-      if not term or part.length > 0
+      if not isText or part.length > 0
         break
-    @partIdx = idx
+    @nextIdx = idx
     @part = part
-    @term = term
+    @isText = isText
     return
-
-  literal: (s) ->
-    switch s
-      when 't'
-        true
-      when 'f'
-        false
-      when 'n'
-        null
-      when 'u'
-      else
-        result = Number s
-        if _.isNaN result
-          throw new Error "unexpected literal '#{s}'"
-        result
-
-  throwError: (extra) ->
-    parts = @parts
-    idx = @partIdx
-    part = @part
-    msg = "unexpected '#{part}' in '#{parts.slice(0, idx).join('') + '^' + parts.slice(idx).join('')}'"
-    if extra
-      msg = "#{msg} #{extra}"
-    throw new Error msg
 
 
 class State
 
-  constructor: (@source, @stage, @value, @parent) ->
+  constructor: (@source) ->
+
+  throwError: (cause) ->
+    badIdx = @source.nextIdx
+    if badIdx > 0
+      --badIdx
+    cause or= "unexpected '#{@source.part}'"
+    msg = "#{cause} in '#{@source.parts.slice(0, badIdx).join('') + '^' + @source.parts.slice(badIdx).join('')}'"
+    throw new Error msg
 
   next: ->
-    source = @source
-    stage = @stage
-    if source.term
-      handler = stage.text
-    else
-      handler = stage[source.part]
+    @source.next()
+
+  scan: ->
+    while @stage
+      if @source.isText
+        handler = @stage.text
+      else  
+        handler = @stage[@source.part]
       if not handler
-        handler = stage.default
-    if not handler
-      @source.throwError @
-    handler.call @
+        handler = @stage.default
+      # console.log "part='%s', stage=%j, handler=%s", @source.part, _.keys(@stage), handler
+      if not handler
+        @throwError()
+      handler.call @
+      # console.log 'stage=', @stage
 
-  pop: ->
-    parent = @parent
-    if not parent
-      @source.throwError @
-    parent.stage.putValue.call parent, @value
-
-  putArrayValue: (x) ->
-    @value.push x
-    @stage = stages.arrayHave
-    @
-
-  putObjectValue: (x) ->
-    @value[@key] = x
-    @stage = stages.objectHave
-    @
-
-  arrayText: ->
-    @value.push transcribe.unescape @source.part
-    @source.next()
-    @stage = stages.arrayHave
-    @
-
-  arrayValue: ->
-    new State @source, stages.valueStart, undefined, @
-
-  arrayNext: ->
-    @source.next()
-    @stage = stages.arrayNext
-    @
-
-  arrayClose: ->
-    @source.next()
-    @pop()
-
-  objectClose: ->
-    @source.next()
-    @pop()
-
-  objectKey: ->
-    @key = transcribe.unescape @source.part
-    @value[@key] = true
-    @source.next()
-    @stage = stages.objectKey
-    @
-
-  objectEmptyKey: ->
-    @key = ''
-    @value[@key] = true
-    @source.next()
-    @stage = stages.objectKey
-    @
-
-  objectColon: ->
-    @source.next()
-    @stage = stages.objectColon
-    @
-
-  objectText: ->
-    @value[@key] = transcribe.unescape @source.part
-    @source.next()
-    @stage = stages.objectHave
-    @
-
-  objectValue: ->
-    new State @source, stages.valueStart, undefined, @
-
-  objectNext: ->
-    @source.next()
-    @stage = stages.objectNext
-    @
-
-
-stages =
-  valueStart:
+  stageValueStart:
     text: ->
       @value = transcribe.unescape @source.part
-      @source.next()
-      @stage = stages.valueEnd
-      @
+      @next()
+      @stage = null
     '#': ->
-      @source.next()
-      @stage = stages.valueLiteral
-      @
+      @next()
+      @value = @getLiteral()
+      @stage = null
     '[': ->
-      @source.next()
-      new State @source, stages.arrayStart, [], @
+      @next()
+      @fetchArray()
+      @stage = null
     '{': ->
-      @source.next()
-      new State @source, stages.objectStart, {}, @
-    putValue: (value) ->
-      @value = value
-      @stage = stages.valueEnd
-      @
-  valueLiteral:
+      @next()
+      @fetchObject()
+      @stage = null
+
+  stageArrayStart:
+    ']': ->
+      @next()
+      @stage = null
+    'default': ->
+      @stage = @stageArrayNext
+
+  stageArrayNext:
     text: ->
+      @value.push transcribe.unescape @source.part
+      @next()
+      @stage = @stageArrayHave
+    '#': ->
+      @next()
+      @value.push @getLiteral()
+      @stage = @stageArrayHave
+    '[': ->
+      @next()
+      state = new State @source
+      state.fetchArray()
+      @value.push state.value
+      @stage = @stageArrayHave
+    '{': ->
+      @next()
+      state = new State @source
+      state.fetchObject()
+      @value.push state.value
+      @stage = @stageArrayHave
+
+  stageArrayHave:
+    '|': ->
+      @next()
+      @stage = @stageArrayNext
+    ']': ->
+      @next()
+      @stage = null
+
+  stageObjectStart:
+    '}': ->
+      @next()
+      @stage = null
+    'default': ->
+      @stage = @stageObjectNext
+
+  stageObjectNext:
+    text: ->
+      @key = transcribe.unescape @source.part
+      @next()
+      @stage = @stageObjectHaveKey
+    '#': ->  
+      @next()
+      @key = ''
+      @stage = @stageObjectHaveKey
+
+  stageObjectHaveKey:
+    ':': ->  
+      @next()
+      @stage = @stageObjectHaveColon
+    '|': ->
+      @next()
+      @value[@key] = true
+      @stage = @stageObjectNext
+    '}': ->
+      @next()
+      @value[@key] = true
+      @stage = null
+
+  stageObjectHaveColon:
+    text: ->
+      @value[@key] = transcribe.unescape @source.part
+      @next()
+      @stage = @stageObjectHaveValue
+    '#': ->
+      @next()
+      @value[@key] = @getLiteral()
+      @stage = @stageObjectHaveValue
+    '[': ->  
+      @next()
+      state = new State @source
+      state.fetchArray()
+      @value[@key] = state.value
+      @stage = @stageObjectHaveValue
+    '{': ->  
+      @next()
+      state = new State @source
+      state.fetchObject()
+      @value[@key] = state.value
+      @stage = @stageObjectHaveValue
+
+  stageObjectHaveValue:
+    '|': ->
+      @next()
+      @stage = @stageObjectNext
+    '}': ->
+      @next()
+      @stage = null
+
+  getLiteral: ->
+    if not @source.isText
+      value = ''
+    else  
       part = @source.part
-      try
-        @value = @source.literal part
-      catch err
-        @source.throwError @
-      @source.next()
-      @stage = stages.valueEnd
-      @
-    default: ->
-      @value = ''
-      @stage = stages.valueEnd
-      @
-  valueEnd:
-    end: ->
-      @done = true
-      @
-    default: ->
-      @pop()
+      switch part
+        when 't'
+          value = true
+        when 'f'
+          value = false
+        when 'n'
+          value = null
+        when 'u'
+        else
+          value = Number part
+          if _.isNaN value
+            @throwError "unexpected literal '#{part}'"
+      @next()    
+    value  
 
-  arrayStart:
-    text: -> @arrayText()
-    '#': -> @arrayValue()
-    '[': -> @arrayValue()
-    '{': -> @arrayValue()
-    ']': -> @arrayClose()
-    putValue: (x) -> @putArrayValue(x)
-  arrayNext:
-    text: -> @arrayText()
-    '#': -> @arrayValue()
-    '[': -> @arrayValue()
-    '{': -> @arrayValue()
-    putValue: (x) -> @putArrayValue(x)
-  arrayHave:
-    '|': -> @arrayNext()
-    ']': -> @arrayClose()
+  fetchValue: ->
+    @stage = @stageValueStart
+    @scan()
 
-  objectStart:
-    text: -> @objectKey()
-    '#': -> @objectEmptyKey()
-    '}': -> @objectClose()
-  objectNext:
-    text: -> @objectKey()
-    '#': -> @objectEmptyKey()
-  objectKey:
-    '|': -> @objectNext()
-    '}': -> @objectClose()
-    ':': -> @objectColon()
-  objectColon:
-    text: -> @objectText()
-    '#': -> @objectValue()
-    '[': -> @objectValue()
-    '{': -> @objectValue()
-    putValue: (x) -> @putObjectValue(x)
-  objectHave:
-    '}': -> @objectClose()
-    '|': -> @objectNext()
+  fetchArray: ->
+    @stage = @stageArrayStart
+    @value = []
+    @scan()
+
+  fetchObject: ->
+    @stage = @stageObjectStart
+    @value = {}
+    @scan()
+
+  getValue: ->
+    @fetchValue()
+    if @source.isText or @source.part != 'end'
+      # console.log 'ERROR: source=', @source
+      @throwError "unexpected extra text"
+    @value
 
 
 class Parser
 
   parse: (s) ->
+    assert typeof s == 'string', 'parse expects a string, got: ' + s
     source = new Source s
-    state = new State source, stages.valueStart
-    loop
-      state = state.next()
-      if state.done
-        return state.value
-
-  unescape: (s) ->
-    unescaper.unescape s
+    state = new State source
+    state.getValue()
 
 
 factory = () ->
@@ -244,11 +230,4 @@ factory = () ->
 factory.Parser = Parser
 
 module.exports = factory
-
-###
-factory.makeState = (s) ->
-  source = new Source s
-  new State source, stages.valueStart
-###
-
 
