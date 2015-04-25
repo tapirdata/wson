@@ -4,15 +4,17 @@ class TsonError extends Error
 
 class ParseError extends TsonError
   name: 'ParseError'
-  constructor: (@s, @pos, cause) ->
+  constructor: (@s, @pos, @cause) ->
+    # console.log 'ParseError "%s" pos=%s cause="%s"', @s, @pos, @cause
     if not @pos?
       @pos = @s.length
-    if !cause
+    if not @cause
       if @pos >= @s.length
-        cause = "unexpected end"
+        char = "end"
       else  
-        cause = "unexpected '#{@s[@pos]}'"
-    @message = "#{cause} at '#{@s.slice 0, @pos}^#{@s.slice @pos}'"
+        char = "'#{@s[@pos]}'"
+      @cause = "unexpected #{char}"
+    @message = "#{@cause} at '#{@s.slice 0, @pos}^#{@s.slice @pos}'"
 
 
 class StringifyError extends TsonError

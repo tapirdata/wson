@@ -47,7 +47,7 @@ module.exports = do ->
       s.replace @xarRe, (all, xar, pos) =>
         char = @charOfXar[xar]
         if not char?
-          throw new errors.ParseError s, pos + 1, "Unexpected escape '#{xar}'" 
+          throw new errors.ParseError s, pos + 1 # , "unexpected escape '#{xar}'" 
         char
     escape: (s) ->
       s.replace @charRe, (char) => @prefix + @xarOfChar[char]

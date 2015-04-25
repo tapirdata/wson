@@ -23,7 +23,7 @@ class Tson
 
     if useHi
       stringifier = new hitson.Stringifier()
-      parser = new hitson.Parser()
+      parser = new hitson.Parser errors.ParseError
 
       @escape = hitson.escape
       @unescape = hitson.unescape

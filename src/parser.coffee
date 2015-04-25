@@ -35,8 +35,8 @@ class State
   constructor: (@source) ->
 
   throwError: (cause, offset=0) ->
-    # console.log 'throwError source=', @source
-    if not @source.isEnd
+    # console.log 'throwError cause="%s" offset=%s source=', cause, offset, @source
+    if 1 or not @source.isEnd
       pos = 0
       idx = 0
       while idx < @source.nextIdx - 1
@@ -184,9 +184,9 @@ class State
     try
       transcribe.unescape @source.part
     catch err
+      # console.log 'err=', err
       if err instanceof errors.ParseError
-        @next()
-        @throwError err.s, err.cause, err.pos
+        @throwError err.cause, err.pos
       throw err
 
   getLiteral: ->
@@ -227,7 +227,7 @@ class State
     @fetchValue()
     if not @source.isEnd
       # console.log 'ERROR: source=', @source
-      @throwError "unexpected extra text"
+      @throwError() # "unexpected extra text"
     @value
 
 
