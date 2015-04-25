@@ -11,7 +11,9 @@ module.exports = [
   [false, '#f']
   [null, '#n']
   [undefined, '#u']
-  ['ab:c', 'ab`ic']
+  [undefined, '#u']
+  [new Date(1400000000000), '#d1400000000000']
+  [':abc', '`iabc']
   # array
   [['ab'], '[ab]']
   [[], '[]']

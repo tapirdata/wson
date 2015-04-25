@@ -189,7 +189,13 @@ class State
         @throwError err.cause, err.pos
       throw err
 
+  
+  invalidLiteral: (part) ->
+    @throwError "unexpected literal '#{part}'"
+
+
   getLiteral: ->
+
     if @source.isEnd or not @source.isText
       value = ''
     else  
@@ -203,9 +209,15 @@ class State
           value = null
         when 'u'
         else
-          value = Number part
-          if _.isNaN value
-            @throwError "unexpected literal '#{part}'"
+          if part[0] == 'd'
+            value = Number part.slice 1
+            if _.isNaN value
+              @invalidLiteral part
+            value = new Date(value)  
+          else  
+            value = Number part
+            if _.isNaN value
+              @invalidLiteral part
       @next()    
     value  
 

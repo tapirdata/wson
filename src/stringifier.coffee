@@ -62,7 +62,10 @@ class Stringifier
           if _.isArray x
             @stringifyArray x
           else if _.isObject x
-            @stringifyObject x
+            if x instanceof Date
+              '#d' + x.valueOf().toString()
+            else  
+              @stringifyObject x
           else
             throw new errors.StringifyError x
 
