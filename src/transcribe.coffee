@@ -41,7 +41,7 @@ module.exports = do ->
     charOfXar: charOfXar
     xarOfChar: xarOfChar
     charRe: new RegExp '[' + charBrick + ']', 'gm'
-    xarRe: new RegExp quoteRegExp(prefix) + '(.)', 'gm'
+    xarRe: new RegExp quoteRegExp(prefix) + '(.?)', 'gm'
     splitRe: new RegExp '([' + splitBrick + '])'
     unescape: (s) ->
       s.replace @xarRe, (all, xar, pos) =>

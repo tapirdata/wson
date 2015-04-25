@@ -22,11 +22,11 @@ class Tson
         useHi = false
 
     if useHi
-      stringifier = new hitson.Stringifier()
+      stringifier = new hitson.Stringifier errors.StringifyError
       parser = new hitson.Parser errors.ParseError
 
-      @escape = hitson.escape
-      @unescape = hitson.unescape
+      @escape = (x) -> stringifier.escape x
+      @unescape = (x) -> parser.unescape x
       @stringify = (x) -> stringifier.stringify x
       @parse = (x) -> parser.parse x
 
