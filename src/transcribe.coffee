@@ -1,4 +1,6 @@
-assert = require 'assert'
+'use strict'
+
+errors = require './errors'
 
 regExpQuoteSet = do (chars='-\\()+*.?[]^$') ->
   o = {}
@@ -42,9 +44,10 @@ module.exports = do ->
     xarRe: new RegExp quoteRegExp(prefix) + '(.)', 'gm'
     splitRe: new RegExp '([' + splitBrick + '])'
     unescape: (s) ->
-      s.replace @xarRe, (all, xar) =>
+      s.replace @xarRe, (all, xar, pos) =>
         char = @charOfXar[xar]
-        assert char?, "unxpected xar: '#{xar}'"
+        if not char?
+          throw new errors.ParseError s, pos + 1, "Unexpected escape '#{xar}'" 
         char
     escape: (s) ->
       s.replace @charRe, (char) => @prefix + @xarOfChar[char]

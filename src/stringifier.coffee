@@ -2,6 +2,7 @@
 
 _ = require 'lodash'
 transcribe = require './transcribe'
+errors = require './errors'
 
 class Stringifier
 
@@ -63,7 +64,7 @@ class Stringifier
           else if _.isObject x
             @stringifyObject x
           else
-            throw new Error "cannot stringify #{typeof x}: '#{x}' #{if _.isObject x then 'by ' + x.constructor.toString()}"
+            throw new errors.StringifyError x
 
 
 module.exports = Stringifier

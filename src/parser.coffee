@@ -3,6 +3,7 @@
 assert = require 'assert'
 _ = require 'lodash'
 transcribe = require './transcribe'
+errors = require './errors'
 
 
 class Source
@@ -10,6 +11,7 @@ class Source
   constructor: (s) ->
     @parts = s.split transcribe.splitRe
     @nextIdx = 0
+    @isEnd = false
     @next()
 
   next: ->
@@ -17,16 +19,14 @@ class Source
     idx = @nextIdx
     loop
       if idx >= parts.length
-        part = 'end'
-        isText = false
+        @isEnd = true
         break
-      isText = idx % 2 == 0
+      @isText = idx % 2 == 0
       part = parts[idx++]
-      if not isText or part.length > 0
+      if not @isText or part.length > 0
         break
     @nextIdx = idx
     @part = part
-    @isText = isText
     return
 
 
@@ -34,19 +34,24 @@ class State
 
   constructor: (@source) ->
 
-  throwError: (cause) ->
-    badIdx = @source.nextIdx
-    if badIdx > 0
-      --badIdx
-    cause or= "unexpected '#{@source.part}'"
-    msg = "#{cause} in '#{@source.parts.slice(0, badIdx).join('') + '^' + @source.parts.slice(badIdx).join('')}'"
-    throw new Error msg
+  throwError: (cause, offset=0) ->
+    # console.log 'throwError source=', @source
+    if not @source.isEnd
+      pos = 0
+      idx = 0
+      while idx < @source.nextIdx - 1
+        pos += @source.parts[idx++].length
+      pos += offset  
+    s = @source.parts.join ''
+    throw new errors.ParseError s, pos, cause
 
   next: ->
     @source.next()
 
   scan: ->
     while @stage
+      if @source.isEnd
+        @throwError()
       if @source.isText
         handler = @stage.text
       else  
@@ -61,7 +66,7 @@ class State
 
   stageValueStart:
     text: ->
-      @value = transcribe.unescape @source.part
+      @value = @getText()
       @next()
       @stage = null
     '#': ->
@@ -86,7 +91,7 @@ class State
 
   stageArrayNext:
     text: ->
-      @value.push transcribe.unescape @source.part
+      @value.push @getText()
       @next()
       @stage = @stageArrayHave
     '#': ->
@@ -123,7 +128,7 @@ class State
 
   stageObjectNext:
     text: ->
-      @key = transcribe.unescape @source.part
+      @key = @getText()
       @next()
       @stage = @stageObjectHaveKey
     '#': ->  
@@ -146,7 +151,7 @@ class State
 
   stageObjectHaveColon:
     text: ->
-      @value[@key] = transcribe.unescape @source.part
+      @value[@key] = @getText()
       @next()
       @stage = @stageObjectHaveValue
     '#': ->
@@ -174,8 +179,18 @@ class State
       @next()
       @stage = null
 
+
+  getText: ->
+    try
+      transcribe.unescape @source.part
+    catch err
+      if err instanceof errors.ParseError
+        @next()
+        @throwError err.s, err.cause, err.pos
+      throw err
+
   getLiteral: ->
-    if not @source.isText
+    if @source.isEnd or not @source.isText
       value = ''
     else  
       part = @source.part
@@ -210,7 +225,7 @@ class State
 
   getValue: ->
     @fetchValue()
-    if @source.isText or @source.part != 'end'
+    if not @source.isEnd
       # console.log 'ERROR: source=', @source
       @throwError "unexpected extra text"
     @value

@@ -1,13 +1,11 @@
 'use strict'
 
-assert = require 'assert'
-_ = require 'lodash'
-
 try
   hitson = require 'hitson'
 catch
   hitson = null
 
+errors = require './errors'
 
 class Tson
 
@@ -43,6 +41,9 @@ class Tson
       @unescape = (s) -> transcribe.unescape s
       @stringify = (x) -> stringifier.stringify x
       @parse = (s) -> parser.parse s
+
+   @ParseError = errors.ParseError
+   @StringifyError= errors.StringifyError
 
       
 module.exports = Tson
