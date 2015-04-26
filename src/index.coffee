@@ -1,29 +1,29 @@
 'use strict'
 
 try
-  hitson = require 'hitson'
+  addon = require 'wson-addon'
 catch
-  hitson = null
+  addon = null
 
 errors = require './errors'
 
-class Tson
+class Wson
 
   constructor: (options) ->
     options or= {}
 
-    useHi = options.hi
+    useAddon = options.useAddon
 
-    if hitson
-      useHi = useHi != false
+    if addon
+      useAddon = useAddon != false
     else  
-      if useHi == true
-        console.warn 'hitson not found; using js-tson'
-        useHi = false
+      if useAddon == true
+        console.warn 'addon not found; using js-wson'
+        useAddon = false
 
-    if useHi
-      stringifier = new hitson.Stringifier errors.StringifyError
-      parser = new hitson.Parser errors.ParseError
+    if useAddon
+      stringifier = new addon.Stringifier errors.StringifyError
+      parser = new addon.Parser errors.ParseError
 
       @escape = (x) -> stringifier.escape x
       @unescape = (x) -> parser.unescape x
@@ -46,4 +46,4 @@ class Tson
    @StringifyError= errors.StringifyError
 
       
-module.exports = Tson
+module.exports = Wson

@@ -1,8 +1,8 @@
 'use strict'
 
-class TsonError extends Error
+class WsonError extends Error
 
-class ParseError extends TsonError
+class ParseError extends WsonError
   name: 'ParseError'
   constructor: (@s, @pos, @cause) ->
     # console.log 'ParseError "%s" pos=%s cause="%s"', @s, @pos, @cause
@@ -17,7 +17,7 @@ class ParseError extends TsonError
     @message = "#{@cause} at '#{@s.slice 0, @pos}^#{@s.slice @pos}'"
 
 
-class StringifyError extends TsonError
+class StringifyError extends WsonError
   name: 'StringifyError'
   constructor: (@x, cause) ->
     try

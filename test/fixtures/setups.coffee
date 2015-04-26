@@ -1,5 +1,5 @@
 module.exports = [
-  {name: 'Tson(hi: false)', options: {hi: false}}
-  {name: 'Tson(hi: true)', options: {hi: true}}
+  {name: 'WSON-js', options: {useAddon: false}}
+  {name: 'WSON-addon', options: {useAddon: true}}
 ]
 

@@ -1,6 +1,6 @@
 'use strict'
 
-Tson = require '../src/'
+Wson = require '../src/'
 
 module.exports = (options) ->
-  new Tson options
+  new Wson options

@@ -1,5 +1,5 @@
 {
-  "name": "tson",
+  "name": "wson",
   "version": "0.2.0",
   "description": "A serializer/deserializer",
   "main": "./lib",
@@ -11,7 +11,7 @@
   "keywords": [],
   "repository": {
     "type": "github",
-    "url": "https://github.com/tapirdata/tson"
+    "url": "https://github.com/tapirdata/wson"
   },
   "author": {
     "name": "Andreas Riedl",
@@ -30,6 +30,6 @@
     "mocha": "^2.2.1"
   },
   "optionalDependencies": {
-    "hitson": "^0.1.0"
+    "wson-addon": "^0.3.0"
   }
 }

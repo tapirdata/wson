@@ -16,12 +16,12 @@ quoteRegExp = (char) ->
 
 charOfXar =
 #xar: char
-  b: '{'
+  o: '{'
   c: '}'
   a: '['
   e: ']'
   i: ':'
-  n: '#'
+  l: '#'
   p: '|'
   q: '`'
 

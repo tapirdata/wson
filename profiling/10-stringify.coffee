@@ -1,10 +1,10 @@
 'use strict'
 
 Benchmark = require 'benchmark'
-Tson = require '../src'
+Wson = require '../src'
 
-jsTson = new Tson hi: false
-hiTson = new Tson hi: true
+wsonJs = new Wson useAddon: false
+wsonAddon = new Wson useAddon: true
 
 suite = new Benchmark.Suite()
 
@@ -21,8 +21,8 @@ x =
 # x = {a: true, b: true, c:true, d: true}
 
 suite.add 'JSON.stringify', -> JSON.stringify x
-suite.add 'jsTson.stringify', -> jsTson.stringify x
-suite.add 'hiTson.stringify', -> hiTson.stringify x
+suite.add 'WSON-js.stringify', -> wsonJs.stringify x
+suite.add 'WSON-addon.stringify', -> wsonAddon.stringify x
 
 suite.on 'cycle', (event) ->
   console.log String(event.target)
