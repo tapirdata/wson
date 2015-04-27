@@ -1,4 +1,4 @@
-# wson[![Build Status](https://secure.travis-ci.org/tapirdata/wson.png?branch=master)](https://travis-ci.org/tapirdata/wson) [![Dependency Status](https://david-dm.org/tapirdata/wson.svg)](https://david-dm.org/tapirdata/wson) [![devDependency Status](https://david-dm.org/tapirdata/wson/dev-status.svg)](https://david-dm.org/tapirdata/wson#info=devDependencies)
+# wson [![Build Status](https://secure.travis-ci.org/tapirdata/wson.png?branch=master)](https://travis-ci.org/tapirdata/wson) [![Dependency Status](https://david-dm.org/tapirdata/wson.svg)](https://david-dm.org/tapirdata/wson) [![devDependency Status](https://david-dm.org/tapirdata/wson/dev-status.svg)](https://david-dm.org/tapirdata/wson#info=devDependencies)
 > A Stringifier and Parser for the WSON data-interchange format.
 
 ## Usage
@@ -7,18 +7,23 @@
 $ npm install wson
 ```
 
-If you have installed [node-gyp](https://www.npmjs.com/package/node-gyp) and its prerequisites, this will also install the optional package [wson-addon](https://www.npmjs.com/package/wson-addon), which provides a somewhat faster C++ implementation of a WSON stringifier/parser.
+If you have installed [node-gyp](https://www.npmjs.com/package/node-gyp) and its prerequisites, this will also install the optional package [wson-addon](https://www.npmjs.com/package/wson-addon), which provides a somewhat faster (some benchmarking shows a factor of about 2) C++ implementation of a WSON stringifier/parser.
 
 ```js
 WSON = require('wson')();
 
-entry = {name: "otto", size: 177.3, completed: ["forth", "javascript", "c++", "haskell"], active: true};
+var entry = {
+  name: "otto", 
+  size: 177.3, 
+  completed: ["forth", "javascript", "c++", "haskell"], 
+  active: true
+};
 
-s = WSON.stringify(entry);
+var s = WSON.stringify(entry);
 console.log(s);
 // '{active|completed:[forth|javascript|c++|haskell]|name:otto|size:#177.3}'
 
-newEntry = WSON.parse(s);
+var newEntry = WSON.parse(s);
 // equivalent to entry
 
 ```
@@ -78,7 +83,7 @@ Booleans, `null`, `undefined` are stringified by these patterns:
 | null                | #n              |
 | undefined           | #u              |
 
-Numbers are stringified by `#` prepended to the the number converted to a string. 
+Numbers are stringified by `#` prepended to the number converted to a string. 
 
 Examples:
 
@@ -128,4 +133,30 @@ The pairs are sorted by key (sorting is done before escaping).
 | {a: "A", "": "B"}        | {a:A\|#:B}              |
 
 
+#### Values
+
+A **value** can be any of **string**, **literal**, **array**, and **object**.
+Note that array components and object values are **values**, but object keys are **strings**.
+
+
+
+## API
+
+#### var WSON = wson(options);
+
+Creates a new WSON processor. Recognized options are:
+- `useAddon` (boolean, default: `undefined`):
+  - `false`: An installed `wson-addon` is ignored.
+  - `true`: The addon is forced (an exception is thrown if the addon is missing).
+  - `undefined`: The addon is used when it is available. 
+- `version` (number, default: `undefined`): the WSON-version to create the processor for. This document describes version 1. If this is `undefined`, the last available version is used.
+
+#### var str = WSON.stringify(val);
+
+Returns the WSON representation of `val`.
+
+
+#### var val = WSON.parse(str);
+
+Returns the value of the WSON string `str`. If `str` is ill-formed, a `ParseError` will be thrown.
 
