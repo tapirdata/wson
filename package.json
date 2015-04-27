@@ -8,7 +8,14 @@
     "build": "coffee -c -b -o lib src/*.coffee",
     "prepublish": "npm run build"
   },
-  "keywords": [],
+  "keywords": [
+    "WSON",
+    "stringify",
+    "parse",
+    "marshalling",
+    "stable",
+    "deterministic"
+  ],
   "repository": {
     "type": "github",
     "url": "https://github.com/tapirdata/wson"
@@ -30,6 +37,6 @@
     "mocha": "^2.2.1"
   },
   "optionalDependencies": {
-    "wson-addon": "^0.3.0"
+    "wson-addon": "^0.3.1"
   }
 }
