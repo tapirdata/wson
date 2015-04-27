@@ -11,6 +11,8 @@ class Wson
 
   constructor: (options) ->
     options or= {}
+    if options.version? and options.version != 1
+      throw new Error "Only WSON version 1 is supported"
 
     useAddon = options.useAddon
 
@@ -18,8 +20,7 @@ class Wson
       useAddon = useAddon != false
     else  
       if useAddon == true
-        console.warn 'addon not found; using js-wson'
-        useAddon = false
+        throw new Error "wson-addon is not installed"
 
     if useAddon
       stringifier = new addon.Stringifier errors.StringifyError
@@ -42,8 +43,13 @@ class Wson
       @stringify = (x) -> stringifier.stringify x
       @parse = (s) -> parser.parse s
 
-   @ParseError = errors.ParseError
-   @StringifyError= errors.StringifyError
 
-      
-module.exports = Wson
+
+factory = (options) ->   
+  new Wson options
+
+factory.Wson = Wson  
+factory.ParseError = errors.ParseError
+factory.StringifyError= errors.StringifyError
+
+module.exports = factory

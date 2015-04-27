@@ -3,8 +3,8 @@
 Benchmark = require 'benchmark'
 Wson = require '../src'
 
-wsonJs = new Wson useAddon: false
-wsonAddon = new Wson useAddon: true
+wsonJs = Wson useAddon: false
+wsonAddon = Wson useAddon: true
 
 suite = new Benchmark.Suite()
 

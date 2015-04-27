@@ -14,8 +14,8 @@ x =
     y: false
     z: ['foo', 'bar', null, 'baz']
 
-wsonJs = new Wson useAddon: false
-wsonAddon = new Wson useAddon: true
+wsonJs = Wson useAddon: false
+wsonAddon = Wson useAddon: true
 
 sj = JSON.stringify x
 st = wsonJs.stringify x
