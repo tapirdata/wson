@@ -11,6 +11,7 @@
   "keywords": [
     "WSON",
     "stringify",
+    "serialize",
     "parse",
     "marshalling",
     "stable",
@@ -37,6 +38,6 @@
     "mocha": "^2.2.1"
   },
   "optionalDependencies": {
-    "wson-addon": "^0.3.1"
+    "wson-addon": "^0.5.0"
   }
 }

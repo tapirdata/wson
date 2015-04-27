@@ -5,11 +5,19 @@ wsonFactory = require './wsonFactory'
 chai = require 'chai'
 expect = chai.expect
 
+try
+  util = require 'util'
+catch  
+  util = null
+  
 saveRepr = (x) ->
-  try
-    JSON.stringify x
-  catch  
-    String x  
+  if util
+    util.inspect x, depth: null
+  else  
+    try
+      JSON.stringify x
+    catch  
+      String x  
 
 for setup in require './fixtures/setups'
   describe setup.name, ->

@@ -32,7 +32,7 @@ class Source
 
 class State
 
-  constructor: (@source) ->
+  constructor: (@source, @parent) ->
 
   throwError: (cause, offset=0) ->
     # console.log 'throwError cause="%s" offset=%s source=', cause, offset, @source
@@ -100,15 +100,19 @@ class State
       @stage = @stageArrayHave
     '[': ->
       @next()
-      state = new State @source
+      state = new State @source, @
       state.fetchArray()
       @value.push state.value
       @stage = @stageArrayHave
     '{': ->
       @next()
-      state = new State @source
+      state = new State @source, @
       state.fetchObject()
       @value.push state.value
+      @stage = @stageArrayHave
+    '|': ->
+      @next()
+      @value.push @getBackreffed()
       @stage = @stageArrayHave
 
   stageArrayHave:
@@ -160,15 +164,19 @@ class State
       @stage = @stageObjectHaveValue
     '[': ->  
       @next()
-      state = new State @source
+      state = new State @source, @
       state.fetchArray()
       @value[@key] = state.value
       @stage = @stageObjectHaveValue
     '{': ->  
       @next()
-      state = new State @source
+      state = new State @source, @
       state.fetchObject()
       @value[@key] = state.value
+      @stage = @stageObjectHaveValue
+    '|': ->
+      @next()
+      @value[@key] = @getBackreffed()
       @stage = @stageObjectHaveValue
 
   stageObjectHaveValue:
@@ -193,9 +201,11 @@ class State
   invalidLiteral: (part) ->
     @throwError "unexpected literal '#{part}'"
 
+  invalidBackref: (part) ->
+    @throwError "unexpected backref '#{part}'"
+
 
   getLiteral: ->
-
     if @source.isEnd or not @source.isText
       value = ''
     else  
@@ -220,6 +230,22 @@ class State
               @invalidLiteral part
       @next()    
     value  
+
+  getBackreffed: ->
+    part = @source.part
+    if @source.isEnd or not @source.isText
+      @invalidBackref part
+    refNum = Number part
+    unless refNum >= 0
+      @invalidBackref part
+    @next()    
+    state = @
+    while refNum > 0
+      state = state.parent
+      unless state
+        @invalidBackref part
+      --refNum  
+    state.value  
 
   fetchValue: ->
     @stage = @stageValueStart

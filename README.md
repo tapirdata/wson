@@ -35,8 +35,8 @@ We demand a format that:
 - is terse, especially does grow linearly in length when stringified recursively.
 - is reasonably human readable.
 - can be parsed reasonably fast. 
+- can proceed cyclic structures.
 - is extensible (coming soon).
-- can proceed recursive structures (coming soon).
 
 Since we found shortcomings in all present formats, we decided to create WSON:
 
@@ -132,12 +132,19 @@ The pairs are sorted by key (sorting is done before escaping).
 | {a: {c: 42}, b: [3,4]}   | {a:{c:#42}\|b:[#3\|#4]} |
 | {a: "A", "": "B"}        | {a:A\|#:B}              |
 
-
 #### Values
 
 A **value** can be any of **string**, **literal**, **array**, and **object**.
 Note that array components and object values are **values**, but object keys are **strings**.
 
+#### Backrefs
+
+WSON is able to stringify and parse cyclic structures by the means of **backrefs**. A **backref** is represented by `|` followed by a number, that says how many levels to go up. (0 resolves to the current array or objects, 1 resolves to the structure that contains the current structure and so on.)  
+
+| javascript               | WSON                    |
+|--------------------------|-------------------------|
+| x = {}; x.y = x          | {y:\|0}                 |
+| x = {a:[]}; x.a.push(x)  | {a:[\|1]}               |
 
 
 ## API
@@ -147,7 +154,7 @@ Note that array components and object values are **values**, but object keys are
 Creates a new WSON processor. Recognized options are:
 - `useAddon` (boolean, default: `undefined`):
   - `false`: An installed `wson-addon` is ignored.
-  - `true`: The addon is forced (an exception is thrown if the addon is missing).
+  - `true`: The addon is forced. An exception is thrown if the addon is missing.
   - `undefined`: The addon is used when it is available. 
 - `version` (number, default: `undefined`): the WSON-version to create the processor for. This document describes version 1. If this is `undefined`, the last available version is used.
 

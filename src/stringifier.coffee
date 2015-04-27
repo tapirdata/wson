@@ -6,7 +6,14 @@ errors = require './errors'
 
 class Stringifier
 
-  stringifyArray: (x) ->
+  getBackref: (x, haves) ->
+    for have, idx in haves
+      if have is x
+        return haves.length - idx - 1 
+
+
+  stringifyArray: (x, haves) ->
+    haves.push x
     result = '['
     first = true
     for elem in x
@@ -14,7 +21,8 @@ class Stringifier
         first = false
       else
         result += '|'
-      result += @stringify elem
+      result += @stringify elem, haves
+    haves.pop()
     result + ']'
 
   stringifyKey: (x) ->
@@ -23,7 +31,8 @@ class Stringifier
     else
       '#'
 
-  stringifyObject: (x) ->
+  stringifyObject: (x, haves) ->
+    haves.push x
     keys = _.keys(x).sort()
     result = '{'
     first = true
@@ -36,10 +45,12 @@ class Stringifier
       result += @stringifyKey key
       if value != true
         result += ':'
-        result += @stringify value
+        result += @stringify value, haves
+    haves.pop()
     result + '}'
 
-  stringify: (x) ->
+  stringify: (x, haves) ->
+    haves or= []
     if x == null
       '#n'
     else
@@ -59,13 +70,16 @@ class Stringifier
           else
             transcribe.escape x
         else
-          if _.isArray x
-            @stringifyArray x
+          backref = @getBackref x, haves
+          if backref?
+            '|' + backref
+          else if _.isArray x
+            @stringifyArray x, haves
           else if _.isObject x
             if x instanceof Date
               '#d' + x.valueOf().toString()
             else  
-              @stringifyObject x
+              @stringifyObject x, haves
           else
             throw new errors.StringifyError x
 
