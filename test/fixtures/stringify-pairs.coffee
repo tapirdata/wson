@@ -1,3 +1,6 @@
+extdefs = require './extdefs'
+
+Point = extdefs.Point
 
 cycArr0 = ['a']; cycArr0.push cycArr0
 cycArr1 = ['a', ['b']]; cycArr1[1].push cycArr1[1]
@@ -6,6 +9,8 @@ cycArr2 = ['a', ['b']]; cycArr2[1].push cycArr2
 cycObj0 = a: 3; cycObj0.x = cycObj0
 cycObj1 = a: 3, b: {}; cycObj1.b.r0 = cycObj1.b
 cycObj2 = a: 3, b: {}; cycObj2.b.r1 = cycObj2
+
+
 
 module.exports = [
   ['abc', 'abc']
@@ -47,6 +52,8 @@ module.exports = [
   [cycObj0, '{a:#3|x:|0}']
   [cycObj1, '{a:#3|b:{r0:|0}}']
   [cycObj2, '{a:#3|b:{r1:|1}}']
+  # extension
+  [new Point(3, 4), '[:Point|#3|#4]'] 
   # fail
   ['__fail__', '']
   # escape
