@@ -5,11 +5,9 @@ class Point
   __wsonsplit__: () -> [@x, @y]
 
 
-class Rect
-  constructor: (@ul, @lr) ->
-  __wsonsplit__: () -> [@ul, @lr]
-
+class Polygon
+  constructor: (@points=[]) ->
 
 exports.Point = Point
-exports.Rect = Rect
+exports.Polygon = Polygon
 

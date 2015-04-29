@@ -10,16 +10,16 @@ catch
 errors = require './errors'
 
 
-normalizeExt = (ext) ->
-  ext = _.clone ext
-  if not _.isFunction ext.splitter
-    ext.split = (x) -> x.__wsonsplit__()
-  if not _.isFunction ext.factory
-    ext.factory = (args...) ->
-      obj = Object.create ext.constr
-      ret = ext.constr.apply obj, args
-      if Object(ret) == ret then ret else obj
-  ext  
+# normalizeExt = (ext) ->
+#   ext = _.clone ext
+#   if not _.isFunction ext.splitter
+#     ext.split = (x) -> x.__wsonsplit__()
+#   if not _.isFunction ext.factory
+#     ext.factory = (args...) ->
+#       obj = Object.create ext.constr
+#       ret = ext.constr.apply obj, args
+#       if Object(ret) == ret then ret else obj
+#   ext  
 
 
 class Wson
@@ -30,10 +30,6 @@ class Wson
       throw new Error "Only WSON version 1 is supported"
 
     useAddon = options.useAddon
-    extensions = options.extensions
-    if extensions
-      extensions = _.map extensions, normalizeExt
-    # console.log 'extensions=', extensions
 
     if addon
       useAddon = useAddon != false
@@ -42,8 +38,8 @@ class Wson
         throw new Error "wson-addon is not installed"
 
     if useAddon
-      stringifier = new addon.Stringifier errors.StringifyError
-      parser = new addon.Parser errors.ParseError
+      stringifier = new addon.Stringifier errors.StringifyError options
+      parser = new addon.Parser errors.ParseError options
 
       @escape = (x) -> stringifier.escape x
       @unescape = (x) -> parser.unescape x
@@ -54,8 +50,8 @@ class Wson
       transcribe = require './transcribe'
       Stringifier = require './stringifier'
       Parser = require './parser'
-      stringifier = new Stringifier extensions
-      parser = new Parser extensions
+      stringifier = new Stringifier options
+      parser = new Parser options
 
       @escape = (s) -> transcribe.escape s
       @unescape = (s) -> transcribe.unescape s

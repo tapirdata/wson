@@ -4,19 +4,42 @@ _ = require 'lodash'
 transcribe = require './transcribe'
 errors = require './errors'
 
+normConnectors = (cons) ->
+  if _.isObject(cons) and not _.isEmpty(cons)
+    connectors = {}
+    for name, con of cons
+      if _.isFunction con
+        connector = 
+          by: con
+      else 
+        connector = _.clone con
+      connector.name = name  
+      if not _.isFunction connector.split
+        connector.split = (x) -> x.__wsonsplit__()
+      connectors[name] = connector    
+    connectors  
+          
+
 class Stringifier
 
-  constructor: (@extensions) ->
+  constructor: (options) ->
+    options or= {}
+    @connectors = normConnectors options.connectors
+
 
   getBackref: (x, haves) ->
     for have, idx in haves
       if have is x
         return haves.length - idx - 1 
   
-  findExtension: (constr) ->
-    for extension in @extensions
-      if extension.constr == constr
-        return extension
+  findConnector: (x) ->
+    # console.log 'find connectors:', @connectors
+    constr = x.constructor
+    if @connectors and constr? and constr != Object
+      for name, connector of @connectors
+        # console.log 'find', connector, x
+        if connector.by == constr
+          return connector
 
   stringifyArray: (x, haves) ->
     haves.push x
@@ -38,11 +61,10 @@ class Stringifier
       '#'
 
   stringifyObject: (x, haves) ->
-    constr = x.constructor
-    if @extensions and constr and constr != Object
-      ext = @findExtension constr
-      if ext
-        return @stringifyExtObject ext, x, haves
+    connector = @findConnector x
+    if connector
+      # console.log 'x=', x, 'con=', connector
+      return @stringifyConnector connector, x, haves
     haves.push x
     keys = _.keys(x).sort()
     result = '{'
@@ -60,10 +82,10 @@ class Stringifier
     haves.pop()
     result + '}'
 
-  stringifyExtObject: (ext, x, haves) ->
+  stringifyConnector: (connector, x, haves) ->
     haves.push x
-    result = '[:' + transcribe.escape(ext.name) + '|'
-    args = ext.split x
+    result = '[:' + transcribe.escape(connector.name) + '|'
+    args = connector.split x
     first = true
     for elem in args
       if first
@@ -108,6 +130,6 @@ class Stringifier
           else
             throw new errors.StringifyError x
 
-
+# Stringifier.norm = normConnectors
 module.exports = Stringifier
 

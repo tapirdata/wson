@@ -5,10 +5,9 @@ _ = require 'lodash'
 transcribe = require './transcribe'
 errors = require './errors'
 
-
 class Source
 
-  constructor: (s) ->
+  constructor: (@stringifier, s) ->
     @parts = s.split transcribe.splitRe
     @nextIdx = 0
     @isEnd = false
@@ -33,6 +32,7 @@ class Source
 class State
 
   constructor: (@source, @parent) ->
+    @isBackreffed = false
 
   throwError: (cause, offset=0) ->
     # console.log 'throwError cause="%s" offset=%s source=', cause, offset, @source
@@ -84,9 +84,14 @@ class State
 
   stageArrayStart:
     ']': ->
+      @value = []
       @next()
       @stage = null
+    ':': ->
+      @next()
+      @stage = @stageCustomStart
     'default': ->
+      @value = []
       @stage = @stageArrayNext
 
   stageArrayNext:
@@ -125,9 +130,11 @@ class State
 
   stageObjectStart:
     '}': ->
+      @value = {}
       @next()
       @stage = null
     'default': ->
+      @value = {}
       @stage = @stageObjectNext
 
   stageObjectNext:
@@ -187,6 +194,66 @@ class State
       @next()
       @stage = null
 
+  stageCustomStart:
+    text: ->
+      name = @getText()
+      connector = @source.stringifier.getConnector name
+      # console.log 'name=%s', name, connector
+      if not connector  
+        @throwError "no connector for '#{name}'"
+      @next()
+      if connector.vetoBackref
+        @vetoBackref = true
+      else  
+        @value = connector.precreate()
+      @connector = connector
+      @args = []  
+      @stage = @stageCustomHave
+
+  stageCustomNext:
+    text: ->
+      @args.push @getText()
+      @next()
+      @stage = @stageCustomHave
+    '#': ->
+      @next()
+      @args.push @getLiteral()
+      @stage = @stageCustomHave
+    '[': ->
+      @next()
+      state = new State @source, @
+      state.fetchArray()
+      @args.push state.value
+      @stage = @stageCustomHave
+    '{': ->
+      @next()
+      state = new State @source, @
+      state.fetchObject()
+      @args.push state.value
+      @stage = @stageCustomHave
+    '|': ->
+      @next()
+      @args.push @getBackreffed()
+      @stage = @stageCustomHave
+
+  stageCustomHave:
+    '|': ->
+      @next()
+      @stage = @stageCustomNext
+    ']': ->
+      @next()
+      connector = @connector
+      # console.log 'end ', connector, @value
+      if connector.vetoBackref
+        @value = connector.create @args
+      else
+        value = connector.postcreate @value, @args
+        # console.log '.end ', connector, @value
+        if value != @value
+          if @isBackreffed
+            @throwError "value is replaced by postcreate after beeing backreffed"
+          @value = value
+      @stage = null
 
   getText: ->
     try
@@ -245,6 +312,9 @@ class State
       unless state
         @invalidBackref part
       --refNum  
+    if state.vetoBackref
+      @invalidBackref part
+    state.isBackreffed = true
     state.value  
 
   fetchValue: ->
@@ -253,12 +323,10 @@ class State
 
   fetchArray: ->
     @stage = @stageArrayStart
-    @value = []
     @scan()
 
   fetchObject: ->
     @stage = @stageObjectStart
-    @value = {}
     @scan()
 
   getValue: ->
@@ -269,14 +337,49 @@ class State
     @value
 
 
+normConnectors = (cons) ->
+  if _.isObject(cons) and not _.isEmpty(cons)
+    connectors = {}
+    for name, con of cons
+      if _.isFunction con
+        connector = 
+          by: con
+      else 
+        connector = _.clone con
+      connector.name = name  
+      if _.isFunction connector.create
+        connector.vetoBackref = true
+      else  
+        do (connector) ->
+          if not _.isFunction connector.precreate
+            connector.precreate = ->
+              Object.create connector.by.prototype
+          if not _.isFunction connector.postcreate
+            connector.postcreate = (obj, args) ->
+              ret = connector.by.apply obj, args
+              if Object(ret) == ret then ret else obj
+      connectors[name] = connector    
+    connectors  
+
+
 class Parser
+
+  constructor: (options) ->
+    options or= {}
+    @connectors = normConnectors options.connectors
 
   parse: (s) ->
     assert typeof s == 'string', 'parse expects a string, got: ' + s
-    source = new Source s
+    source = new Source @, s
     state = new State source
     state.getValue()
 
+  getConnector: (name) ->
+    if @connectors
+      connector = @connectors[name]
+    connector  
 
+
+# Parser.norm = normConnectors
 module.exports = Parser
 

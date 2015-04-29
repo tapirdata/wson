@@ -1,6 +1,7 @@
 extdefs = require './extdefs'
 
 Point = extdefs.Point
+Polygon = extdefs.Polygon
 
 cycArr0 = ['a']; cycArr0.push cycArr0
 cycArr1 = ['a', ['b']]; cycArr1[1].push cycArr1[1]
@@ -10,7 +11,8 @@ cycObj0 = a: 3; cycObj0.x = cycObj0
 cycObj1 = a: 3, b: {}; cycObj1.b.r0 = cycObj1.b
 cycObj2 = a: 3, b: {}; cycObj2.b.r1 = cycObj2
 
-
+cycPoint = new Point 8, 9
+cycPoint.x = cycPoint
 
 module.exports = [
   ['abc', 'abc']
@@ -54,6 +56,8 @@ module.exports = [
   [cycObj2, '{a:#3|b:{r1:|1}}']
   # extension
   [new Point(3, 4), '[:Point|#3|#4]'] 
+  [new Polygon([new Point(3, 4), new Point(12, 5)]), '[:Polygon|[:Point|#3|#4]|[:Point|#12|#5]]'] 
+  [cycPoint, '[:Point||0|#9]'] 
   # fail
   ['__fail__', '']
   # escape
@@ -90,6 +94,6 @@ module.exports = [
   ['__fail__', '[|a]']
   ['__fail__', '[|-1]']
   ['__fail__', '[|1]']
-
+  ['__fail__', '[:Polygon||0]']
 ]
 
