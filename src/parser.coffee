@@ -337,36 +337,12 @@ class State
     @value
 
 
-normConnectors = (cons) ->
-  if _.isObject(cons) and not _.isEmpty(cons)
-    connectors = {}
-    for name, con of cons
-      if _.isFunction con
-        connector = 
-          by: con
-      else 
-        connector = _.clone con
-      connector.name = name  
-      if _.isFunction connector.create
-        connector.vetoBackref = true
-      else  
-        do (connector) ->
-          if not _.isFunction connector.precreate
-            connector.precreate = ->
-              Object.create connector.by.prototype
-          if not _.isFunction connector.postcreate
-            connector.postcreate = (obj, args) ->
-              ret = connector.by.apply obj, args
-              if Object(ret) == ret then ret else obj
-      connectors[name] = connector    
-    connectors  
-
 
 class Parser
 
   constructor: (options) ->
     options or= {}
-    @connectors = normConnectors options.connectors
+    @connectors = options.connectors
 
   parse: (s) ->
     assert typeof s == 'string', 'parse expects a string, got: ' + s

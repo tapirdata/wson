@@ -9,17 +9,46 @@ catch
 
 errors = require './errors'
 
+normStringifyConnectors = (cons) ->
+  if _.isObject(cons) and not _.isEmpty(cons)
+    connectors = {}
+    for name, con of cons
+      if _.isFunction con
+        connector = 
+          by: con
+      else 
+        connector = _.clone con
+      connector.name = name  
+      if not _.isFunction connector.split
+        connector.split = (x) -> x.__wsonsplit__()
+      connectors[name] = connector    
+    connectors  
+          
 
-# normalizeExt = (ext) ->
-#   ext = _.clone ext
-#   if not _.isFunction ext.splitter
-#     ext.split = (x) -> x.__wsonsplit__()
-#   if not _.isFunction ext.factory
-#     ext.factory = (args...) ->
-#       obj = Object.create ext.constr
-#       ret = ext.constr.apply obj, args
-#       if Object(ret) == ret then ret else obj
-#   ext  
+normParseConnectors = (cons) ->
+  if _.isObject(cons) and not _.isEmpty(cons)
+    connectors = {}
+    for name, con of cons
+      if _.isFunction con
+        connector = 
+          by: con
+      else 
+        connector = _.clone con
+      connector.name = name  
+      if _.isFunction connector.create
+        connector.vetoBackref = true
+      else  
+        do (connector) ->
+          if not _.isFunction connector.precreate
+            connector.precreate = ->
+              Object.create connector.by.prototype
+          if not _.isFunction connector.postcreate
+            connector.postcreate = (obj, args) ->
+              ret = connector.by.apply obj, args
+              if Object(ret) == ret then ret else obj
+      connectors[name] = connector    
+    connectors  
+
 
 
 class Wson
@@ -37,9 +66,22 @@ class Wson
       if useAddon == true
         throw new Error "wson-addon is not installed"
 
+    if options.connectors
+      stringifyOptions =
+        connectors: normStringifyConnectors options.connectors
+      parseOptions =
+        connectors: normParseConnectors options.connectors
+    else
+      stringifyOptions = {}
+      parseOptions = {}
+
+    # console.log 'options=', options
+    # console.log 'stringifyOptions=', stringifyOptions
+    # console.log 'parseOptions=', parseOptions
+
     if useAddon
-      stringifier = new addon.Stringifier errors.StringifyError options
-      parser = new addon.Parser errors.ParseError options
+      stringifier = new addon.Stringifier errors.StringifyError, stringifyOptions
+      parser = new addon.Parser errors.ParseError, parseOptions
 
       @escape = (x) -> stringifier.escape x
       @unescape = (x) -> parser.unescape x
@@ -50,8 +92,8 @@ class Wson
       transcribe = require './transcribe'
       Stringifier = require './stringifier'
       Parser = require './parser'
-      stringifier = new Stringifier options
-      parser = new Parser options
+      stringifier = new Stringifier stringifyOptions
+      parser = new Parser parseOptions
 
       @escape = (s) -> transcribe.escape s
       @unescape = (s) -> transcribe.unescape s

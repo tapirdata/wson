@@ -4,27 +4,11 @@ _ = require 'lodash'
 transcribe = require './transcribe'
 errors = require './errors'
 
-normConnectors = (cons) ->
-  if _.isObject(cons) and not _.isEmpty(cons)
-    connectors = {}
-    for name, con of cons
-      if _.isFunction con
-        connector = 
-          by: con
-      else 
-        connector = _.clone con
-      connector.name = name  
-      if not _.isFunction connector.split
-        connector.split = (x) -> x.__wsonsplit__()
-      connectors[name] = connector    
-    connectors  
-          
-
 class Stringifier
 
   constructor: (options) ->
     options or= {}
-    @connectors = normConnectors options.connectors
+    @connectors = options.connectors
 
 
   getBackref: (x, haves) ->

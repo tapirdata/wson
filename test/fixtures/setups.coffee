@@ -15,6 +15,6 @@ connectors =
 
 module.exports = [
   {name: 'WSON-js', options: {useAddon: false, connectors: connectors}}
-  # {name: 'WSON-addon', options: {useAddon: true}, extensions: extensions}
+  {name: 'WSON-addon', options: {useAddon: true, connectors: connectors}}
 ]
 
