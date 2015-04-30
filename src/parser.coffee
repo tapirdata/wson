@@ -202,7 +202,7 @@ class State
       if not connector  
         @throwError "no connector for '#{name}'"
       @next()
-      if connector.vetoBackref
+      if connector.hasCreate
         @vetoBackref = true
       else  
         @value = connector.precreate()
@@ -244,7 +244,7 @@ class State
       @next()
       connector = @connector
       # console.log 'end ', connector, @value
-      if connector.vetoBackref
+      if connector.hasCreate
         @value = connector.create @args
       else
         value = connector.postcreate @value, @args

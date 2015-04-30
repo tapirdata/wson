@@ -36,8 +36,9 @@ normParseConnectors = (cons) ->
         connector = _.clone con
       connector.name = name  
       if _.isFunction connector.create
-        connector.vetoBackref = true
+        connector.hasCreate = true
       else  
+        connector.hasCreate = false
         do (connector) ->
           if not _.isFunction connector.precreate
             connector.precreate = ->
