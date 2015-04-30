@@ -7,17 +7,17 @@ expect = chai.expect
 
 try
   util = require 'util'
-catch  
+catch
   util = null
-  
+
 saveRepr = (x) ->
   if util
     util.inspect x, depth: null
-  else  
+  else
     try
       JSON.stringify x
-    catch  
-      String x  
+    catch
+      String x
 
 for setup in require './fixtures/setups'
   describe setup.name, ->

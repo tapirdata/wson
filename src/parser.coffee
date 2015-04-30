@@ -41,7 +41,7 @@ class State
       idx = 0
       while idx < @source.nextIdx - 1
         pos += @source.parts[idx++].length
-      pos += offset  
+      pos += offset
     s = @source.parts.join ''
     throw new errors.ParseError s, pos, cause
 
@@ -54,7 +54,7 @@ class State
         @throwError()
       if @source.isText
         handler = @stage.text
-      else  
+      else
         handler = @stage[@source.part]
       if not handler
         handler = @stage.default
@@ -142,13 +142,13 @@ class State
       @key = @getText()
       @next()
       @stage = @stageObjectHaveKey
-    '#': ->  
+    '#': ->
       @next()
       @key = ''
       @stage = @stageObjectHaveKey
 
   stageObjectHaveKey:
-    ':': ->  
+    ':': ->
       @next()
       @stage = @stageObjectHaveColon
     '|': ->
@@ -169,13 +169,13 @@ class State
       @next()
       @value[@key] = @getLiteral()
       @stage = @stageObjectHaveValue
-    '[': ->  
+    '[': ->
       @next()
       state = new State @source, @
       state.fetchArray()
       @value[@key] = state.value
       @stage = @stageObjectHaveValue
-    '{': ->  
+    '{': ->
       @next()
       state = new State @source, @
       state.fetchObject()
@@ -199,15 +199,15 @@ class State
       name = @getText()
       connector = @source.stringifier.getConnector name
       # console.log 'name=%s', name, connector
-      if not connector  
+      if not connector
         @throwError "no connector for '#{name}'"
       @next()
       if connector.hasCreate
         @vetoBackref = true
-      else  
+      else
         @value = connector.precreate()
       @connector = connector
-      @args = []  
+      @args = []
       @stage = @stageCustomHave
 
   stageCustomNext:
@@ -241,18 +241,18 @@ class State
       @next()
       @stage = @stageCustomNext
     ']': ->
-      @next()
       connector = @connector
       # console.log 'end ', connector, @value
       if connector.hasCreate
         @value = connector.create @args
       else
-        value = connector.postcreate @value, @args
+        newValue = connector.postcreate @value, @args
         # console.log '.end ', connector, @value
-        if value != @value
+        if newValue != @value
           if @isBackreffed
-            @throwError "value is replaced by postcreate after beeing backreffed"
-          @value = value
+            @throwError "backreffed value is replaced by postcreate"
+          @value = newValue
+      @next()
       @stage = null
 
   getText: ->
@@ -264,18 +264,18 @@ class State
         @throwError err.cause, err.pos
       throw err
 
-  
+
   invalidLiteral: (part) ->
     @throwError "unexpected literal '#{part}'"
 
-  invalidBackref: (part) ->
-    @throwError "unexpected backref '#{part}'"
+  invalidBackref: (part, offset=0) ->
+    @throwError "unexpected backref '#{part}'", offset
 
 
   getLiteral: ->
     if @source.isEnd or not @source.isText
       value = ''
-    else  
+    else
       part = @source.part
       switch part
         when 't'
@@ -290,13 +290,13 @@ class State
             value = Number part.slice 1
             if _.isNaN value
               @invalidLiteral part
-            value = new Date(value)  
-          else  
+            value = new Date(value)
+          else
             value = Number part
             if _.isNaN value
               @invalidLiteral part
-      @next()    
-    value  
+      @next()
+    value
 
   getBackreffed: ->
     part = @source.part
@@ -305,17 +305,17 @@ class State
     refNum = Number part
     unless refNum >= 0
       @invalidBackref part
-    @next()    
     state = @
     while refNum > 0
       state = state.parent
       unless state
         @invalidBackref part
-      --refNum  
+      --refNum
     if state.vetoBackref
       @invalidBackref part
+    @next()
     state.isBackreffed = true
-    state.value  
+    state.value
 
   fetchValue: ->
     @stage = @stageValueStart
@@ -353,7 +353,7 @@ class Parser
   getConnector: (name) ->
     if @connectors
       connector = @connectors[name]
-    connector  
+    connector
 
 
 # Parser.norm = normConnectors

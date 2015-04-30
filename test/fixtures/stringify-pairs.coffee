@@ -55,9 +55,9 @@ module.exports = [
   [cycObj1, '{a:#3|b:{r0:|0}}']
   [cycObj2, '{a:#3|b:{r1:|1}}']
   # extension
-  [new Point(3, 4), '[:Point|#3|#4]'] 
-  [new Polygon([new Point(3, 4), new Point(12, 5)]), '[:Polygon|[:Point|#3|#4]|[:Point|#12|#5]]'] 
-  [cycPoint, '[:Point||0|#9]'] 
+  [new Point(3, 4), '[:Point|#3|#4]']
+  [new Polygon([new Point(3, 4), new Point(12, 5)]), '[:Polygon|[:Point|#3|#4]|[:Point|#12|#5]]']
+  [cycPoint, '[:Point||0|#9]']
   # fail
   ['__fail__', '']
   # escape

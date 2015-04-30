@@ -11,7 +11,7 @@ class ParseError extends WsonError
     if not @cause
       if @pos >= @s.length
         char = "end"
-      else  
+      else
         char = "'#{@s[@pos]}'"
       @cause = "unexpected #{char}"
     @message = "#{@cause} at '#{@s.slice 0, @pos}^#{@s.slice @pos}'"
@@ -22,8 +22,8 @@ class StringifyError extends WsonError
   constructor: (@x, cause) ->
     try
       xStr = JSON.stringify @x
-    catch  
-      xStr = String x  
+    catch
+      xStr = String x
 
     @message = "cannot stringify '#{xStr}' (type=#{typeof @x})#{if cause then ' ' + cause else ''}"
 

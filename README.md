@@ -13,9 +13,9 @@ If you have installed [node-gyp](https://www.npmjs.com/package/node-gyp) and its
 WSON = require('wson')();
 
 var entry = {
-  name: "otto", 
-  size: 177.3, 
-  completed: ["forth", "javascript", "c++", "haskell"], 
+  name: "otto",
+  size: 177.3,
+  completed: ["forth", "javascript", "c++", "haskell"],
   active: true
 };
 
@@ -34,7 +34,7 @@ We demand a format that:
 - is textual, so it can be used as a key itself.
 - is terse, especially does grow linearly in length when stringified recursively.
 - is reasonably human readable.
-- can be parsed reasonably fast. 
+- can be parsed reasonably fast.
 - can proceed cyclic structures.
 - is extensible (coming soon).
 
@@ -83,7 +83,7 @@ Booleans, `null`, `undefined` are stringified by these patterns:
 | null                | #n              |
 | undefined           | #u              |
 
-Numbers are stringified by `#` prepended to the number converted to a string. 
+Numbers are stringified by `#` prepended to the number converted to a string.
 
 Examples:
 
@@ -92,7 +92,7 @@ Examples:
 | 42                  | #42             |
 | 42.1                | #42.1           |
 
-`Date`-objects are stringified by `#d` prepended to the `valueOf`-number (i.e. the milliseconds since midnight 01 January, 1970 UTC) converted to a string. 
+`Date`-objects are stringified by `#d` prepended to the `valueOf`-number (i.e. the milliseconds since midnight 01 January, 1970 UTC) converted to a string.
 
 Examples:
 
@@ -116,7 +116,7 @@ Arrays are stringified by their stringified components concatenated by `|`, encl
 #### Objects
 
 Objects are stringified by their stringified key-value pairs concatenated by `|`, enclosed by `{`, `}`.
-Key-value pairs are stringified this way: 
+Key-value pairs are stringified this way:
 - If the value is `true`: just the escaped key (This is meant to be handy for objects representing sets)
 - Else: escaped key `:` stringified value
 
@@ -139,7 +139,7 @@ Note that array components and object values are **values**, but object keys are
 
 #### Backrefs
 
-WSON is able to stringify and parse cyclic structures by the means of **backrefs**. A **backref** is represented by `|` followed by a number, that says how many levels to go up. (0 resolves to the current array or objects, 1 resolves to the structure that contains the current structure and so on.)  
+WSON is able to stringify and parse cyclic structures by the means of **backrefs**. A **backref** is represented by `|` followed by a number, that says how many levels to go up. (0 resolves to the current array or objects, 1 resolves to the structure that contains the current structure and so on.)
 
 | javascript               | WSON                    |
 |--------------------------|-------------------------|
@@ -155,7 +155,7 @@ Creates a new WSON processor. Recognized options are:
 - `useAddon` (boolean, default: `undefined`):
   - `false`: An installed `wson-addon` is ignored.
   - `true`: The addon is forced. An exception is thrown if the addon is missing.
-  - `undefined`: The addon is used when it is available. 
+  - `undefined`: The addon is used when it is available.
 - `version` (number, default: `undefined`): the WSON-version to create the processor for. This document describes version 1. If this is `undefined`, the last available version is used.
 
 #### var str = WSON.stringify(val);

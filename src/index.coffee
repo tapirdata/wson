@@ -14,30 +14,30 @@ normStringifyConnectors = (cons) ->
     connectors = {}
     for name, con of cons
       if _.isFunction con
-        connector = 
+        connector =
           by: con
-      else 
+      else
         connector = _.clone con
-      connector.name = name  
+      connector.name = name
       if not _.isFunction connector.split
         connector.split = (x) -> x.__wsonsplit__()
-      connectors[name] = connector    
-    connectors  
-          
+      connectors[name] = connector
+    connectors
+
 
 normParseConnectors = (cons) ->
   if _.isObject(cons) and not _.isEmpty(cons)
     connectors = {}
     for name, con of cons
       if _.isFunction con
-        connector = 
+        connector =
           by: con
-      else 
+      else
         connector = _.clone con
-      connector.name = name  
+      connector.name = name
       if _.isFunction connector.create
         connector.hasCreate = true
-      else  
+      else
         connector.hasCreate = false
         do (connector) ->
           if not _.isFunction connector.precreate
@@ -47,8 +47,8 @@ normParseConnectors = (cons) ->
             connector.postcreate = (obj, args) ->
               ret = connector.by.apply obj, args
               if Object(ret) == ret then ret else obj
-      connectors[name] = connector    
-    connectors  
+      connectors[name] = connector
+    connectors
 
 
 
@@ -63,7 +63,7 @@ class Wson
 
     if addon
       useAddon = useAddon != false
-    else  
+    else
       if useAddon == true
         throw new Error "wson-addon is not installed"
 
@@ -103,10 +103,10 @@ class Wson
 
 
 
-factory = (options) ->   
+factory = (options) ->
   new Wson options
 
-factory.Wson = Wson  
+factory.Wson = Wson
 factory.ParseError = errors.ParseError
 factory.StringifyError= errors.StringifyError
 

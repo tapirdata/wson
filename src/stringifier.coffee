@@ -14,8 +14,8 @@ class Stringifier
   getBackref: (x, haves) ->
     for have, idx in haves
       if have is x
-        return haves.length - idx - 1 
-  
+        return haves.length - idx - 1
+
   findConnector: (x) ->
     # console.log 'find connectors:', @connectors
     constr = x.constructor
@@ -68,14 +68,10 @@ class Stringifier
 
   stringifyConnector: (connector, x, haves) ->
     haves.push x
-    result = '[:' + transcribe.escape(connector.name) + '|'
+    result = '[:' + transcribe.escape(connector.name)
     args = connector.split x
-    first = true
     for elem in args
-      if first
-        first = false
-      else
-        result += '|'
+      result += '|'
       result += @stringify elem, haves
     haves.pop()
     result + ']'
@@ -109,7 +105,7 @@ class Stringifier
           else if _.isObject x
             if x instanceof Date
               '#d' + x.valueOf().toString()
-            else 
+            else
               @stringifyObject x, haves
           else
             throw new errors.StringifyError x
