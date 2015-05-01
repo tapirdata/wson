@@ -15,7 +15,8 @@
     "parse",
     "marshalling",
     "stable",
-    "deterministic"
+    "deterministic",
+    "extensible"
   ],
   "repository": {
     "type": "github",
@@ -38,6 +39,6 @@
     "mocha": "^2.2.1"
   },
   "optionalDependencies": {
-    "wson-addon": "^0.5.0"
+    "wson-addon": "^1.0.0"
   }
 }

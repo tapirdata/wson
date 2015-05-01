@@ -7,7 +7,7 @@
 $ npm install wson
 ```
 
-If you have installed [node-gyp](https://www.npmjs.com/package/node-gyp) and its prerequisites, this will also install the optional package [wson-addon](https://www.npmjs.com/package/wson-addon), which provides a somewhat faster (some benchmarking shows a factor of about 2) C++ implementation of a WSON stringifier/parser.
+If you have installed [node-gyp](https://www.npmjs.com/package/node-gyp) and its prerequisites, this will also install the optional package [wson-addon](https://www.npmjs.com/package/wson-addon), which provides a somewhat faster (some benchmarking shows a factors of about 2 for parsing and 1.5 for stringifiying) native C++ implementation of a WSON stringifier/parser.
 
 ```js
 WSON = require('wson')();
@@ -29,13 +29,13 @@ var newEntry = WSON.parse(s);
 ```
 ## Motivation (why just another format?)
 
-We demand a format that:
-- is stable (stringification does not depend on key insertion order).
+We demanded a format that:
+- is deterministic (stringification does not depend on key insertion order or unjustified assumptions about the js-engine).
 - is textual, so it can be used as a key itself.
-- is terse, especially does grow linearly in length when stringified recursively.
+- is terse, especially does grow linearly in length when stringified recursively (`\`-escaping grows exponentially). 
 - is reasonably human readable.
 - can be parsed reasonably fast.
-- can proceed cyclic structures.
+- can handle cyclic structures.
 - is extensible.
 
 Since we found shortcomings in all present formats, we decided to create WSON:
@@ -57,7 +57,7 @@ There 8 special characters: `{`, `}`, `[`, `]`, `#`, `:`, `|`, `` ` ``. If they 
 |   \|     |   `p    |
 |   `      |   `q    |
 
-The special characters are choosen to be expectable rare in natural language texts to minimize the need for escaping.
+The special characters are choosen to be expectable rare in natural language texts to minimize the need for escaping. E.g. delimiter is `|` instead of `,`.
 
 
 #### Strings
@@ -117,7 +117,7 @@ Arrays are stringified by their stringified components concatenated by `|`, encl
 
 Objects are stringified by their stringified key-value pairs concatenated by `|`, enclosed by `{`, `}`.
 Key-value pairs are stringified this way:
-- If the value is `true`: just the escaped key (This is meant to be handy for objects representing sets)
+- If the value is `true`: just the escaped key (This is meant to be handy for set-like objects.)
 - Else: escaped key `:` stringified value
 
 The pairs are sorted by key (sorting is done before escaping).
@@ -148,15 +148,15 @@ WSON is able to stringify and parse cyclic structures by means of **backrefs**. 
 
 #### Custom Objects
 
-WSON can be extended to stringify and parse custom objects by means of **connectors**.
+WSON can be extended to stringify and parse **custom objects** by means of **connectors**.
 
-A **connector** is used to stringify a custom object by:
+A **connector** is used to stringify a **custom object** by:
 - `by`: the objects's constructor. Only objects with exactly that constructor use this **connector** to stringify.
 - `split`: a function of `obj` that returns an array of arguments `args` that can be used to recreate `obj`.
 
-If `split` is ommited, `obj` must provide a method `__wsonsplit__` that return `args`.
+If `split` is ommited, `obj` must provide a method `__wsonsplit__` that returns `args`.
 
-A **connector** is used to create a custom object by:
+A **connector** is used to create a **custom object** by:
 - `create`: a function that takes an array of arguments `args` to create the object `obj`.
 
 Alternativly these functions may be used to use 2-stage creation:
@@ -165,18 +165,15 @@ Alternativly these functions may be used to use 2-stage creation:
 
 If no `create` is specified, missing `precreate` and `postcreate` are just created by using the constructor `by`.
 
-An extend WSON stringifier/parser is created by passing a `connectors` option to `wson`. `connectors` should by a object that maps that map **cname** keys to **connector** objects. If a value is given as a function `Foo` the **connector** is constructed as `{by: Foo}`.
+An extended WSON stringifier/parser is created by passing a `connectors` option to `wson`. `connectors` should by a object that maps **cname** keys to **connector** objects. If a value is given as a function `Foo` the **connector** is constructed as `{by: Foo}`.
 
-
-
-The WSON representation of custom objects is:
+The WSON representation of a **custom object** is:
 
   `[:` **cname** (list of args, each prepeded by `|`) `]`
 
 ###### Examples:
 
 Provide a `__wsonsplit__` method:
-
 ```js
 var wson = require('wson');
 
@@ -191,8 +188,8 @@ var s = WSON.stringify(point1);
 console.log('s=', s); // [Point:#3|#4]
 var point2 = WSON.parse(s);
 ```
-Or equivalently specify `split` explicitly:
 
+Or equivalently specify `split` explicitly:
 ```js
 var wson = require('wson');
 
@@ -200,7 +197,7 @@ var Point = function(x, y) {this.x=x; this.y=y}
 
 var WSON = wson({connectors: {
   Point: {
-    by: Point, 
+    by: Point,
     split: function(point) {return [point.x, point.y]; }
   }
 }});
@@ -211,10 +208,55 @@ console.log('s=', s); // [Point:#3|#4]
 var point2 = WSON.parse(s);
 ```
 
+Specify `split` and `postcreate` (use default `precreate`):
+```js
+var wson = require('wson');
+
+var Point = function(x, y) {this.x=x; this.y=y}
+
+var WSON = wson({connectors: {
+  Point: {
+    by: Point,
+    // reverse order of args for some strange reason
+    split: function(point) {return [point.y, point.x]; },
+    postcreate: function(point, args) {Point.call(point, args[1], args[0]); }
+  }
+}});
+
+var point1 = new Point(3, 4);
+var s = WSON.stringify(point1);
+console.log('s=', s); // [Point:#4|#3]
+var point2 = WSON.parse(s);
+```
+
+Alternately you could specify `create` (with the lack of ability to use the constructor with `call` and `apply`. And: see Corner cases below):
+```js
+var WSON = wson({connectors: {
+  Point: {
+    by: Point,
+    split: function(point) {return [point.y, point.x]; },
+    create: function(args) {return new Point(args[1], args[0]); }
+  }
+}});
+```
+
+###### Corner cases:
+
+You *can* use together **backrefs** and **custom objects**. For example this will work:
+
+```js
+var pointCyc = new Point(5); // leave 'y' undefined for now
+var points = [pointCyc, pointCyc]
+pointCyc.y = points;
+var s = WSON.stringify(pointCyc);
+```
+provided that:
+- You use 2-stage creation (don't use `create`).
+- `postcreate` (or your constructor `by` from which `postcreate` is auto-created) does return an other object then that passed in.
 
 ## API
 
-#### var WSON = wson(options);
+#### var WSON = wson(options)
 
 Creates a new WSON processor. Recognized options are:
 - `useAddon` (boolean, default: `undefined`):
@@ -222,14 +264,23 @@ Creates a new WSON processor. Recognized options are:
   - `true`: The addon is forced. An exception is thrown if the addon is missing.
   - `undefined`: The addon is used when it is available.
 - `version` (number, default: `undefined`): the WSON-version to create the processor for. This document describes version 1. If this is `undefined`, the last available version is used.
-- `connectors` (optional): an object of  
+- `connectors` (optional): an object that maps **cnames** to **connectors**.
 
-#### var str = WSON.stringify(val);
+#### WSON.stringify(val)
 
 Returns the WSON representation of `val`.
 
 
-#### var val = WSON.parse(str);
+#### WSON.parse(str)
 
 Returns the value of the WSON string `str`. If `str` is ill-formed, a `ParseError` will be thrown.
+
+#### wson.ParseError
+
+This may be thrown by `WSON.parse`. It provides these fields:
+- `s`: the original ill-formed string.
+- `pos`: the position in `s` where passing has stumbled.
+- `cause`: some textual description of what caused to reject the string `s`.
+
+
 
