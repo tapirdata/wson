@@ -8,6 +8,12 @@ class Point
 class Polygon
   constructor: (@points=[]) ->
 
+class Foo
+  constructor: (@x, @y) ->
+
+
 exports.Point = Point
 exports.Polygon = Polygon
+exports.Foo = Foo
+
 

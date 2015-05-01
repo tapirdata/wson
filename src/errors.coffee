@@ -1,10 +1,15 @@
 'use strict'
 
 class WsonError extends Error
+  constructor: ->
+    if Error.captureStackTrace
+      Error.captureStackTrace @, @constructor
+
 
 class ParseError extends WsonError
   name: 'ParseError'
   constructor: (@s, @pos, @cause) ->
+    super()
     # console.log 'ParseError "%s" pos=%s cause="%s"', @s, @pos, @cause
     if not @pos?
       @pos = @s.length
@@ -20,6 +25,7 @@ class ParseError extends WsonError
 class StringifyError extends WsonError
   name: 'StringifyError'
   constructor: (@x, cause) ->
+    super()
     try
       xStr = JSON.stringify @x
     catch

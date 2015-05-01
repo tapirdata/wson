@@ -247,11 +247,12 @@ class State
         @value = connector.create @args
       else
         newValue = connector.postcreate @value, @args
-        # console.log '.end ', connector, @value
-        if newValue != @value
-          if @isBackreffed
-            @throwError "backreffed value is replaced by postcreate"
-          @value = newValue
+        # console.log '.end ', connector, @value, newValue
+        if _.isObject newValue
+          if newValue != @value
+            if @isBackreffed
+              @throwError "backreffed value is replaced by postcreate"
+            @value = newValue
       @next()
       @stage = null
 

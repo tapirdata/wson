@@ -36,7 +36,7 @@ We demand a format that:
 - is reasonably human readable.
 - can be parsed reasonably fast.
 - can proceed cyclic structures.
-- is extensible (coming soon).
+- is extensible.
 
 Since we found shortcomings in all present formats, we decided to create WSON:
 
@@ -64,7 +64,7 @@ The special characters are choosen to be expectable rare in natural language tex
 
 Strings are stringified verbatim (without quotes). If they have special characters in them, they got escaped. The empty string is stringified as `#`.
 
-Examples:
+###### Examples:
 
 | javascript          | WSON            |
 |---------------------|-----------------|
@@ -85,7 +85,7 @@ Booleans, `null`, `undefined` are stringified by these patterns:
 
 Numbers are stringified by `#` prepended to the number converted to a string.
 
-Examples:
+###### Examples:
 
 | javascript          | WSON            |
 |---------------------|-----------------|
@@ -94,7 +94,7 @@ Examples:
 
 `Date`-objects are stringified by `#d` prepended to the `valueOf`-number (i.e. the milliseconds since midnight 01 January, 1970 UTC) converted to a string.
 
-Examples:
+###### Examples:
 
 | javascript              | WSON            |
 |-------------------------|-----------------|
@@ -139,12 +139,77 @@ Note that array components and object values are **values**, but object keys are
 
 #### Backrefs
 
-WSON is able to stringify and parse cyclic structures by the means of **backrefs**. A **backref** is represented by `|` followed by a number, that says how many levels to go up. (0 resolves to the current array or objects, 1 resolves to the structure that contains the current structure and so on.)
+WSON is able to stringify and parse cyclic structures by means of **backrefs**. A **backref** is represented by `|` followed by a number, that says how many levels to go up. (0 resolves to the current array or objects, 1 resolves to the structure that contains the current structure and so on.)
 
 | javascript               | WSON                    |
 |--------------------------|-------------------------|
 | x = {}; x.y = x          | {y:\|0}                 |
 | x = {a:[]}; x.a.push(x)  | {a:[\|1]}               |
+
+#### Custom Objects
+
+WSON can be extended to stringify and parse custom objects by means of **connectors**.
+
+A **connector** is used to stringify a custom object by:
+- `by`: the objects's constructor. Only objects with exactly that constructor use this **connector** to stringify.
+- `split`: a function of `obj` that returns an array of arguments `args` that can be used to recreate `obj`.
+
+If `split` is ommited, `obj` must provide a method `__wsonsplit__` that return `args`.
+
+A **connector** is used to create a custom object by:
+- `create`: a function that takes an array of arguments `args` to create the object `obj`.
+
+Alternativly these functions may be used to use 2-stage creation:
+- `precreate`: a function that creates the (empty) object `obj`.
+- `postcreate`: a function that takes `obj` and `args` to populate `obj`.
+
+If no `create` is specified, missing `precreate` and `postcreate` are just created by using the constructor `by`.
+
+An extend WSON stringifier/parser is created by passing a `connectors` option to `wson`. `connectors` should by a object that maps that map **cname** keys to **connector** objects. If a value is given as a function `Foo` the **connector** is constructed as `{by: Foo}`.
+
+
+
+The WSON representation of custom objects is:
+
+  `[:` **cname** (list of args, each prepeded by `|`) `]`
+
+###### Examples:
+
+Provide a `__wsonsplit__` method:
+
+```js
+var wson = require('wson');
+
+var Point = function(x, y) {this.x=x; this.y=y; }
+Point.prototype.__wsonsplit__ = function() {return [this.x, this.y]; }
+
+var WSON = wson({connectors: {Point: Point}});
+
+var point1 = new Point(3, 4);
+
+var s = WSON.stringify(point1);
+console.log('s=', s); // [Point:#3|#4]
+var point2 = WSON.parse(s);
+```
+Or equivalently specify `split` explicitly:
+
+```js
+var wson = require('wson');
+
+var Point = function(x, y) {this.x=x; this.y=y}
+
+var WSON = wson({connectors: {
+  Point: {
+    by: Point, 
+    split: function(point) {return [point.x, point.y]; }
+  }
+}});
+
+var point1 = new Point(3, 4);
+var s = WSON.stringify(point1);
+console.log('s=', s); // [Point:#3|#4]
+var point2 = WSON.parse(s);
+```
 
 
 ## API
@@ -157,6 +222,7 @@ Creates a new WSON processor. Recognized options are:
   - `true`: The addon is forced. An exception is thrown if the addon is missing.
   - `undefined`: The addon is used when it is available.
 - `version` (number, default: `undefined`): the WSON-version to create the processor for. This document describes version 1. If this is `undefined`, the last available version is used.
+- `connectors` (optional): an object of  
 
 #### var str = WSON.stringify(val);
 
