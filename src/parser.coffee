@@ -31,7 +31,7 @@ class Source
 
 class State
 
-  constructor: (@source, @parent) ->
+  constructor: (@source, @parent, @allowPartial) ->
     @isBackreffed = false
 
   throwError: (cause, offset=0) ->
@@ -81,6 +81,13 @@ class State
       @next()
       @fetchObject()
       @stage = null
+    'default': ->
+      if @allowPartial
+        @isPartial = true
+        @stage = null
+      else
+        @throwError()
+
 
   stageArrayStart:
     ']': ->
@@ -350,6 +357,21 @@ class Parser
     source = new Source @, s
     state = new State source
     state.getValue()
+
+  parsePartial: (s, cb) ->
+    assert typeof s == 'string', 'parse expects a string, got: ' + s
+    source = new Source @, s
+    while not source.isEnd
+      state = new State source, null, true
+      state.fetchValue()
+      if state.isPartial
+        part = source.part
+        source.next()
+        cb false, part
+      else
+        cb true, state.value
+    cb false, null
+    return  
 
   getConnector: (name) ->
     if @connectors

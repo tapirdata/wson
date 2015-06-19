@@ -84,10 +84,11 @@ class Wson
       stringifier = new addon.Stringifier errors.StringifyError, stringifyOptions
       parser = new addon.Parser errors.ParseError, parseOptions
 
-      @escape = (x) -> stringifier.escape x
-      @unescape = (x) -> parser.unescape x
+      @escape = (s) -> stringifier.escape s
+      @unescape = (s) -> parser.unescape s
       @stringify = (x) -> stringifier.stringify x
-      @parse = (x) -> parser.parse x
+      @parse = (s) -> parser.parse s
+      @parsePartial = (s, cb) -> parser.parsePartial s, cb
 
     else
       transcribe = require './transcribe'
@@ -100,7 +101,7 @@ class Wson
       @unescape = (s) -> transcribe.unescape s
       @stringify = (x) -> stringifier.stringify x
       @parse = (s) -> parser.parse s
-
+      @parsePartial = (s, cb) -> parser.parsePartial s, cb
 
 
 factory = (options) ->
