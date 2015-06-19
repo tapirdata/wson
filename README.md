@@ -252,7 +252,7 @@ var s = WSON.stringify(pointCyc);
 ```
 provided that:
 - You use 2-stage creation (don't use `create`).
-- `postcreate` (or your constructor `by` from which `postcreate` is auto-created) does return an other object then that passed in.
+- `postcreate` (or your constructor `by` from which `postcreate` is auto-created) does return that object which has been passed in.
 
 ## API
 
