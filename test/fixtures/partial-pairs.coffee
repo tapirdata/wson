@@ -9,6 +9,7 @@ module.exports = [
   ['abc|', [true, 'abc', false, '|', false, null]]
   ['abc|def', [true, 'abc', false, '|', true, 'def', false, null]]
   ['[ab:|c]', '__fail__']
+  ['[ab|c]', [true, ['ab', 'c']], -> false ]
 ]  
 
 

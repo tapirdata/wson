@@ -270,14 +270,19 @@ Creates a new WSON processor. Recognized options are:
 
 Returns the WSON representation of `val`.
 
-
 #### WSON.parse(str)
 
 Returns the value of the WSON string `str`. If `str` is ill-formed, a `ParseError` will be thrown.
 
+#### WSON.parsePartial(str, cb)
+
+- `str`: a concatenation of chunks. Each chunk must be a valid WSON string or one of the special characters `{`, `}`, `[`, `]`, `#`, `:`, `|`.
+- `cb` (`function(isValue, value)`): This callback is called for every chunk. For a chunk that is a WSON string, `isValue` is `true` and `value` contains the parsed value. Otherwise `isValue`is `false` and `value` contains the special character. Eventually `cb` will be called with `(false, null)`. If `cb` returns `false` at some point, `parsePartial` is aborted immediately with a result of `false`. If the whole string `str` has been processed, `parsePartial` returns `true`. If some chunk is ill-formed, a `ParseError` will be thrown.
+
+
 #### wson.ParseError
 
-This may be thrown by `WSON.parse`. It provides these fields:
+This may be thrown by `WSON.parse` and `WSON.parsePartial`. It provides these fields:
 - `s`: the original ill-formed string.
 - `pos`: the position in `s` where passing has stumbled.
 - `cause`: some textual description of what caused to reject the string `s`.

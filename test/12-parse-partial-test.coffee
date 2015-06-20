@@ -23,18 +23,21 @@ for setup in require './fixtures/setups'
   describe setup.name, ->
     wson = wsonFactory setup.options
 
-    collectPartial = (s) ->
+    collectPartial = (s, fOk) ->
       result = []
 
       wson.parsePartial s, (isValue, value) ->
         result.push isValue
         result.push value
+        if fOk?
+          fOk isValue, value
+
       return result  
 
-    describe 'parse', ->
+    describe 'parse partial', ->
       pairs = require './fixtures/partial-pairs'
-      for [s, l] in pairs
-        do (s, l) ->
+      for [s, l, fOk] in pairs
+        do (s, l, fOk) ->
           cb = (isValue, v) ->
             result.push isValue
             result.push v
@@ -42,8 +45,8 @@ for setup in require './fixtures/setups'
             it "should fail to parse '#{s}'", ->
               expect(-> collectPartial s).to.throw()
           else
-            it "should parse '#{s}' as #{saveRepr l}", ->
-              expect(collectPartial s).to.be.deep.equal l
+            it "should parse '#{s}' as #{saveRepr l} #{if fOk then '(truncated)' else ''}", ->
+              expect(collectPartial s, fOk).to.be.deep.equal l
 
 
 

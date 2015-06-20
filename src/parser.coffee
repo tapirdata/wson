@@ -369,9 +369,13 @@ class Parser
         source.next()
         cb false, part
       else
-        cb true, state.value
-    cb false, null
-    return  
+        ok = cb true, state.value
+        if ok == false
+          return false
+    ok = cb false, null
+    if ok == false
+      return false
+    return true
 
   getConnector: (name) ->
     if @connectors
