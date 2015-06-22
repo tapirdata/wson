@@ -2,5 +2,9 @@
 
 Wson = require '../src/'
 
-module.exports = (options) ->
+factory = (options) ->
   Wson options
+
+
+factory.ParseError = Wson.ParseError  
+module.exports = factory

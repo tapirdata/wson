@@ -7,26 +7,75 @@ errors = require './errors'
 
 class Source
 
-  constructor: (@stringifier, s) ->
-    @parts = s.split transcribe.splitRe
-    @nextIdx = 0
+  constructor: (@parser, @s) ->
+    @sLen = @s.length
+    @rest = @s
+    # @parts = @s.split transcribe.splitRe
+    # @partIdx = null
+    @splitRe = new RegExp transcribe.splitBrick, 'g'
+    @pos = null
     @isEnd = false
     @next()
 
+  # nextX: ->
+  #   while not @isEnd
+  #     if @partIdx?
+  #       @partIdx++
+  #       @pos += @part.length
+  #     else  
+  #       @partIdx = 0
+  #       @pos = 0
+  #     if @partIdx >= @parts.length
+  #       @isEnd = true
+  #     else  
+  #       @part = @parts[@partIdx]
+  #       @isText = @partIdx % 2 == 0
+  #     if @part.length > 0
+  #       break
+  #   return
+
   next: ->
-    parts = @parts
-    idx = @nextIdx
-    loop
-      if idx >= parts.length
-        @isEnd = true
-        break
-      @isText = idx % 2 == 0
-      part = parts[idx++]
-      if not @isText or part.length > 0
-        break
-    @nextIdx = idx
-    @part = part
-    return
+    if @pos?
+      @pos += @part.length
+    else
+      @pos = 0
+
+    if @pos >= @sLen
+      @isEnd = true
+    else
+      if @nt?
+        @part = @nt
+        @isText = false
+        @nt = null
+      else
+        m = @splitRe.exec @rest
+        restPos = @pos + @rest.length - @sLen
+        # console.log 'next rest=%s, m=%j restPos=%s', @rest, m, restPos
+        if m?
+          if m.index > restPos
+            partLen = m.index - restPos
+            @isText = true
+            @part = @rest.slice restPos, restPos + partLen
+            @nt = m[0]
+          else
+            @isText = false
+            @part = m[0]
+        else    
+          @part = @rest.slice restPos
+          @isText = true
+    # console.log 'next.. source=%j', @
+    return  
+
+
+  advance: (n) ->
+    # console.log 'advance', n, @isEnd
+    @rest = @s.slice @pos + n
+    @splitRe = new RegExp transcribe.splitBrick, 'g'
+    @nt = null
+    @part = ''
+    @pos += n
+    @next()
+    # console.log 'advance.. source=%j', @
 
 
 class State
@@ -35,15 +84,7 @@ class State
     @isBackreffed = false
 
   throwError: (cause, offset=0) ->
-    # console.log 'throwError cause="%s" offset=%s source=', cause, offset, @source
-    if 1 or not @source.isEnd
-      pos = 0
-      idx = 0
-      while idx < @source.nextIdx - 1
-        pos += @source.parts[idx++].length
-      pos += offset
-    s = @source.parts.join ''
-    throw new errors.ParseError s, pos, cause
+    throw new errors.ParseError @source.s, @source.pos + offset, cause
 
   next: ->
     @source.next()
@@ -204,7 +245,7 @@ class State
   stageCustomStart:
     text: ->
       name = @getText()
-      connector = @source.stringifier.getConnector name
+      connector = @source.parser.getConnector name
       # console.log 'name=%s', name, connector
       if not connector
         @throwError "no connector for '#{name}'"
@@ -267,7 +308,6 @@ class State
     try
       transcribe.unescape @source.part
     catch err
-      # console.log 'err=', err
       if err instanceof errors.ParseError
         @throwError err.cause, err.pos
       throw err
@@ -358,23 +398,29 @@ class Parser
     state = new State source
     state.getValue()
 
-  parsePartial: (s, cb) ->
+  parsePartial: (s, nextRaw, cb) ->
     assert typeof s == 'string', 'parse expects a string, got: ' + s
     source = new Source @, s
     while not source.isEnd
-      state = new State source, null, true
-      state.fetchValue()
-      if state.isPartial
-        part = source.part
+      pos = source.pos
+      if _.isArray nextRaw
+        source.advance nextRaw[1]
+        if source.isEnd
+          break
+        nextRaw = nextRaw[0]
+      if nextRaw == true
+        nextRaw = cb source.isText, source.part, pos
         source.next()
-        cb false, part
+      else if nextRaw == false
+        state = new State source, null, true
+        state.fetchValue()
+        if state.isPartial
+          nextRaw = cb false, source.part, pos
+          source.next()
+        else
+          nextRaw = cb true, state.value, pos
       else
-        ok = cb true, state.value
-        if ok == false
-          return false
-    ok = cb false, null
-    if ok == false
-      return false
+        return false
     return true
 
   getConnector: (name) ->
@@ -382,7 +428,6 @@ class Parser
       connector = @connectors[name]
     connector
 
-
-# Parser.norm = normConnectors
+Parser.Source = Source
 module.exports = Parser
 

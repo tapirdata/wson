@@ -20,33 +20,40 @@ saveRepr = (x) ->
       String x
 
 for setup in require './fixtures/setups'
+  # if setup.options.useAddon
+  #   continue
   describe setup.name, ->
     wson = wsonFactory setup.options
 
-    collectPartial = (s, fOk) ->
+    collectPartial = (s, nrs) ->
+      # console.log 'collectPartial', s, nrs
       result = []
+      nrIdx = 0
 
-      wson.parsePartial s, (isValue, value) ->
+      cb = (isValue, value) ->
         result.push isValue
         result.push value
-        if fOk?
-          fOk isValue, value
+        nrs[nrIdx++]
+
+      wson.parsePartial s, nrs[nrIdx++], cb
 
       return result  
 
     describe 'parse partial', ->
       pairs = require './fixtures/partial-pairs'
-      for [s, l, fOk] in pairs
-        do (s, l, fOk) ->
-          cb = (isValue, v) ->
-            result.push isValue
-            result.push v
-          if l == '__fail__'
-            it "should fail to parse '#{s}'", ->
-              expect(-> collectPartial s).to.throw()
+      for pair in pairs
+        do (pair) ->
+          if pair.failPos?
+            it "should fail to parse '#{pair.s}' at #{pair.failPos}", ->
+              try
+                collectPartial pair.s, pair.nrs
+              catch e_
+                e = e_
+              expect(e).to.be.instanceof wsonFactory.ParseError
+              expect(e.pos).to.be.equal pair.failPos
           else
-            it "should parse '#{s}' as #{saveRepr l} #{if fOk then '(truncated)' else ''}", ->
-              expect(collectPartial s, fOk).to.be.deep.equal l
+            it "should parse '#{pair.s}' as #{saveRepr pair.col} (nrs=#{saveRepr pair.nrs})", ->
+              expect(collectPartial pair.s, pair.nrs).to.be.deep.equal pair.col
 
 
 

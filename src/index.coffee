@@ -88,7 +88,18 @@ class Wson
       @unescape = (s) -> parser.unescape s
       @stringify = (x) -> stringifier.stringify x
       @parse = (s) -> parser.parse s
-      @parsePartial = (s, cb) -> parser.parsePartial s, cb
+      @parsePartial = (s, nextRaw, cb) -> parser.parsePartial s, nextRaw, ->
+        try
+          result = cb.apply null, arguments
+        catch e
+          if e instanceof Error
+            return e
+          else
+            return new Error e
+        if result == true or result == false or _.isArray result
+          return result
+        else
+          return null
 
     else
       transcribe = require './transcribe'
@@ -101,7 +112,7 @@ class Wson
       @unescape = (s) -> transcribe.unescape s
       @stringify = (x) -> stringifier.stringify x
       @parse = (s) -> parser.parse s
-      @parsePartial = (s, cb) -> parser.parsePartial s, cb
+      @parsePartial = (s, nextRaw, cb) -> parser.parsePartial s, nextRaw, cb
 
 
 factory = (options) ->
