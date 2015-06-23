@@ -297,7 +297,7 @@ Returns `str` with the special characters replaced by their corresponding escape
 
 #### WSON.unescape(str)
 
-Returns `str` with containing escape sequence replaced by their counterparts. If `str` contains invalid escape sequences, a `ParseError` will be thrown.
+Returns `str` with encountered escape sequence replaced by their counterparts. If `str` contains invalid escape sequences, a `ParseError` will be thrown.
 
 
 #### wson.ParseError
