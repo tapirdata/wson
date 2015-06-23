@@ -88,7 +88,7 @@ class Wson
       @unescape = (s) -> parser.unescape s
       @stringify = (x) -> stringifier.stringify x
       @parse = (s) -> parser.parse s
-      @parsePartial = (s, nextRaw, cb) -> parser.parsePartial s, nextRaw, ->
+      @parsePartial = (s, howNext, cb) -> parser.parsePartial s, howNext, ->
         try
           result = cb.apply null, arguments
         catch e
@@ -112,7 +112,7 @@ class Wson
       @unescape = (s) -> transcribe.unescape s
       @stringify = (x) -> stringifier.stringify x
       @parse = (s) -> parser.parse s
-      @parsePartial = (s, nextRaw, cb) -> parser.parsePartial s, nextRaw, cb
+      @parsePartial = (s, howNext, cb) -> parser.parsePartial s, howNext, cb
 
 
 factory = (options) ->
@@ -120,6 +120,6 @@ factory = (options) ->
 
 factory.Wson = Wson
 factory.ParseError = errors.ParseError
-factory.StringifyError= errors.StringifyError
+factory.StringifyError = errors.StringifyError
 
 module.exports = factory

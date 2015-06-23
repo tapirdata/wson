@@ -67,15 +67,15 @@ class Source
     return  
 
 
-  advance: (n) ->
-    # console.log 'advance', n, @isEnd
+  skip: (n) ->
+    # console.log 'skip', n, @isEnd
     @rest = @s.slice @pos + n
     @splitRe = new RegExp transcribe.splitBrick, 'g'
     @nt = null
     @part = ''
     @pos += n
     @next()
-    # console.log 'advance.. source=%j', @
+    # console.log 'skip.. source=%j', @
 
 
 class State
@@ -398,27 +398,32 @@ class Parser
     state = new State source
     state.getValue()
 
-  parsePartial: (s, nextRaw, cb) ->
+  parsePartial: (s, howNext, cb) ->
     assert typeof s == 'string', 'parse expects a string, got: ' + s
     source = new Source @, s
     while not source.isEnd
-      pos = source.pos
-      if _.isArray nextRaw
-        source.advance nextRaw[1]
-        if source.isEnd
-          break
-        nextRaw = nextRaw[0]
+      if _.isArray howNext
+        [nextRaw, nSkip] = howNext
+        if nSkip > 0
+          source.skip nSkip
+          if source.isEnd
+            break
+      else
+        nextRaw = howNext
       if nextRaw == true
-        nextRaw = cb source.isText, source.part, pos
+        isText = source.isText
+        part = source.part
         source.next()
+        howNext = cb isText, part, source.pos
       else if nextRaw == false
         state = new State source, null, true
         state.fetchValue()
         if state.isPartial
-          nextRaw = cb false, source.part, pos
+          part = source.part
           source.next()
+          howNext = cb false, part, source.pos
         else
-          nextRaw = cb true, state.value, pos
+          howNext = cb true, state.value, source.pos
       else
         return false
     return true

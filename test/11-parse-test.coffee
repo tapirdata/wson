@@ -20,6 +20,8 @@ saveRepr = (x) ->
       String x
 
 for setup in require './fixtures/setups'
+  # if setup.options.useAddon
+  #   continue
   describe setup.name, ->
     wson = wsonFactory setup.options
     describe 'parse', ->

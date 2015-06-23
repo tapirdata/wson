@@ -274,10 +274,30 @@ Returns the WSON representation of `val`.
 
 Returns the value of the WSON string `str`. If `str` is ill-formed, a `ParseError` will be thrown.
 
-#### WSON.parsePartial(str, cb)
+#### WSON.parsePartial(str, howNext, cb)
 
-- `str`: a concatenation of chunks. Each chunk must be a valid WSON string or one of the special characters `{`, `}`, `[`, `]`, `#`, `:`, `|`.
-- `cb` (`function(isValue, value)`): This callback is called for every chunk. For a chunk that is a WSON string, `isValue` is `true` and `value` contains the parsed value. Otherwise `isValue`is `false` and `value` contains the special character. Eventually `cb` will be called with `(false, null)`. If `cb` returns `false` at some point, `parsePartial` is aborted immediately with a result of `false`. If the whole string `str` has been processed, `parsePartial` returns `true`. If some chunk is ill-formed, a `ParseError` will be thrown.
+Parse a string with embedded WSON strings by intercepting the WSON lexer/parser.
+
+- `str`: The string to be parsed.
+- `howNext`: determines how the next chunk should be handled. This may be an array `[nextRaw, skip]` or just boolean `nextRaw`. `skip` is the number of characters to be skipped first (Say, they have been proceeded by other means). Then, if `nextRaw` is:
+  - `true`, just the lexer is to be used. The next `value` passed to `cb` will be either:
+    - One of the special characters `{`, `}`, `[`, `]`, `#`, `:`, `|`. This is signaled by `isValue == false`.
+    - A non-empty string that results by unescaping untill the next special character. This is signaled by `isValue == true`.
+  - `false`, an attempt to parse is requested. The next `value` passed to `cb` will be either: 
+    - One of the special characters `}`, `]`, `:`, `|` that may not start a valid WSON string. This is signaled by `isValue == false`.
+    - The value of the next WSON string. This is signaled by `isValue == true`. If this sub-string is ill-formed, a `ParseError` will be thrown.
+  Any other value of `howNext` will cause `parsePartial` to stop immediately with a result of `false`.
+- `cb` (`function(isValue, value, pos)`): This callback reports the next chunk according to `howNext`. `pos` will be set to the next (yet unparsed) position in `str`. The return value of `cb` is used as `howNext` for next parsing step.
+
+If `parseNext` happens to parse the complete `str`, it will return `true`.
+
+#### WSON.escape(str)
+
+Returns `str` with the special characters replaced by their corresponding escape sequences.
+
+#### WSON.unescape(str)
+
+Returns `str` with containing escape sequence replaced by their counterparts. If `str` contains invalid escape sequences, a `ParseError` will be thrown.
 
 
 #### wson.ParseError

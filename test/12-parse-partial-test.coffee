@@ -30,9 +30,10 @@ for setup in require './fixtures/setups'
       result = []
       nrIdx = 0
 
-      cb = (isValue, value) ->
+      cb = (isValue, value, pos) ->
         result.push isValue
         result.push value
+        result.push pos
         nrs[nrIdx++]
 
       wson.parsePartial s, nrs[nrIdx++], cb
