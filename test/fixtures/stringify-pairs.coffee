@@ -49,13 +49,16 @@ module.exports = [
   [{a:{}}, '{a:{}}']
   [{a:{a:['b',{c:3}],b:{c:[8,2]}}}, '{a:{a:[b|{c:#3}]|b:{c:[#8|#2]}}}']
   [{'[a]':'[b]'}, '{`aa`e:`ab`e}']
-  #cyclic
+  # cyclic
   [cycArr0, '[a||0]']
   [cycArr1, '[a|[b||0]]']
   [cycArr2, '[a|[b||1]]']
   [cycObj0, '{a:#3|x:|0}']
   [cycObj1, '{a:#3|b:{r0:|0}}']
   [cycObj2, '{a:#3|b:{r1:|1}}']
+  # ext backref
+  [{a: 3, b: [100]}, '{a:#3|b:|1}', null, (refNum) -> refNum; [[100],[101],[102]][refNum]]
+  [{a: 3, b: [101]}, '{a:#3|b:|2}', null, (refNum) -> refNum; [[100],[101],[102]][refNum]]
   # extension
   [new Point(3, 4), '[:Point|#3|#4]']
   [new Polygon([new Point(3, 4), new Point(12, 5)]), '[:Polygon|[:Point|#3|#4]|[:Point|#12|#5]]']

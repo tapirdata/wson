@@ -87,19 +87,28 @@ class Wson
       @escape = (s) -> stringifier.escape s
       @unescape = (s) -> parser.unescape s
       @stringify = (x) -> stringifier.stringify x
-      @parse = (s) -> parser.parse s
-      @parsePartial = (s, howNext, cb) -> parser.parsePartial s, howNext, ->
-        try
-          result = cb.apply null, arguments
-        catch e
-          if e instanceof Error
-            return e
-          else
-            return new Error e
-        if result == true or result == false or _.isArray result
-          return result
+      @parse = (s, options) -> parser.parse s, options?.backrefCb
+      @parsePartial = (s, options) ->
+        if _.isObject options
+          howNext = options.howNext
+          cb      = options.cb
+          backrefCb = options.backrefCb
         else
-          return null
+          howNext = arguments[1]
+          cb      = arguments[2]
+        safeCb = ->
+          try
+            result = cb.apply null, arguments
+          catch e
+            if e instanceof Error
+              return e
+            else
+              return new Error e
+          if result == true or result == false or _.isArray result
+            return result
+          else
+            return null
+        parser.parsePartial s, howNext, safeCb, backrefCb
 
     else
       transcribe = require './transcribe'
@@ -111,8 +120,14 @@ class Wson
       @escape = (s) -> transcribe.escape s
       @unescape = (s) -> transcribe.unescape s
       @stringify = (x) -> stringifier.stringify x
-      @parse = (s) -> parser.parse s
-      @parsePartial = (s, howNext, cb) -> parser.parsePartial s, howNext, cb
+      @parse = (s, options) ->
+        parser.parse s, options or {}
+      @parsePartial = (s, options) ->
+        if not _.isObject options
+          options =
+            howNext: arguments[1]
+            cb:      arguments[2]
+        parser.parsePartial s, options
 
 
 factory = (options) ->

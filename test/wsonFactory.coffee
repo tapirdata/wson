@@ -6,5 +6,5 @@ factory = (options) ->
   Wson options
 
 
-factory.ParseError = Wson.ParseError  
+factory.ParseError = Wson.ParseError
 module.exports = factory

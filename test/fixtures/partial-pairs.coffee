@@ -2,22 +2,22 @@
 
 module.exports = [
   {
-    s: '', 
+    s: ''
     col: []
     nrs: [false]
   }
   {
-    s: 'abc', 
+    s: 'abc',
     col: [true, 'abc', 3]
     nrs: [false]
   }
   {
-    s: '[ab|c]', 
+    s: '[ab|c]',
     col: [true, ['ab', 'c'], 6]
     nrs: [false]
   }
   {
-    s: ':', 
+    s: ':'
     col: [false, ':', 1]
     nrs: [false]
   }
@@ -27,22 +27,22 @@ module.exports = [
     nrs: [false, false]
   }
   {
-    s: 'abc|', 
+    s: 'abc|'
     col: [true, 'abc', 3, false, '|', 4]
     nrs: [false, false]
   }
   {
-    s: 'abc|def', 
+    s: 'abc|def'
     col: [true, 'abc', 3, false, '|', 4, true, 'def', 7]
     nrs: [false, false, false]
   }
   {
-    s: '[ab:|c]', 
+    s: '[ab:|c]'
     failPos: 3,
     nrs: [false]
-  }  
+  }
   {
-    s: '[ab|c]', 
+    s: '[ab|c]'
     col: [true, ['ab', 'c'], 6]
     nrs: [false]
   }
@@ -62,6 +62,12 @@ module.exports = [
     nrs: [false, [false, 1]]
   }
   {
+    s: '{a:#3|b:|1}'
+    col: [true, {a: 3, b: [100]}, 11]
+    nrs: [false]
+    backrefCb: (refNum) -> [[100],[101],[102]][refNum]
+  }
+  {
     s: ':foo{bar:[x|y]|:baz:{u:vw}}',
     col: [
       false, ':', 1
@@ -79,6 +85,6 @@ module.exports = [
     ]
     nrs: [false, true, true, true, true, false, true, true, true, true, false, true]
   }
-]  
+]
 
 

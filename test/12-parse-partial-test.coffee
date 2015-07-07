@@ -20,12 +20,12 @@ saveRepr = (x) ->
       String x
 
 for setup in require './fixtures/setups'
-  # if setup.options.useAddon
-  #   continue
+  if setup.options.useAddon
+    continue
   describe setup.name, ->
     wson = wsonFactory setup.options
 
-    collectPartial = (s, nrs) ->
+    collectPartial = (s, nrs, backrefCb) ->
       # console.log 'collectPartial', s, nrs
       result = []
       nrIdx = 0
@@ -36,9 +36,9 @@ for setup in require './fixtures/setups'
         result.push pos
         nrs[nrIdx++]
 
-      wson.parsePartial s, nrs[nrIdx++], cb
+      wson.parsePartial s, howNext: nrs[nrIdx++], cb: cb, backrefCb: backrefCb
 
-      return result  
+      return result
 
     describe 'parse partial', ->
       pairs = require './fixtures/partial-pairs'
@@ -47,14 +47,14 @@ for setup in require './fixtures/setups'
           if pair.failPos?
             it "should fail to parse '#{pair.s}' at #{pair.failPos}", ->
               try
-                collectPartial pair.s, pair.nrs
+                collectPartial pair.s, pair.nrs, pair.backrefCb
               catch e_
                 e = e_
               expect(e).to.be.instanceof wsonFactory.ParseError
               expect(e.pos).to.be.equal pair.failPos
           else
             it "should parse '#{pair.s}' as #{saveRepr pair.col} (nrs=#{saveRepr pair.nrs})", ->
-              expect(collectPartial pair.s, pair.nrs).to.be.deep.equal pair.col
+              expect(collectPartial pair.s, pair.nrs, pair.backrefCb).to.be.deep.equal pair.col
 
 
 

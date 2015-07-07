@@ -32,7 +32,7 @@ var newEntry = WSON.parse(s);
 We demanded a format that:
 - is deterministic (stringification does not depend on key insertion order or unjustified assumptions about the js-engine).
 - is textual, so it can be used as a key itself.
-- is terse, especially does grow linearly in length when stringified recursively (`\`-escaping grows exponentially). 
+- is terse, especially does grow linearly in length when stringified recursively (`\`-escaping grows exponentially).
 - is reasonably human readable.
 - can be parsed reasonably fast.
 - can handle cyclic structures.
@@ -193,6 +193,7 @@ Or equivalently specify `split` explicitly:
 ```js
 var wson = require('wson');
 
+
 var Point = function(x, y) {this.x=x; this.y=y}
 
 var WSON = wson({connectors: {
@@ -270,24 +271,27 @@ Creates a new WSON processor. Recognized options are:
 
 Returns the WSON representation of `val`.
 
-#### WSON.parse(str)
+#### WSON.parse(str, options)
 
 Returns the value of the WSON string `str`. If `str` is ill-formed, a `ParseError` will be thrown.
+- `options`:
+  - `backrefCb` (`function(refIdx)`):
 
-#### WSON.parsePartial(str, howNext, cb)
+#### WSON.parsePartial(str, options)
 
 Parse a string with embedded WSON strings by intercepting the WSON lexer/parser.
 
 - `str`: The string to be parsed.
-- `howNext`: determines how the next chunk should be handled. This may be an array `[nextRaw, skip]` or just boolean `nextRaw`. `skip` is the number of characters to be skipped first (Say, they have been proceeded by other means). Then, if `nextRaw` is:
-  - `true`, just the lexer is to be used. The next `value` passed to `cb` will be either:
-    - One of the special characters `{`, `}`, `[`, `]`, `#`, `:`, `|`. This is signaled by `isValue == false`.
-    - A non-empty string that results by unescaping untill the next special character. This is signaled by `isValue == true`.
-  - `false`, an attempt to parse is requested. The next `value` passed to `cb` will be either: 
-    - One of the special characters `}`, `]`, `:`, `|` that may not start a valid WSON string. This is signaled by `isValue == false`.
-    - The value of the next WSON string. This is signaled by `isValue == true`. If this sub-string is ill-formed, a `ParseError` will be thrown.
-  Any other value of `howNext` will cause `parsePartial` to stop immediately with a result of `false`.
-- `cb` (`function(isValue, value, pos)`): This callback reports the next chunk according to `howNext`. `pos` will be set to the next (yet unparsed) position in `str`. The return value of `cb` is used as `howNext` for next parsing step.
+- `options`:
+  - `howNext`: determines how the next chunk should be handled. This may be an array `[nextRaw, skip]` or just boolean `nextRaw`. `skip` is the number of characters to be skipped first (Say, they have been proceeded by other means). Then, if `nextRaw` is:
+    - `true`, just the lexer is to be used. The next `value` passed to `cb` will be either:
+      - One of the special characters `{`, `}`, `[`, `]`, `#`, `:`, `|`. This is signaled by `isValue == false`.
+      - A non-empty string that results by unescaping untill the next special character. This is signaled by `isValue == true`.
+    - `false`, an attempt to parse is requested. The next `value` passed to `cb` will be either:
+      - One of the special characters `}`, `]`, `:`, `|` that may not start a valid WSON string. This is signaled by `isValue == false`.
+      - The value of the next WSON string. This is signaled by `isValue == true`. If this sub-string is ill-formed, a `ParseError` will be thrown.
+    Any other value of `howNext` will cause `parsePartial` to stop immediately with a result of `false`.
+  - `cb` (`function(isValue, value, pos)`): This callback reports the next chunk according to `howNext`. `pos` will be set to the next (yet unparsed) position in `str`. The return value of `cb` is used as `howNext` for next parsing step.
 
 If `parseNext` happens to parse the complete `str`, it will return `true`.
 

@@ -22,12 +22,12 @@ class Source
   #     if @partIdx?
   #       @partIdx++
   #       @pos += @part.length
-  #     else  
+  #     else
   #       @partIdx = 0
   #       @pos = 0
   #     if @partIdx >= @parts.length
   #       @isEnd = true
-  #     else  
+  #     else
   #       @part = @parts[@partIdx]
   #       @isText = @partIdx % 2 == 0
   #     if @part.length > 0
@@ -60,11 +60,11 @@ class Source
           else
             @isText = false
             @part = m[0]
-        else    
+        else
           @part = @rest.slice restPos
           @isText = true
     # console.log 'next.. source=%j', @
-    return  
+    return
 
 
   skip: (n) ->
@@ -355,8 +355,17 @@ class State
       @invalidBackref part
     state = @
     while refNum > 0
-      state = state.parent
-      unless state
+      parentState = state.parent
+      if parentState?
+        state = parentState
+      else if state.backrefCb?
+        value = state.backrefCb refNum - 1
+        if value?
+          @next()
+          return value
+        else
+          @invalidBackref part
+      else
         @invalidBackref part
       --refNum
     if state.vetoBackref
@@ -392,13 +401,16 @@ class Parser
     options or= {}
     @connectors = options.connectors
 
-  parse: (s) ->
+  parse: (s, options) ->
     assert typeof s == 'string', 'parse expects a string, got: ' + s
     source = new Source @, s
     state = new State source
+    state.backrefCb = options.backrefCb
     state.getValue()
 
-  parsePartial: (s, howNext, cb) ->
+  parsePartial: (s, options) ->
+    howNext = options.howNext
+    cb      = options.cb
     assert typeof s == 'string', 'parse expects a string, got: ' + s
     source = new Source @, s
     while not source.isEnd
@@ -417,6 +429,7 @@ class Parser
         howNext = cb isText, part, source.pos
       else if nextRaw == false
         state = new State source, null, true
+        state.backrefCb = options.backrefCb
         state.fetchValue()
         if state.isPartial
           part = source.part

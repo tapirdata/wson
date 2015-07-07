@@ -24,9 +24,10 @@ for setup in require './fixtures/setups'
     wson = wsonFactory setup.options
     describe 'stringify', ->
       pairs = require './fixtures/stringify-pairs'
-      for [x, s] in pairs
-        do (x, s) ->
-          if x == '__fail__'
+      for pair in pairs
+        do (pair) ->
+          [x, s, failPos, backrefCb] = pair
+          if x == '__fail__' or backrefCb?
             return
           if s == '__fail__'
             it "should fail to stringify #{saveRepr x}", ->
