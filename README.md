@@ -35,8 +35,9 @@ We demanded a format that:
 - is terse, especially does grow linearly in length when stringified recursively (`\`-escaping grows exponentially).
 - is reasonably human readable.
 - can be parsed reasonably fast.
-- can handle cyclic structures.
-- is extensible.
+- can handle [cyclic structures](#backrefs).
+- is [extensible](#custom-objects).
+- can parse strings that contain WSON mixed [with other stuff](#parse-partial).
 
 Since we found shortcomings in all present formats, we decided to create WSON:
 
@@ -137,6 +138,7 @@ The pairs are sorted by key (sorting is done before escaping).
 A **value** can be any of **string**, **literal**, **array**, and **object**.
 Note that array components and object values are **values**, but object keys are **strings**.
 
+<a name="backrefs"></a>
 #### Backrefs
 
 WSON is able to stringify and parse cyclic structures by means of **backrefs**. A **backref** is represented by `|` followed by a number, that says how many levels to go up. (0 resolves to the current array or objects, 1 resolves to the structure that contains the current structure and so on.)
@@ -146,6 +148,7 @@ WSON is able to stringify and parse cyclic structures by means of **backrefs**. 
 | x = {}; x.y = x          | {y:\|0}                 |
 | x = {a:[]}; x.a.push(x)  | {a:[\|1]}               |
 
+<a name="custom-objects"></a>
 #### Custom Objects
 
 WSON can be extended to stringify and parse **custom objects** by means of **connectors**.
@@ -185,7 +188,7 @@ var WSON = wson({connectors: {Point: Point}});
 var point1 = new Point(3, 4);
 
 var s = WSON.stringify(point1);
-console.log('s=', s); // [Point:#3|#4]
+console.log('s=', s); // [:Point|#3|#4]
 var point2 = WSON.parse(s);
 ```
 
@@ -265,7 +268,7 @@ Creates a new WSON processor. Recognized options are:
   - `true`: The addon is forced. An exception is thrown if the addon is missing.
   - `undefined`: The addon is used when it is available.
 - `version` (number, default: `undefined`): the WSON-version to create the processor for. This document describes version 1. If this is `undefined`, the last available version is used.
-- `connectors` (optional): an object that maps **cnames** to **connectors**.
+- `connectors` (optional): an object that maps **cnames** to [connectors](#custom-objects).
 
 #### WSON.stringify(val)
 
@@ -275,8 +278,9 @@ Returns the WSON representation of `val`.
 
 Returns the value of the WSON string `str`. If `str` is ill-formed, a `ParseError` will be thrown.
 - `options`:
-  - `backrefCb` (`function(refIdx)`):
+  - `backrefCb` (`function(refIdx)`): a function that can resolve backrefs outsite of the item in scope. `refIdx=0` will refer to next enclosing object.
 
+<a name="parse-partial"></a>
 #### WSON.parsePartial(str, options)
 
 Parse a string with embedded WSON strings by intercepting the WSON lexer/parser.
@@ -292,6 +296,7 @@ Parse a string with embedded WSON strings by intercepting the WSON lexer/parser.
       - The value of the next WSON string. This is signaled by `isValue == true`. If this sub-string is ill-formed, a `ParseError` will be thrown.
     Any other value of `howNext` will cause `parsePartial` to stop immediately with a result of `false`.
   - `cb` (`function(isValue, value, pos)`): This callback reports the next chunk according to `howNext`. `pos` will be set to the next (yet unparsed) position in `str`. The return value of `cb` is used as `howNext` for next parsing step.
+  - `backrefCb` (`function(refIdx)`): a function that can resolve backrefs outsite of the item in scope. `refIdx=0` will refer to next enclosing object.
 
 If `parseNext` happens to parse the complete `str`, it will return `true`.
 
@@ -303,6 +308,9 @@ Returns `str` with the special characters replaced by their corresponding escape
 
 Returns `str` with encountered escape sequence replaced by their counterparts. If `str` contains invalid escape sequences, a `ParseError` will be thrown.
 
+#### WSON.connectors
+
+Holds the map of **cnames** to normalized [connectors](#custom-objects)
 
 #### wson.ParseError
 

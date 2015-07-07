@@ -9,7 +9,7 @@ catch
 
 errors = require './errors'
 
-normStringifyConnectors = (cons) ->
+normConnectors = (cons) ->
   if _.isObject(cons) and not _.isEmpty(cons)
     connectors = {}
     for name, con of cons
@@ -19,22 +19,11 @@ normStringifyConnectors = (cons) ->
       else
         connector = _.clone con
       connector.name = name
+      
       if not _.isFunction connector.split
         connector.split = (x) -> x.__wsonsplit__()
       connectors[name] = connector
-    connectors
 
-
-normParseConnectors = (cons) ->
-  if _.isObject(cons) and not _.isEmpty(cons)
-    connectors = {}
-    for name, con of cons
-      if _.isFunction con
-        connector =
-          by: con
-      else
-        connector = _.clone con
-      connector.name = name
       if _.isFunction connector.create
         connector.hasCreate = true
       else
@@ -47,9 +36,7 @@ normParseConnectors = (cons) ->
             connector.postcreate = (obj, args) ->
               ret = connector.by.apply obj, args
               if Object(ret) == ret then ret else obj
-      connectors[name] = connector
     connectors
-
 
 
 class Wson
@@ -67,18 +54,15 @@ class Wson
       if useAddon == true
         throw new Error "wson-addon is not installed"
 
+    stringifyOptions = {}
+    parseOptions = {}
     if options.connectors
-      stringifyOptions =
-        connectors: normStringifyConnectors options.connectors
-      parseOptions =
-        connectors: normParseConnectors options.connectors
+      connectors = normConnectors options.connectors
+      stringifyOptions.connectors = connectors
+      parseOptions.connectors = connectors
     else
-      stringifyOptions = {}
-      parseOptions = {}
-
-    # console.log 'options=', options
-    # console.log 'stringifyOptions=', stringifyOptions
-    # console.log 'parseOptions=', parseOptions
+      connectors = null
+    @connectors = connectors
 
     if useAddon
       stringifier = new addon.Stringifier errors.StringifyError, stringifyOptions
