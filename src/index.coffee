@@ -70,7 +70,8 @@ class Wson
 
       @escape = (s) -> stringifier.escape s
       @unescape = (s) -> parser.unescape s
-      @stringify = (x) -> stringifier.stringify x
+      @stringify = (x, options) ->
+        stringifier.stringify x, options?.haverefCb
       @parse = (s, options) -> parser.parse s, options?.backrefCb
       @parsePartial = (s, options) ->
         if _.isObject options
@@ -103,7 +104,8 @@ class Wson
 
       @escape = (s) -> transcribe.escape s
       @unescape = (s) -> transcribe.unescape s
-      @stringify = (x) -> stringifier.stringify x
+      @stringify = (x, options) ->
+        stringifier.stringify x, null, options?.haverefCb
       @parse = (s, options) ->
         parser.parse s, options or {}
       @parsePartial = (s, options) ->

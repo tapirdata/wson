@@ -162,7 +162,7 @@ If `split` is ommited, `obj` must provide a method `__wsonsplit__` that returns 
 A **connector** is used to create a **custom object** by:
 - `create`: a function that takes an array of arguments `args` to create the object `obj`.
 
-Alternativly these functions may be used to use 2-stage creation:
+Alternatively these functions may be used to use 2-stage creation:
 - `precreate`: a function that creates the (empty) object `obj`.
 - `postcreate`: a function that takes `obj` and `args` to populate `obj`.
 
@@ -172,7 +172,7 @@ An extended WSON stringifier/parser is created by passing a `connectors` option 
 
 The WSON representation of a **custom object** is:
 
-  `[:` **cname** (list of args, each prepeded by `|`) `]`
+  `[:` **cname** (list of args, each prepended by `|`) `]`
 
 ###### Examples:
 
@@ -278,7 +278,7 @@ Returns the WSON representation of `val`.
 
 Returns the value of the WSON string `str`. If `str` is ill-formed, a `ParseError` will be thrown.
 - `options`:
-  - `backrefCb` (`function(refIdx)`): a function that can resolve backrefs outsite of the item in scope. `refIdx=0` will refer to next enclosing object.
+  - `backrefCb` (`function(refIdx)`): a function that can resolve backrefs outside of the item in scope. `refIdx=0` will refer to next enclosing object.
 
 <a name="parse-partial"></a>
 #### WSON.parsePartial(str, options)
@@ -296,7 +296,7 @@ Parse a string with embedded WSON strings by intercepting the WSON lexer/parser.
       - The value of the next WSON string. This is signaled by `isValue == true`. If this sub-string is ill-formed, a `ParseError` will be thrown.
     Any other value of `howNext` will cause `parsePartial` to stop immediately with a result of `false`.
   - `cb` (`function(isValue, value, pos)`): This callback reports the next chunk according to `howNext`. `pos` will be set to the next (yet unparsed) position in `str`. The return value of `cb` is used as `howNext` for next parsing step.
-  - `backrefCb` (`function(refIdx)`): a function that can resolve backrefs outsite of the item in scope. `refIdx=0` will refer to next enclosing object.
+  - `backrefCb` (`function(refIdx)`): a function that can resolve backrefs outside of the item in scope. `refIdx=0` will refer to next enclosing object.
 
 If `parseNext` happens to parse the complete `str`, it will return `true`.
 

@@ -1,5 +1,6 @@
 'use strict'
 
+_ = require 'lodash'
 wsonFactory = require './wsonFactory'
 
 chai = require 'chai'
@@ -26,13 +27,12 @@ for setup in require './fixtures/setups'
       pairs = require './fixtures/stringify-pairs'
       for pair in pairs
         do (pair) ->
-          [x, s, failPos, backrefCb] = pair
-          if x == '__fail__' or backrefCb?
+          if not _.has pair, 'x'
             return
-          if s == '__fail__'
-            it "should fail to stringify #{saveRepr x}", ->
-              expect(-> wson.stringify x).to.throw()
+          if pair.stringifyFailPos?
+            it "should fail to stringify #{saveRepr pair.x}", ->
+              expect(-> wson.stringify pair.x, haverefCb: pair.haverefCb).to.throw()
           else
-            it "should stringify #{saveRepr x} as '#{s}' ", ->
-              expect(wson.stringify x).to.be.equal s
+            it "should stringify #{saveRepr pair.x} as '#{pair.s}' ", ->
+              expect(wson.stringify pair.x, haverefCb: pair.haverefCb).to.be.equal pair.s
 
