@@ -270,15 +270,17 @@ Creates a new WSON processor. Recognized options are:
 - `version` (number, default: `undefined`): the WSON-version to create the processor for. This document describes version 1. If this is `undefined`, the last available version is used.
 - `connectors` (optional): an object that maps **cnames** to [connectors](#custom-objects).
 
-#### WSON.stringify(val)
+#### WSON.stringify(val, options)
 
 Returns the WSON representation of `val`.
+- `options`:
+  - `haveCb` (`function(val)`): a function that can create backrefs outside of `val`. It should return an integer >= 0 for a preexistent enclosing object, otherwise `null`. I.e. `haveCb` and `backrefCb` are expected to be inverses. 
 
 #### WSON.parse(str, options)
 
 Returns the value of the WSON string `str`. If `str` is ill-formed, a `ParseError` will be thrown.
 - `options`:
-  - `backrefCb` (`function(refIdx)`): a function that can resolve backrefs outside of the item in scope. `refIdx=0` will refer to next enclosing object.
+  - `backrefCb` (`function(refIdx)`): a function that can resolve backrefs outside of the the item that corresponds to `str`. `refIdx=0` will refer to next enclosing object.
 
 <a name="parse-partial"></a>
 #### WSON.parsePartial(str, options)
@@ -296,7 +298,7 @@ Parse a string with embedded WSON strings by intercepting the WSON lexer/parser.
       - The value of the next WSON string. This is signaled by `isValue == true`. If this sub-string is ill-formed, a `ParseError` will be thrown.
     Any other value of `howNext` will cause `parsePartial` to stop immediately with a result of `false`.
   - `cb` (`function(isValue, value, pos)`): This callback reports the next chunk according to `howNext`. `pos` will be set to the next (yet unparsed) position in `str`. The return value of `cb` is used as `howNext` for next parsing step.
-  - `backrefCb` (`function(refIdx)`): a function that can resolve backrefs outside of the item in scope. `refIdx=0` will refer to next enclosing object.
+  - `backrefCb` (`function(refIdx)`): a function that can resolve backrefs outside of the the item that corresponds to `str`. `refIdx=0` will refer to next enclosing object.
 
 If `parseNext` happens to parse the complete `str`, it will return `true`.
 
