@@ -274,7 +274,7 @@ Creates a new WSON processor. Recognized options are:
 
 Returns the WSON representation of `val`.
 - `options`:
-  - `haveCb` (`function(val)`): a function that can create backrefs outside of `val`. It should return an integer >= 0 for a preexistent enclosing object, otherwise `null`. I.e. `haveCb` and `backrefCb` are expected to be inverses. 
+  - `haverefCb` (`function(val)`): a function that can create backrefs outside of `val`. It should return an integer >= 0 for a preexistent enclosing object, otherwise `null`. I.e. `haverefCb` and `backrefCb` are expected to be inverses. 
 
 #### WSON.parse(str, options)
 
