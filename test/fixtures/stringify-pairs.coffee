@@ -195,6 +195,18 @@ module.exports = [
     haverefCb: haverefCb
     parseFailPos: 9
   }
+  {
+    x: extBacks[0]
+    s: '|0' 
+    backrefCb: backrefCb
+    haverefCb: haverefCb
+  }
+  {
+    x: extBacks[1]
+    s: '|1' 
+    backrefCb: backrefCb
+    haverefCb: haverefCb
+  }
   # extension
   {
     x: new Point(3, 4)

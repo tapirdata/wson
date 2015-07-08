@@ -27,13 +27,13 @@ module.exports = [
     nrs: [false, false]
   }
   {
-    s: 'abc|'
-    col: [true, 'abc', 3, false, '|', 4]
+    s: 'abc:'
+    col: [true, 'abc', 3, false, ':', 4]
     nrs: [false, false]
   }
   {
-    s: 'abc|def'
-    col: [true, 'abc', 3, false, '|', 4, true, 'def', 7]
+    s: 'abc:def'
+    col: [true, 'abc', 3, false, ':', 4, true, 'def', 7]
     nrs: [false, false, false]
   }
   {
@@ -49,7 +49,7 @@ module.exports = [
   {
     s: '[ab|c]',
     col: [false, '[', 1, true, 'ab', 3, false, '|', 4, true, 'c', 5, false, ']', 6]
-    nrs: [true, false, false, false, true]
+    nrs: [true, false, true, false, true]
   }
   {
     s: '[[ab|c]]',

@@ -17,22 +17,6 @@ class Source
     @isEnd = false
     @next()
 
-  # nextX: ->
-  #   while not @isEnd
-  #     if @partIdx?
-  #       @partIdx++
-  #       @pos += @part.length
-  #     else
-  #       @partIdx = 0
-  #       @pos = 0
-  #     if @partIdx >= @parts.length
-  #       @isEnd = true
-  #     else
-  #       @part = @parts[@partIdx]
-  #       @isText = @partIdx % 2 == 0
-  #     if @part.length > 0
-  #       break
-  #   return
 
   next: ->
     if @pos?
@@ -122,6 +106,10 @@ class State
       @next()
       @fetchObject()
       @stage = null
+    '|': ->
+      @next()
+      @value = @getBackreffed 1
+      @stage = null
     'default': ->
       if @allowPartial
         @isPartial = true
@@ -165,7 +153,7 @@ class State
       @stage = @stageArrayHave
     '|': ->
       @next()
-      @value.push @getBackreffed()
+      @value.push @getBackreffed 0
       @stage = @stageArrayHave
 
   stageArrayHave:
@@ -231,7 +219,7 @@ class State
       @stage = @stageObjectHaveValue
     '|': ->
       @next()
-      @value[@key] = @getBackreffed()
+      @value[@key] = @getBackreffed 0
       @stage = @stageObjectHaveValue
 
   stageObjectHaveValue:
@@ -281,7 +269,7 @@ class State
       @stage = @stageCustomHave
     '|': ->
       @next()
-      @args.push @getBackreffed()
+      @args.push @getBackreffed 0
       @stage = @stageCustomHave
 
   stageCustomHave:
@@ -346,13 +334,14 @@ class State
       @next()
     value
 
-  getBackreffed: ->
+  getBackreffed: (hereRefNum) ->
     part = @source.part
     if @source.isEnd or not @source.isText
       @invalidBackref part
     refNum = Number part
     unless refNum >= 0
       @invalidBackref part
+    refNum += hereRefNum
     state = @
     while refNum > 0
       parentState = state.parent
