@@ -20,7 +20,7 @@ class Stringifier
       if idx?
         return haves.length + idx
 
-  findConnector: (x) ->
+  connectorOfValue: (x) ->
     # console.log 'find connectors:', @connectors
     constr = x.constructor
     if @connectors and constr? and constr != Object
@@ -49,7 +49,7 @@ class Stringifier
       '#'
 
   stringifyObject: (x, haves, haverefCb) ->
-    connector = @findConnector x
+    connector = @connectorOfValue x
     if connector
       # console.log 'x=', x, 'con=', connector
       return @stringifyConnector connector, x, haves, haverefCb

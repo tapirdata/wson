@@ -62,7 +62,7 @@ class Wson
       parseOptions.connectors = connectors
     else
       connectors = null
-    @connectors = connectors
+    # @_connectors = connectors
 
     if useAddon
       stringifier = new addon.Stringifier errors.StringifyError, stringifyOptions
@@ -94,6 +94,8 @@ class Wson
           else
             return null
         parser.parsePartial s, howNext, safeCb, backrefCb
+      @connectorOfCname = (cname) -> parser.connectorOfCname cname  
+      @connectorOfValue = (value) -> stringifier.connectorOfValue value
 
     else
       transcribe = require './transcribe'
@@ -114,6 +116,8 @@ class Wson
             howNext: arguments[1]
             cb:      arguments[2]
         parser.parsePartial s, options
+      @connectorOfCname = (cname) -> parser.connectorOfCname cname  
+      @connectorOfValue = (value) -> stringifier.connectorOfValue value
 
 
 factory = (options) ->

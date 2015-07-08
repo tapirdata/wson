@@ -232,11 +232,11 @@ class State
 
   stageCustomStart:
     text: ->
-      name = @getText()
-      connector = @source.parser.getConnector name
-      # console.log 'name=%s', name, connector
+      cname = @getText()
+      connector = @source.parser.connectorOfCname cname
+      # console.log 'cname=%s', cname, connector
       if not connector
-        @throwError "no connector for '#{name}'"
+        @throwError "no connector for '#{cname}'"
       @next()
       if connector.hasCreate
         @vetoBackref = true
@@ -430,9 +430,9 @@ class Parser
         return false
     return true
 
-  getConnector: (name) ->
+  connectorOfCname: (cname) ->
     if @connectors
-      connector = @connectors[name]
+      connector = @connectors[cname]
     connector
 
 Parser.Source = Source

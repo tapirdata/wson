@@ -280,7 +280,7 @@ Returns the WSON representation of `val`.
 
 Returns the value of the WSON string `str`. If `str` is ill-formed, a `ParseError` will be thrown.
 - `options`:
-  - `backrefCb` (`function(refIdx)`): a function that can resolve backrefs outside of the the item that corresponds to `str`. `refIdx=0` will refer to next enclosing object.
+  - `backrefCb` (`function(refIdx)`): a function that can resolve backrefs outside of the item that corresponds to `str`. `refIdx=0` will refer to next enclosing object.
 
 <a name="parse-partial"></a>
 #### WSON.parsePartial(str, options)
@@ -298,7 +298,7 @@ Parse a string with embedded WSON strings by intercepting the WSON lexer/parser.
       - The value of the next WSON string. This is signaled by `isValue == true`. If this sub-string is ill-formed, a `ParseError` will be thrown.
     Any other value of `howNext` will cause `parsePartial` to stop immediately with a result of `false`.
   - `cb` (`function(isValue, value, pos)`): This callback reports the next chunk according to `howNext`. `pos` will be set to the next (yet unparsed) position in `str`. The return value of `cb` is used as `howNext` for next parsing step.
-  - `backrefCb` (`function(refIdx)`): a function that can resolve backrefs outside of the the item that corresponds to `str`. `refIdx=0` will refer to next enclosing object.
+  - `backrefCb` (`function(refIdx)`): a function that can resolve backrefs outside of the item that corresponds to `str`. `refIdx=0` will refer to next enclosing object.
 
 If `parseNext` happens to parse the complete `str`, it will return `true`.
 
@@ -310,9 +310,13 @@ Returns `str` with the special characters replaced by their corresponding escape
 
 Returns `str` with encountered escape sequence replaced by their counterparts. If `str` contains invalid escape sequences, a `ParseError` will be thrown.
 
-#### WSON.connectors
+#### WSON.connectorOfCname(cname)
 
-Holds the map of **cnames** to normalized [connectors](#custom-objects)
+Returns the normalized [connector](#custom-objects) for **cname** (or `null` if none is found).
+
+#### WSON.connectorOfValue(value)
+
+Returns the normalized [connector](#custom-objects) for `value` (or `null` if none is found).
 
 #### wson.ParseError
 

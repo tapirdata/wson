@@ -39,6 +39,6 @@
     "mocha": "^2.2.5"
   },
   "optionalDependencies": {
-    "wson-addon": "^1.6.1"
+    "wson-addon": "^1.7.0"
   }
 }
