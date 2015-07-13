@@ -310,6 +310,22 @@ Returns `str` with the special characters replaced by their corresponding escape
 
 Returns `str` with encountered escape sequence replaced by their counterparts. If `str` contains invalid escape sequences, a `ParseError` will be thrown.
 
+#### WSON.getTypeid(value)
+
+Returns a numeric type-id of `value`. This function is exposed as it may be usefull for extending WSON.
+
+|  value                 | typeid |
+|:----------------------:|:------:|
+|  `undefined`           |   1    |
+|  `null`                |   2    |
+|  `Boolean`             |   4    |
+|  `Number` (`NaN`, too) |   8    |
+|  `Date`                |   16   |
+|  `String`              |   20   |
+|  `Array`               |   24   |
+|   other `Object`       |   32   |
+
+
 #### WSON.connectorOfCname(cname)
 
 Returns the normalized [connector](#custom-objects) for **cname** (or `null` if none is found).

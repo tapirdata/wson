@@ -1,7 +1,6 @@
 'use strict'
 
 assert = require 'assert'
-_ = require 'lodash'
 transcribe = require './transcribe'
 errors = require './errors'
 
@@ -34,7 +33,6 @@ class Source
       else
         m = @splitRe.exec @rest
         restPos = @pos + @rest.length - @sLen
-        # console.log 'next rest=%s, m=%j restPos=%s', @rest, m, restPos
         if m?
           if m.index > restPos
             partLen = m.index - restPos
@@ -47,19 +45,16 @@ class Source
         else
           @part = @rest.slice restPos
           @isText = true
-    # console.log 'next.. source=%j', @
     return
 
 
   skip: (n) ->
-    # console.log 'skip', n, @isEnd
     @rest = @s.slice @pos + n
     @splitRe = new RegExp transcribe.splitBrick, 'g'
     @nt = null
     @part = ''
     @pos += n
     @next()
-    # console.log 'skip.. source=%j', @
 
 
 class State
@@ -83,11 +78,9 @@ class State
         handler = @stage[@source.part]
       if not handler
         handler = @stage.default
-      # console.log "part='%s', stage=%j, handler=%s", @source.part, _.keys(@stage), handler
       if not handler
         @throwError()
       handler.call @
-      # console.log 'stage=', @stage
 
   stageValueStart:
     text: ->
@@ -234,7 +227,6 @@ class State
     text: ->
       cname = @getText()
       connector = @source.parser.connectorOfCname cname
-      # console.log 'cname=%s', cname, connector
       if not connector
         @throwError "no connector for '#{cname}'"
       @next()
@@ -278,13 +270,11 @@ class State
       @stage = @stageCustomNext
     ']': ->
       connector = @connector
-      # console.log 'end ', connector, @value
       if connector.hasCreate
         @value = connector.create @args
       else
         newValue = connector.postcreate @value, @args
-        # console.log '.end ', connector, @value, newValue
-        if _.isObject newValue
+        if typeof newValue == 'object'
           if newValue != @value
             if @isBackreffed
               @throwError "backreffed value is replaced by postcreate"
@@ -320,16 +310,18 @@ class State
           value = false
         when 'n'
           value = null
+        when 'NaN'
+          value = NaN
         when 'u'
         else
           if part[0] == 'd'
             value = Number part.slice 1
-            if _.isNaN value
+            if value != value # NaN
               @invalidLiteral part
             value = new Date(value)
           else
             value = Number part
-            if _.isNaN value
+            if value != value # NaN
               @invalidLiteral part
       @next()
     value
@@ -378,7 +370,6 @@ class State
   getValue: ->
     @fetchValue()
     if not @source.isEnd
-      # console.log 'ERROR: source=', @source
       @throwError() # "unexpected extra text"
     @value
 
@@ -403,7 +394,7 @@ class Parser
     assert typeof s == 'string', 'parse expects a string, got: ' + s
     source = new Source @, s
     while not source.isEnd
-      if _.isArray howNext
+      if typeof howNext == 'object' # array
         [nextRaw, nSkip] = howNext
         if nSkip > 0
           source.skip nSkip

@@ -70,6 +70,7 @@ class Wson
 
       @escape = (s) -> stringifier.escape s
       @unescape = (s) -> parser.unescape s
+      @getTypeid = (x) -> stringifier.getTypeid x
       @stringify = (x, options) ->
         stringifier.stringify x, options?.haverefCb
       @parse = (s, options) -> parser.parse s, options?.backrefCb
@@ -106,6 +107,7 @@ class Wson
 
       @escape = (s) -> transcribe.escape s
       @unescape = (s) -> transcribe.unescape s
+      @getTypeid = (x) -> stringifier.getTypeid x
       @stringify = (x, options) ->
         stringifier.stringify x, null, options?.haverefCb
       @parse = (s, options) ->

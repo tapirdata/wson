@@ -80,39 +80,59 @@ class Stringifier
     haves.pop()
     result + ']'
 
-  stringify: (x, haves, haverefCb) ->
-    haves or= []
+  getTypeid: (x) ->
     if x == null
-      '#n'
+      2
     else
       switch typeof x
         when 'undefined'
-          '#u'
+          1
         when 'boolean'
-          if x
-            '#t'
-          else
-            '#f'
+          4
         when 'number'
-          '#' + x.toString()
+          8
         when 'string'
-          if x.length == 0
-            '#'
-          else
-            transcribe.escape x
-        else
-          backref = @getBackref x, haves, haverefCb
-          if backref?
-            '|' + backref
+          20
+        when 'object'
+          if x instanceof Date
+            16
           else if _.isArray x
-            @stringifyArray x, haves, haverefCb
-          else if _.isObject x
-            if x instanceof Date
-              '#d' + x.valueOf().toString()
-            else
-              @stringifyObject x, haves, haverefCb
+            24
           else
-            throw new errors.StringifyError x
+            32
+        else
+          0
+          
+
+  stringify: (x, haves, haverefCb) ->
+    haves or= []
+    typeid = @getTypeid x
+    switch typeid
+      when 0
+        throw new errors.StringifyError x
+      when 1
+        '#u'
+      when 2
+        '#n'
+      when 4
+        if x then '#t' else '#f'
+      when 8
+        '#' + x.toString()
+      when 16
+        '#d' + x.valueOf().toString()
+      when 20
+        if x.length == 0
+          '#'
+        else
+          transcribe.escape x
+      else
+        backref = @getBackref x, haves, haverefCb
+        if backref?
+          '|' + backref
+        else if typeid == 24
+          @stringifyArray x, haves, haverefCb
+        else
+          @stringifyObject x, haves, haverefCb
 
 # Stringifier.norm = normConnectors
 module.exports = Stringifier
