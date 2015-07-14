@@ -258,10 +258,6 @@
          <polygon points="277 33 285 29 285 37"/>
          <polygon points="277 33 269 29 269 37"/>
       </svg>
-      <xhtml:p xmlns:xhtml="http://www.w3.org/1999/xhtml">
-         <xhtml:div class="ebnf"><xhtml:pre><a href="#wson-escaped" title="wson-escaped">wson-escaped</a>
-         ::= ( [^`#:{|}[#x0093] | '`' [abceilpq] )+</xhtml:pre></xhtml:div>
-      </xhtml:p>
       <xhtml:p xmlns:xhtml="http://www.w3.org/1999/xhtml">referenced by:
          <xhtml:ul>
             <xhtml:li><xhtml:a href="#wson-cname" title="wson-cname">wson-cname</xhtml:a></xhtml:li>
@@ -307,10 +303,6 @@
          <polygon points="87 17 95 13 95 21"/>
          <polygon points="87 17 79 13 79 21"/>
       </svg>
-      <xhtml:p xmlns:xhtml="http://www.w3.org/1999/xhtml">
-         <xhtml:div class="ebnf"><xhtml:pre><a href="#wson-undefined" title="wson-undefined">wson-undefined</a>
-         ::= '#u'</xhtml:pre></xhtml:div>
-      </xhtml:p>
       <xhtml:p xmlns:xhtml="http://www.w3.org/1999/xhtml">referenced by:
          <xhtml:ul>
             <xhtml:li><xhtml:a href="#wson-value" title="wson-value">wson-value</xhtml:a></xhtml:li>
@@ -355,10 +347,6 @@
          <polygon points="87 17 95 13 95 21"/>
          <polygon points="87 17 79 13 79 21"/>
       </svg>
-      <xhtml:p xmlns:xhtml="http://www.w3.org/1999/xhtml">
-         <xhtml:div class="ebnf"><xhtml:pre><a href="#wson-null" title="wson-null">wson-null</a>
-         ::= '#n'</xhtml:pre></xhtml:div>
-      </xhtml:p>
       <xhtml:p xmlns:xhtml="http://www.w3.org/1999/xhtml">referenced by:
          <xhtml:ul>
             <xhtml:li><xhtml:a href="#wson-value" title="wson-value">wson-value</xhtml:a></xhtml:li>
@@ -409,10 +397,6 @@
          <polygon points="167 17 175 13 175 21"/>
          <polygon points="167 17 159 13 159 21"/>
       </svg>
-      <xhtml:p xmlns:xhtml="http://www.w3.org/1999/xhtml">
-         <xhtml:div class="ebnf"><xhtml:pre><a href="#wson-boolean" title="wson-boolean">wson-boolean</a>
-         ::= '#' [fb]</xhtml:pre></xhtml:div>
-      </xhtml:p>
       <xhtml:p xmlns:xhtml="http://www.w3.org/1999/xhtml">referenced by:
          <xhtml:ul>
             <xhtml:li><xhtml:a href="#wson-value" title="wson-value">wson-value</xhtml:a></xhtml:li>
@@ -462,10 +446,6 @@
          <polygon points="183 17 191 13 191 21"/>
          <polygon points="183 17 175 13 175 21"/>
       </svg>
-      <xhtml:p xmlns:xhtml="http://www.w3.org/1999/xhtml">
-         <xhtml:div class="ebnf"><xhtml:pre><a href="#wson-number" title="wson-number">wson-number</a>
-         ::= '#' <a href="#js-number" title="js-number">js-number</a></xhtml:pre></xhtml:div>
-      </xhtml:p>
       <xhtml:p xmlns:xhtml="http://www.w3.org/1999/xhtml">referenced by:
          <xhtml:ul>
             <xhtml:li><xhtml:a href="#wson-value" title="wson-value">wson-value</xhtml:a></xhtml:li>
@@ -515,10 +495,6 @@
          <polygon points="191 17 199 13 199 21"/>
          <polygon points="191 17 183 13 183 21"/>
       </svg>
-      <xhtml:p xmlns:xhtml="http://www.w3.org/1999/xhtml">
-         <xhtml:div class="ebnf"><xhtml:pre><a href="#wson-date" title="wson-date">wson-date</a>
-         ::= '#d' <a href="#js-number" title="js-number">js-number</a></xhtml:pre></xhtml:div>
-      </xhtml:p>
       <xhtml:p xmlns:xhtml="http://www.w3.org/1999/xhtml">referenced by:
          <xhtml:ul>
             <xhtml:li><xhtml:a href="#wson-value" title="wson-value">wson-value</xhtml:a></xhtml:li>
@@ -568,11 +544,6 @@
          <polygon points="201 17 209 13 209 21"/>
          <polygon points="201 17 193 13 193 21"/>
       </svg>
-      <xhtml:p xmlns:xhtml="http://www.w3.org/1999/xhtml">
-         <xhtml:div class="ebnf"><xhtml:pre><a href="#wson-string" title="wson-string">wson-string</a>
-         ::= '#'
-           | <a href="#wson-escaped" title="wson-escaped">wson-escaped</a></xhtml:pre></xhtml:div>
-      </xhtml:p>
       <xhtml:p xmlns:xhtml="http://www.w3.org/1999/xhtml">referenced by:
          <xhtml:ul>
             <xhtml:li><xhtml:a href="#wson-object-item" title="wson-object-item">wson-object-item</xhtml:a></xhtml:li>
@@ -665,19 +636,6 @@
          <polygon points="211 17 219 13 219 21"/>
          <polygon points="211 17 203 13 203 21"/>
       </svg>
-      <xhtml:p xmlns:xhtml="http://www.w3.org/1999/xhtml">
-         <xhtml:div class="ebnf"><xhtml:pre><a href="#wson-value" title="wson-value">wson-value</a>
-         ::= <a href="#wson-undefined" title="wson-undefined">wson-undefined</a>
-           | <a href="#wson-null" title="wson-null">wson-null</a>
-           | <a href="#wson-boolean" title="wson-boolean">wson-boolean</a>
-           | <a href="#wson-number" title="wson-number">wson-number</a>
-           | <a href="#wson-date" title="wson-date">wson-date</a>
-           | <a href="#wson-string" title="wson-string">wson-string</a>
-           | <a href="#wson-array" title="wson-array">wson-array</a>
-           | <a href="#wson-object" title="wson-object">wson-object</a>
-           | <a href="#wson-custom" title="wson-custom">wson-custom</a>
-           | <a href="#wson-backref" title="wson-backref">wson-backref</a></xhtml:pre></xhtml:div>
-      </xhtml:p>
       <xhtml:p xmlns:xhtml="http://www.w3.org/1999/xhtml">referenced by:
          <xhtml:ul>
             <xhtml:li><xhtml:a href="#wson-array" title="wson-array">wson-array</xhtml:a></xhtml:li>
@@ -740,10 +698,6 @@
          <polygon points="511 33 519 29 519 37"/>
          <polygon points="511 33 503 29 503 37"/>
       </svg>
-      <xhtml:p xmlns:xhtml="http://www.w3.org/1999/xhtml">
-         <xhtml:div class="ebnf"><xhtml:pre><a href="#wson-array" title="wson-array">wson-array</a>
-         ::= '[' <a href="#wson-value" title="wson-value">wson-value</a>? ( '|' <a href="#wson-value" title="wson-value">wson-value</a> )* ']'</xhtml:pre></xhtml:div>
-      </xhtml:p>
       <xhtml:p xmlns:xhtml="http://www.w3.org/1999/xhtml">referenced by:
          <xhtml:ul>
             <xhtml:li><xhtml:a href="#wson-value" title="wson-value">wson-value</xhtml:a></xhtml:li>
@@ -798,10 +752,6 @@
          <polygon points="339 17 347 13 347 21"/>
          <polygon points="339 17 331 13 331 21"/>
       </svg>
-      <xhtml:p xmlns:xhtml="http://www.w3.org/1999/xhtml">
-         <xhtml:div class="ebnf"><xhtml:pre><a href="#wson-object-item" title="wson-object-item">wson-object-item</a>
-         ::= <a href="#wson-string" title="wson-string">wson-string</a> ( ':' <a href="#wson-value" title="wson-value">wson-value</a> )?</xhtml:pre></xhtml:div>
-      </xhtml:p>
       <xhtml:p xmlns:xhtml="http://www.w3.org/1999/xhtml">referenced by:
          <xhtml:ul>
             <xhtml:li><xhtml:a href="#wson-object" title="wson-object">wson-object</xhtml:a></xhtml:li>
@@ -862,10 +812,6 @@
          <polygon points="587 33 595 29 595 37"/>
          <polygon points="587 33 579 29 579 37"/>
       </svg>
-      <xhtml:p xmlns:xhtml="http://www.w3.org/1999/xhtml">
-         <xhtml:div class="ebnf"><xhtml:pre><a href="#wson-object" title="wson-object">wson-object</a>
-         ::= '[' <a href="#wson-object-item" title="wson-object-item">wson-object-item</a>? ( '|' <a href="#wson-object-item" title="wson-object-item">wson-object-item</a> )* ']'</xhtml:pre></xhtml:div>
-      </xhtml:p>
       <xhtml:p xmlns:xhtml="http://www.w3.org/1999/xhtml">referenced by:
          <xhtml:ul>
             <xhtml:li><xhtml:a href="#wson-value" title="wson-value">wson-value</xhtml:a></xhtml:li>
@@ -912,10 +858,6 @@
          <polygon points="161 17 169 13 169 21"/>
          <polygon points="161 17 153 13 153 21"/>
       </svg>
-      <xhtml:p xmlns:xhtml="http://www.w3.org/1999/xhtml">
-         <xhtml:div class="ebnf"><xhtml:pre><a href="#wson-cname" title="wson-cname">wson-cname</a>
-         ::= <a href="#wson-escaped" title="wson-escaped">wson-escaped</a></xhtml:pre></xhtml:div>
-      </xhtml:p>
       <xhtml:p xmlns:xhtml="http://www.w3.org/1999/xhtml">referenced by:
          <xhtml:ul>
             <xhtml:li><xhtml:a href="#wson-custom" title="wson-custom">wson-custom</xhtml:a></xhtml:li>
@@ -976,10 +918,6 @@
          <polygon points="483 33 491 29 491 37"/>
          <polygon points="483 33 475 29 475 37"/>
       </svg>
-      <xhtml:p xmlns:xhtml="http://www.w3.org/1999/xhtml">
-         <xhtml:div class="ebnf"><xhtml:pre><a href="#wson-custom" title="wson-custom">wson-custom</a>
-         ::= '[:' <a href="#wson-cname" title="wson-cname">wson-cname</a> ( '|' <a href="#wson-value" title="wson-value">wson-value</a> )* ']'</xhtml:pre></xhtml:div>
-      </xhtml:p>
       <xhtml:p xmlns:xhtml="http://www.w3.org/1999/xhtml">referenced by:
          <xhtml:ul>
             <xhtml:li><xhtml:a href="#wson-value" title="wson-value">wson-value</xhtml:a></xhtml:li>
@@ -1029,10 +967,6 @@
          <polygon points="179 17 187 13 187 21"/>
          <polygon points="179 17 171 13 171 21"/>
       </svg>
-      <xhtml:p xmlns:xhtml="http://www.w3.org/1999/xhtml">
-         <xhtml:div class="ebnf"><xhtml:pre><a href="#wson-backref" title="wson-backref">wson-backref</a>
-         ::= '|' <a href="#js-number" title="js-number">js-number</a></xhtml:pre></xhtml:div>
-      </xhtml:p>
       <xhtml:p xmlns:xhtml="http://www.w3.org/1999/xhtml">referenced by:
          <xhtml:ul>
             <xhtml:li><xhtml:a href="#wson-value" title="wson-value">wson-value</xhtml:a></xhtml:li>
