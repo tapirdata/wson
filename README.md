@@ -43,6 +43,8 @@ Since we found shortcomings in all present formats, we decided to create WSON:
 
 ### WSON
 
+This is an informal description of the WSON-Syntax. There is also an EBNF-file in the doc-directory and a [syntax-diagram](http://tapirdata.github.io/wson/doc/wson.xhtml) created from it.    
+
 #### Escaping
 
 There 8 special characters: `{`, `}`, `[`, `]`, `#`, `:`, `|`, `` ` ``. If they occur in strings the will be escaped using these counterparts:

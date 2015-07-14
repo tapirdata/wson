@@ -16,3 +16,4 @@ wson-cname ::= wson-escaped
 wson-custom ::= '[:' wson-cname ( '|' wson-value )* ']' 
 wson-backref ::= '|' js-number
 wson ::= wson-value
+
