@@ -1,0 +1,683 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Wson by tapirdata</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-light.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Wson</h1>
+        <p></p>
+
+        <p class="view"><a href="https://github.com/tapirdata/wson">View the Project on GitHub <small>tapirdata/wson</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/tapirdata/wson/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/tapirdata/wson/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/tapirdata/wson">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a id="wson---" class="anchor" href="#wson---" aria-hidden="true"><span class="octicon octicon-link"></span></a>wson <a href="https://travis-ci.org/tapirdata/wson"><img src="https://secure.travis-ci.org/tapirdata/wson.png?branch=master" alt="Build Status"></a> <a href="https://david-dm.org/tapirdata/wson"><img src="https://david-dm.org/tapirdata/wson.svg" alt="Dependency Status"></a> <a href="https://david-dm.org/tapirdata/wson#info=devDependencies"><img src="https://david-dm.org/tapirdata/wson/dev-status.svg" alt="devDependency Status"></a>
+</h1>
+
+<blockquote>
+<p>A Stringifier and Parser for the WSON data-interchange format.</p>
+</blockquote>
+
+<h2>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span class="octicon octicon-link"></span></a>Usage</h2>
+
+<div class="highlight highlight-bash"><pre>$ npm install wson</pre></div>
+
+<p>If you have installed <a href="https://www.npmjs.com/package/node-gyp">node-gyp</a> and its prerequisites, this will also install the optional package <a href="https://www.npmjs.com/package/wson-addon">wson-addon</a>, which provides a somewhat faster (some benchmarking shows a factors of about 2 for parsing and 1.5 for stringifiying) native C++ implementation of a WSON stringifier/parser.</p>
+
+<div class="highlight highlight-js"><pre><span class="pl-c1">WSON</span> <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>wson<span class="pl-pds">'</span></span>)();
+
+<span class="pl-k">var</span> entry <span class="pl-k">=</span> {
+  name<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>otto<span class="pl-pds">"</span></span>,
+  size<span class="pl-k">:</span> <span class="pl-c1">177.3</span>,
+  completed<span class="pl-k">:</span> [<span class="pl-s"><span class="pl-pds">"</span>forth<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>javascript<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>c++<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>haskell<span class="pl-pds">"</span></span>],
+  active<span class="pl-k">:</span> <span class="pl-c1">true</span>
+};
+
+<span class="pl-k">var</span> s <span class="pl-k">=</span> <span class="pl-c1">WSON</span>.stringify(entry);
+<span class="pl-en">console</span><span class="pl-c1">.log</span>(s);
+<span class="pl-c">// '{active|completed:[forth|javascript|c++|haskell]|name:otto|size:#177.3}'</span>
+
+<span class="pl-k">var</span> newEntry <span class="pl-k">=</span> <span class="pl-c1">WSON</span>.<span class="pl-c1">parse</span>(s);
+<span class="pl-c">// equivalent to entry</span>
+</pre></div>
+
+<h2>
+<a id="motivation-why-just-another-format" class="anchor" href="#motivation-why-just-another-format" aria-hidden="true"><span class="octicon octicon-link"></span></a>Motivation (why just another format?)</h2>
+
+<p>We demanded a format that:</p>
+
+<ul>
+<li>is deterministic (stringification does not depend on key insertion order or unjustified assumptions about the js-engine).</li>
+<li>is textual, so it can be used as a key itself.</li>
+<li>is terse, especially does grow linearly in length when stringified recursively (<code>\</code>-escaping grows exponentially).</li>
+<li>is reasonably human readable.</li>
+<li>can be parsed reasonably fast.</li>
+<li>can handle <a href="#backrefs">cyclic structures</a>.</li>
+<li>is <a href="#custom-objects">extensible</a>.</li>
+<li>can parse strings that contain WSON mixed <a href="#parse-partial">with other stuff</a>.</li>
+</ul>
+
+<p>Since we found shortcomings in all present formats, we decided to create WSON:</p>
+
+<h3>
+<a id="wson" class="anchor" href="#wson" aria-hidden="true"><span class="octicon octicon-link"></span></a>WSON</h3>
+
+<h4>
+<a id="escaping" class="anchor" href="#escaping" aria-hidden="true"><span class="octicon octicon-link"></span></a>Escaping</h4>
+
+<p>There 8 special characters: <code>{</code>, <code>}</code>, <code>[</code>, <code>]</code>, <code>#</code>, <code>:</code>, <code>|</code>, <code>`</code>. If they occur in strings the will be escaped using these counterparts:</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">original</th>
+<th align="center">escaped</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center">{</td>
+<td align="center">`o</td>
+</tr>
+<tr>
+<td align="center">}</td>
+<td align="center">`c</td>
+</tr>
+<tr>
+<td align="center">[</td>
+<td align="center">`a</td>
+</tr>
+<tr>
+<td align="center">]</td>
+<td align="center">`e</td>
+</tr>
+<tr>
+<td align="center">#</td>
+<td align="center">`l</td>
+</tr>
+<tr>
+<td align="center">:</td>
+<td align="center">`i</td>
+</tr>
+<tr>
+<td align="center">|</td>
+<td align="center">`p</td>
+</tr>
+<tr>
+<td align="center">
+<code>|</code>q</td>
+<td align="center"></td>
+</tr>
+</tbody>
+</table>
+
+<p>The special characters are choosen to be expectable rare in natural language texts to minimize the need for escaping. E.g. delimiter is <code>|</code> instead of <code>,</code>.</p>
+
+<h4>
+<a id="strings" class="anchor" href="#strings" aria-hidden="true"><span class="octicon octicon-link"></span></a>Strings</h4>
+
+<p>Strings are stringified verbatim (without quotes). If they have special characters in them, they got escaped. The empty string is stringified as <code>#</code>.</p>
+
+<h6>
+<a id="examples" class="anchor" href="#examples" aria-hidden="true"><span class="octicon octicon-link"></span></a>Examples:</h6>
+
+<table>
+<thead>
+<tr>
+<th>javascript</th>
+<th>WSON</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>"abc"</td>
+<td>abc</td>
+</tr>
+<tr>
+<td>"say: \"hello\""</td>
+<td>say`i "hello"</td>
+</tr>
+<tr>
+<td>""</td>
+<td>#</td>
+</tr>
+</tbody>
+</table>
+
+<h4>
+<a id="literals" class="anchor" href="#literals" aria-hidden="true"><span class="octicon octicon-link"></span></a>Literals</h4>
+
+<p>Booleans, <code>null</code>, <code>undefined</code> are stringified by these patterns:</p>
+
+<table>
+<thead>
+<tr>
+<th>javascript</th>
+<th>WSON</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>false</td>
+<td>#f</td>
+</tr>
+<tr>
+<td>true</td>
+<td>#t</td>
+</tr>
+<tr>
+<td>null</td>
+<td>#n</td>
+</tr>
+<tr>
+<td>undefined</td>
+<td>#u</td>
+</tr>
+</tbody>
+</table>
+
+<p>Numbers are stringified by <code>#</code> prepended to the number converted to a string.</p>
+
+<h6>
+<a id="examples-1" class="anchor" href="#examples-1" aria-hidden="true"><span class="octicon octicon-link"></span></a>Examples:</h6>
+
+<table>
+<thead>
+<tr>
+<th>javascript</th>
+<th>WSON</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>42</td>
+<td>#42</td>
+</tr>
+<tr>
+<td>42.1</td>
+<td>#42.1</td>
+</tr>
+</tbody>
+</table>
+
+<p><code>Date</code>-objects are stringified by <code>#d</code> prepended to the <code>valueOf</code>-number (i.e. the milliseconds since midnight 01 January, 1970 UTC) converted to a string.</p>
+
+<h6>
+<a id="examples-2" class="anchor" href="#examples-2" aria-hidden="true"><span class="octicon octicon-link"></span></a>Examples:</h6>
+
+<table>
+<thead>
+<tr>
+<th>javascript</th>
+<th>WSON</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>new Date(1400000000000)</td>
+<td>#d1400000000000</td>
+</tr>
+</tbody>
+</table>
+
+<h4>
+<a id="arrays" class="anchor" href="#arrays" aria-hidden="true"><span class="octicon octicon-link"></span></a>Arrays</h4>
+
+<p>Arrays are stringified by their stringified components concatenated by <code>|</code>, enclosed by <code>[</code>, <code>]</code>.</p>
+
+<table>
+<thead>
+<tr>
+<th>javascript</th>
+<th>WSON</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>[]</td>
+<td>[]</td>
+</tr>
+<tr>
+<td>["foo"]</td>
+<td>[foo]</td>
+</tr>
+<tr>
+<td>[""]</td>
+<td>[#]</td>
+</tr>
+<tr>
+<td>["foo",true,42]</td>
+<td>[foo|#t|#42]</td>
+</tr>
+<tr>
+<td>["foo",["bar","baz"]]</td>
+<td>[foo|[bar|baz]]</td>
+</tr>
+</tbody>
+</table>
+
+<h4>
+<a id="objects" class="anchor" href="#objects" aria-hidden="true"><span class="octicon octicon-link"></span></a>Objects</h4>
+
+<p>Objects are stringified by their stringified key-value pairs concatenated by <code>|</code>, enclosed by <code>{</code>, <code>}</code>.
+Key-value pairs are stringified this way:</p>
+
+<ul>
+<li>If the value is <code>true</code>: just the escaped key (This is meant to be handy for set-like objects.)</li>
+<li>Else: escaped key <code>:</code> stringified value</li>
+</ul>
+
+<p>The pairs are sorted by key (sorting is done before escaping).</p>
+
+<table>
+<thead>
+<tr>
+<th>javascript</th>
+<th>WSON</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>{}</td>
+<td>{}</td>
+</tr>
+<tr>
+<td>{a: "A", b: "B"}</td>
+<td>{a:A|b:B}</td>
+</tr>
+<tr>
+<td>{b: "A", a: "B"}</td>
+<td>{a:A|b:B}</td>
+</tr>
+<tr>
+<td>{a: true, b: true}</td>
+<td>{a|b}</td>
+</tr>
+<tr>
+<td>{a: {c: 42}, b: [3,4]}</td>
+<td>{a:{c:#42}|b:[#3|#4]}</td>
+</tr>
+<tr>
+<td>{a: "A", "": "B"}</td>
+<td>{a:A|#:B}</td>
+</tr>
+</tbody>
+</table>
+
+<h4>
+<a id="values" class="anchor" href="#values" aria-hidden="true"><span class="octicon octicon-link"></span></a>Values</h4>
+
+<p>A <strong>value</strong> can be any of <strong>string</strong>, <strong>literal</strong>, <strong>array</strong>, and <strong>object</strong>.
+Note that array components and object values are <strong>values</strong>, but object keys are <strong>strings</strong>.</p>
+
+<p><a name="backrefs"></a></p>
+
+<h4>
+<a id="backrefs" class="anchor" href="#backrefs" aria-hidden="true"><span class="octicon octicon-link"></span></a>Backrefs</h4>
+
+<p>WSON is able to stringify and parse cyclic structures by means of <strong>backrefs</strong>. A <strong>backref</strong> is represented by <code>|</code> followed by a number, that says how many levels to go up. (0 resolves to the current array or objects, 1 resolves to the structure that contains the current structure and so on.)</p>
+
+<table>
+<thead>
+<tr>
+<th>javascript</th>
+<th>WSON</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>x = {}; x.y = x</td>
+<td>{y:|0}</td>
+</tr>
+<tr>
+<td>x = {a:[]}; x.a.push(x)</td>
+<td>{a:[|1]}</td>
+</tr>
+</tbody>
+</table>
+
+<p><a name="custom-objects"></a></p>
+
+<h4>
+<a id="custom-objects" class="anchor" href="#custom-objects" aria-hidden="true"><span class="octicon octicon-link"></span></a>Custom Objects</h4>
+
+<p>WSON can be extended to stringify and parse <strong>custom objects</strong> by means of <strong>connectors</strong>.</p>
+
+<p>A <strong>connector</strong> is used to stringify a <strong>custom object</strong> by:</p>
+
+<ul>
+<li>
+<code>by</code>: the objects's constructor. Only objects with exactly that constructor use this <strong>connector</strong> to stringify.</li>
+<li>
+<code>split</code>: a function of <code>obj</code> that returns an array of arguments <code>args</code> that can be used to recreate <code>obj</code>.</li>
+</ul>
+
+<p>If <code>split</code> is ommited, <code>obj</code> must provide a method <code>__wsonsplit__</code> that returns <code>args</code>.</p>
+
+<p>A <strong>connector</strong> is used to create a <strong>custom object</strong> by:</p>
+
+<ul>
+<li>
+<code>create</code>: a function that takes an array of arguments <code>args</code> to create the object <code>obj</code>.</li>
+</ul>
+
+<p>Alternatively these functions may be used to use 2-stage creation:</p>
+
+<ul>
+<li>
+<code>precreate</code>: a function that creates the (empty) object <code>obj</code>.</li>
+<li>
+<code>postcreate</code>: a function that takes <code>obj</code> and <code>args</code> to populate <code>obj</code>.</li>
+</ul>
+
+<p>If no <code>create</code> is specified, missing <code>precreate</code> and <code>postcreate</code> are just created by using the constructor <code>by</code>.</p>
+
+<p>An extended WSON stringifier/parser is created by passing a <code>connectors</code> option to <code>wson</code>. <code>connectors</code> should by a object that maps <strong>cname</strong> keys to <strong>connector</strong> objects. If a value is given as a function <code>Foo</code> the <strong>connector</strong> is constructed as <code>{by: Foo}</code>.</p>
+
+<p>The WSON representation of a <strong>custom object</strong> is:</p>
+
+<p><code>[:</code> <strong>cname</strong> (list of args, each prepended by <code>|</code>) <code>]</code></p>
+
+<h6>
+<a id="examples-3" class="anchor" href="#examples-3" aria-hidden="true"><span class="octicon octicon-link"></span></a>Examples:</h6>
+
+<p>Provide a <code>__wsonsplit__</code> method:</p>
+
+<div class="highlight highlight-js"><pre><span class="pl-k">var</span> wson <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>wson<span class="pl-pds">'</span></span>);
+
+<span class="pl-k">var</span> <span class="pl-en">Point</span> <span class="pl-k">=</span> <span class="pl-k">function</span>(<span class="pl-smi">x</span>, <span class="pl-smi">y</span>) {<span class="pl-v">this</span>.<span class="pl-c1">x</span><span class="pl-k">=</span>x; <span class="pl-v">this</span>.<span class="pl-c1">y</span><span class="pl-k">=</span>y; }
+<span class="pl-c1">Point</span>.<span class="pl-c1">prototype</span>.<span class="pl-en">__wsonsplit__</span> <span class="pl-k">=</span> <span class="pl-k">function</span>() {<span class="pl-k">return</span> [<span class="pl-v">this</span>.<span class="pl-c1">x</span>, <span class="pl-v">this</span>.<span class="pl-c1">y</span>]; }
+
+<span class="pl-k">var</span> <span class="pl-c1">WSON</span> <span class="pl-k">=</span> wson({connectors<span class="pl-k">:</span> {Point<span class="pl-k">:</span> Point}});
+
+<span class="pl-k">var</span> point1 <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">Point</span>(<span class="pl-c1">3</span>, <span class="pl-c1">4</span>);
+
+<span class="pl-k">var</span> s <span class="pl-k">=</span> <span class="pl-c1">WSON</span>.stringify(point1);
+<span class="pl-en">console</span><span class="pl-c1">.log</span>(<span class="pl-s"><span class="pl-pds">'</span>s=<span class="pl-pds">'</span></span>, s); <span class="pl-c">// [:Point|#3|#4]</span>
+<span class="pl-k">var</span> point2 <span class="pl-k">=</span> <span class="pl-c1">WSON</span>.<span class="pl-c1">parse</span>(s);</pre></div>
+
+<p>Or equivalently specify <code>split</code> explicitly:</p>
+
+<div class="highlight highlight-js"><pre><span class="pl-k">var</span> wson <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>wson<span class="pl-pds">'</span></span>);
+
+
+<span class="pl-k">var</span> <span class="pl-en">Point</span> <span class="pl-k">=</span> <span class="pl-k">function</span>(<span class="pl-smi">x</span>, <span class="pl-smi">y</span>) {<span class="pl-v">this</span>.<span class="pl-c1">x</span><span class="pl-k">=</span>x; <span class="pl-v">this</span>.<span class="pl-c1">y</span><span class="pl-k">=</span>y}
+
+<span class="pl-k">var</span> <span class="pl-c1">WSON</span> <span class="pl-k">=</span> wson({connectors<span class="pl-k">:</span> {
+  Point<span class="pl-k">:</span> {
+    by<span class="pl-k">:</span> Point,
+    <span class="pl-en">split</span><span class="pl-k">:</span> <span class="pl-k">function</span>(<span class="pl-smi">point</span>) {<span class="pl-k">return</span> [point.<span class="pl-c1">x</span>, point.<span class="pl-c1">y</span>]; }
+  }
+}});
+
+<span class="pl-k">var</span> point1 <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">Point</span>(<span class="pl-c1">3</span>, <span class="pl-c1">4</span>);
+<span class="pl-k">var</span> s <span class="pl-k">=</span> <span class="pl-c1">WSON</span>.stringify(point1);
+<span class="pl-en">console</span><span class="pl-c1">.log</span>(<span class="pl-s"><span class="pl-pds">'</span>s=<span class="pl-pds">'</span></span>, s); <span class="pl-c">// [Point:#3|#4]</span>
+<span class="pl-k">var</span> point2 <span class="pl-k">=</span> <span class="pl-c1">WSON</span>.<span class="pl-c1">parse</span>(s);</pre></div>
+
+<p>Specify <code>split</code> and <code>postcreate</code> (use default <code>precreate</code>):</p>
+
+<div class="highlight highlight-js"><pre><span class="pl-k">var</span> wson <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>wson<span class="pl-pds">'</span></span>);
+
+<span class="pl-k">var</span> <span class="pl-en">Point</span> <span class="pl-k">=</span> <span class="pl-k">function</span>(<span class="pl-smi">x</span>, <span class="pl-smi">y</span>) {<span class="pl-v">this</span>.<span class="pl-c1">x</span><span class="pl-k">=</span>x; <span class="pl-v">this</span>.<span class="pl-c1">y</span><span class="pl-k">=</span>y}
+
+<span class="pl-k">var</span> <span class="pl-c1">WSON</span> <span class="pl-k">=</span> wson({connectors<span class="pl-k">:</span> {
+  Point<span class="pl-k">:</span> {
+    by<span class="pl-k">:</span> Point,
+    <span class="pl-c">// reverse order of args for some strange reason</span>
+    <span class="pl-en">split</span><span class="pl-k">:</span> <span class="pl-k">function</span>(<span class="pl-smi">point</span>) {<span class="pl-k">return</span> [point.<span class="pl-c1">y</span>, point.<span class="pl-c1">x</span>]; },
+    <span class="pl-en">postcreate</span><span class="pl-k">:</span> <span class="pl-k">function</span>(<span class="pl-smi">point</span>, <span class="pl-smi">args</span>) {Point.<span class="pl-c1">call</span>(point, args[<span class="pl-c1">1</span>], args[<span class="pl-c1">0</span>]); }
+  }
+}});
+
+<span class="pl-k">var</span> point1 <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">Point</span>(<span class="pl-c1">3</span>, <span class="pl-c1">4</span>);
+<span class="pl-k">var</span> s <span class="pl-k">=</span> <span class="pl-c1">WSON</span>.stringify(point1);
+<span class="pl-en">console</span><span class="pl-c1">.log</span>(<span class="pl-s"><span class="pl-pds">'</span>s=<span class="pl-pds">'</span></span>, s); <span class="pl-c">// [Point:#4|#3]</span>
+<span class="pl-k">var</span> point2 <span class="pl-k">=</span> <span class="pl-c1">WSON</span>.<span class="pl-c1">parse</span>(s);</pre></div>
+
+<p>Alternately you could specify <code>create</code> (with the lack of ability to use the constructor with <code>call</code> and <code>apply</code>. And: see Corner cases below):</p>
+
+<div class="highlight highlight-js"><pre><span class="pl-k">var</span> <span class="pl-c1">WSON</span> <span class="pl-k">=</span> wson({connectors<span class="pl-k">:</span> {
+  Point<span class="pl-k">:</span> {
+    by<span class="pl-k">:</span> Point,
+    <span class="pl-en">split</span><span class="pl-k">:</span> <span class="pl-k">function</span>(<span class="pl-smi">point</span>) {<span class="pl-k">return</span> [point.<span class="pl-c1">y</span>, point.<span class="pl-c1">x</span>]; },
+    <span class="pl-en">create</span><span class="pl-k">:</span> <span class="pl-k">function</span>(<span class="pl-smi">args</span>) {<span class="pl-k">return</span> <span class="pl-k">new</span> <span class="pl-en">Point</span>(args[<span class="pl-c1">1</span>], args[<span class="pl-c1">0</span>]); }
+  }
+}});</pre></div>
+
+<h6>
+<a id="corner-cases" class="anchor" href="#corner-cases" aria-hidden="true"><span class="octicon octicon-link"></span></a>Corner cases:</h6>
+
+<p>You <em>can</em> use together <strong>backrefs</strong> and <strong>custom objects</strong>. For example this will work:</p>
+
+<div class="highlight highlight-js"><pre><span class="pl-k">var</span> pointCyc <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">Point</span>(<span class="pl-c1">5</span>); <span class="pl-c">// leave 'y' undefined for now</span>
+<span class="pl-k">var</span> points <span class="pl-k">=</span> [pointCyc, pointCyc]
+pointCyc.<span class="pl-c1">y</span> <span class="pl-k">=</span> points;
+<span class="pl-k">var</span> s <span class="pl-k">=</span> <span class="pl-c1">WSON</span>.stringify(pointCyc);</pre></div>
+
+<p>provided that:</p>
+
+<ul>
+<li>You use 2-stage creation (don't use <code>create</code>).</li>
+<li>
+<code>postcreate</code> (or your constructor <code>by</code> from which <code>postcreate</code> is auto-created) does return that object which has been passed in.</li>
+</ul>
+
+<h2>
+<a id="api" class="anchor" href="#api" aria-hidden="true"><span class="octicon octicon-link"></span></a>API</h2>
+
+<h4>
+<a id="var-wson--wsonoptions" class="anchor" href="#var-wson--wsonoptions" aria-hidden="true"><span class="octicon octicon-link"></span></a>var WSON = wson(options)</h4>
+
+<p>Creates a new WSON processor. Recognized options are:</p>
+
+<ul>
+<li>
+<code>useAddon</code> (boolean, default: <code>undefined</code>):
+
+<ul>
+<li>
+<code>false</code>: An installed <code>wson-addon</code> is ignored.</li>
+<li>
+<code>true</code>: The addon is forced. An exception is thrown if the addon is missing.</li>
+<li>
+<code>undefined</code>: The addon is used when it is available.</li>
+</ul>
+</li>
+<li>
+<code>version</code> (number, default: <code>undefined</code>): the WSON-version to create the processor for. This document describes version 1. If this is <code>undefined</code>, the last available version is used.</li>
+<li>
+<code>connectors</code> (optional): an object that maps <strong>cnames</strong> to <a href="#custom-objects">connectors</a>.</li>
+</ul>
+
+<h4>
+<a id="wsonstringifyval-options" class="anchor" href="#wsonstringifyval-options" aria-hidden="true"><span class="octicon octicon-link"></span></a>WSON.stringify(val, options)</h4>
+
+<p>Returns the WSON representation of <code>val</code>.</p>
+
+<ul>
+<li>
+<code>options</code>:
+
+<ul>
+<li>
+<code>haverefCb</code> (<code>function(val)</code>): a function that can create backrefs outside of <code>val</code>. It should return an integer &gt;= 0 for a preexistent enclosing object, otherwise <code>null</code>. I.e. <code>haverefCb</code> and <code>backrefCb</code> are expected to be inverses. </li>
+</ul>
+</li>
+</ul>
+
+<h4>
+<a id="wsonparsestr-options" class="anchor" href="#wsonparsestr-options" aria-hidden="true"><span class="octicon octicon-link"></span></a>WSON.parse(str, options)</h4>
+
+<p>Returns the value of the WSON string <code>str</code>. If <code>str</code> is ill-formed, a <code>ParseError</code> will be thrown.</p>
+
+<ul>
+<li>
+<code>options</code>:
+
+<ul>
+<li>
+<code>backrefCb</code> (<code>function(refIdx)</code>): a function that can resolve backrefs outside of the item that corresponds to <code>str</code>. <code>refIdx=0</code> will refer to next enclosing object.</li>
+</ul>
+</li>
+</ul>
+
+<p><a name="parse-partial"></a></p>
+
+<h4>
+<a id="wsonparsepartialstr-options" class="anchor" href="#wsonparsepartialstr-options" aria-hidden="true"><span class="octicon octicon-link"></span></a>WSON.parsePartial(str, options)</h4>
+
+<p>Parse a string with embedded WSON strings by intercepting the WSON lexer/parser.</p>
+
+<ul>
+<li>
+<code>str</code>: The string to be parsed.</li>
+<li>
+<code>options</code>:
+
+<ul>
+<li>
+<code>howNext</code>: determines how the next chunk should be handled. This may be an array <code>[nextRaw, skip]</code> or just boolean <code>nextRaw</code>. <code>skip</code> is the number of characters to be skipped first (Say, they have been proceeded by other means). Then, if <code>nextRaw</code> is:
+
+<ul>
+<li>
+<code>true</code>, just the lexer is to be used. The next <code>value</code> passed to <code>cb</code> will be either:
+
+<ul>
+<li>One of the special characters <code>{</code>, <code>}</code>, <code>[</code>, <code>]</code>, <code>#</code>, <code>:</code>, <code>|</code>. This is signaled by <code>isValue == false</code>.</li>
+<li>A non-empty string that results by unescaping untill the next special character. This is signaled by <code>isValue == true</code>.</li>
+</ul>
+</li>
+<li>
+<code>false</code>, an attempt to parse is requested. The next <code>value</code> passed to <code>cb</code> will be either:
+
+<ul>
+<li>One of the special characters <code>}</code>, <code>]</code>, <code>:</code>, <code>|</code> that may not start a valid WSON string. This is signaled by <code>isValue == false</code>.</li>
+<li>The value of the next WSON string. This is signaled by <code>isValue == true</code>. If this sub-string is ill-formed, a <code>ParseError</code> will be thrown.
+Any other value of <code>howNext</code> will cause <code>parsePartial</code> to stop immediately with a result of <code>false</code>.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<code>cb</code> (<code>function(isValue, value, pos)</code>): This callback reports the next chunk according to <code>howNext</code>. <code>pos</code> will be set to the next (yet unparsed) position in <code>str</code>. The return value of <code>cb</code> is used as <code>howNext</code> for next parsing step.</li>
+<li>
+<code>backrefCb</code> (<code>function(refIdx)</code>): a function that can resolve backrefs outside of the item that corresponds to <code>str</code>. <code>refIdx=0</code> will refer to next enclosing object.</li>
+</ul>
+</li>
+</ul>
+
+<p>If <code>parseNext</code> happens to parse the complete <code>str</code>, it will return <code>true</code>.</p>
+
+<h4>
+<a id="wsonescapestr" class="anchor" href="#wsonescapestr" aria-hidden="true"><span class="octicon octicon-link"></span></a>WSON.escape(str)</h4>
+
+<p>Returns <code>str</code> with the special characters replaced by their corresponding escape sequences.</p>
+
+<h4>
+<a id="wsonunescapestr" class="anchor" href="#wsonunescapestr" aria-hidden="true"><span class="octicon octicon-link"></span></a>WSON.unescape(str)</h4>
+
+<p>Returns <code>str</code> with encountered escape sequence replaced by their counterparts. If <code>str</code> contains invalid escape sequences, a <code>ParseError</code> will be thrown.</p>
+
+<h4>
+<a id="wsongettypeidvalue" class="anchor" href="#wsongettypeidvalue" aria-hidden="true"><span class="octicon octicon-link"></span></a>WSON.getTypeid(value)</h4>
+
+<p>Returns a numeric type-id of <code>value</code>. This function is exposed as it may be usefull for extending WSON.</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">value</th>
+<th align="center">typeid</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><code>undefined</code></td>
+<td align="center">1</td>
+</tr>
+<tr>
+<td align="center"><code>null</code></td>
+<td align="center">2</td>
+</tr>
+<tr>
+<td align="center"><code>Boolean</code></td>
+<td align="center">4</td>
+</tr>
+<tr>
+<td align="center">
+<code>Number</code> (<code>NaN</code>, too)</td>
+<td align="center">8</td>
+</tr>
+<tr>
+<td align="center"><code>Date</code></td>
+<td align="center">16</td>
+</tr>
+<tr>
+<td align="center"><code>String</code></td>
+<td align="center">20</td>
+</tr>
+<tr>
+<td align="center"><code>Array</code></td>
+<td align="center">24</td>
+</tr>
+<tr>
+<td align="center">other <code>Object</code>
+</td>
+<td align="center">32</td>
+</tr>
+</tbody>
+</table>
+
+<h4>
+<a id="wsonconnectorofcnamecname" class="anchor" href="#wsonconnectorofcnamecname" aria-hidden="true"><span class="octicon octicon-link"></span></a>WSON.connectorOfCname(cname)</h4>
+
+<p>Returns the normalized <a href="#custom-objects">connector</a> for <strong>cname</strong> (or <code>null</code> if none is found).</p>
+
+<h4>
+<a id="wsonconnectorofvaluevalue" class="anchor" href="#wsonconnectorofvaluevalue" aria-hidden="true"><span class="octicon octicon-link"></span></a>WSON.connectorOfValue(value)</h4>
+
+<p>Returns the normalized <a href="#custom-objects">connector</a> for <code>value</code> (or <code>null</code> if none is found).</p>
+
+<h4>
+<a id="wsonparseerror" class="anchor" href="#wsonparseerror" aria-hidden="true"><span class="octicon octicon-link"></span></a>wson.ParseError</h4>
+
+<p>This may be thrown by <code>WSON.parse</code> and <code>WSON.parsePartial</code>. It provides these fields:</p>
+
+<ul>
+<li>
+<code>s</code>: the original ill-formed string.</li>
+<li>
+<code>pos</code>: the position in <code>s</code> where passing has stumbled.</li>
+<li>
+<code>cause</code>: some textual description of what caused to reject the string <code>s</code>.</li>
+</ul>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/tapirdata">tapirdata</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
