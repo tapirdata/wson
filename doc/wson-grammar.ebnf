@@ -1,0 +1,18 @@
+wson-escaped ::= ( [^`#:{|}[#x93] | '`' [abceilpq] )+
+wson-undefined ::= '#u'
+wson-null ::= '#n'
+wson-boolean ::= '#' [fb]
+wson-number ::= '#' js-number
+wson-date ::= '#d' js-number
+wson-string ::= '#' | wson-escaped
+wson-value ::= wson-undefined | wson-null
+  | wson-boolean | wson-number | wson-date | wson-string
+  | wson-array | wson-object | wson-custom
+  | wson-backref
+wson-array ::= '[' wson-value? ( '|' wson-value )* ']' 
+wson-object-item ::= wson-string ( ':' wson-value )?    
+wson-object ::= '[' wson-object-item? ( '|' wson-object-item )* ']' 
+wson-cname ::= wson-escaped
+wson-custom ::= '[:' wson-cname ( '|' wson-value )* ']' 
+wson-backref ::= '|' js-number
+wson ::= wson-value
