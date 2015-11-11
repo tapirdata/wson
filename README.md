@@ -58,9 +58,9 @@ There 8 special characters: `{`, `}`, `[`, `]`, `#`, `:`, `|`, `` ` ``. If they 
 |   #      |   `l    |
 |   :      |   `i    |
 |   \|     |   `p    |
-|   `      |   `q    |
+|   \`     |   `q    |
 
-The special characters are choosen to be expectable rare in natural language texts to minimize the need for escaping. E.g. delimiter is `|` instead of `,`.
+The special characters are chosen to be expectable rare in natural language texts to minimize the need for escaping. E.g. delimiter is `|` instead of `,`.
 
 
 #### Strings
@@ -159,7 +159,7 @@ A **connector** is used to stringify a **custom object** by:
 - `by`: the objects's constructor. Only objects with exactly that constructor use this **connector** to stringify.
 - `split`: a function of `obj` that returns an array of arguments `args` that can be used to recreate `obj`.
 
-If `split` is ommited, `obj` must provide a method `__wsonsplit__` that returns `args`.
+If `split` is omitted, `obj` must provide a method `__wsonsplit__` that returns `args`.
 
 A **connector** is used to create a **custom object** by:
 - `create`: a function that takes an array of arguments `args` to create the object `obj`.
@@ -276,7 +276,7 @@ Creates a new WSON processor. Recognized options are:
 
 Returns the WSON representation of `val`.
 - `options`:
-  - `haverefCb` (`function(val)`): a function that can create backrefs outside of `val`. It should return an integer >= 0 for a preexistent enclosing object, otherwise `null`. I.e. `haverefCb` and `backrefCb` are expected to be inverses. 
+  - `haverefCb` (`function(val)`): a function that can create backrefs outside of `val`. It should return an integer >= 0 for a preexistent enclosing object, otherwise `null`. I.e. `haverefCb` and `backrefCb` are expected to be inverses.
 
 #### WSON.parse(str, options)
 
@@ -294,7 +294,7 @@ Parse a string with embedded WSON strings by intercepting the WSON lexer/parser.
   - `howNext`: determines how the next chunk should be handled. This may be an array `[nextRaw, skip]` or just boolean `nextRaw`. `skip` is the number of characters to be skipped first (Say, they have been proceeded by other means). Then, if `nextRaw` is:
     - `true`, just the lexer is to be used. The next `value` passed to `cb` will be either:
       - One of the special characters `{`, `}`, `[`, `]`, `#`, `:`, `|`. This is signaled by `isValue == false`.
-      - A non-empty string that results by unescaping untill the next special character. This is signaled by `isValue == true`.
+      - A non-empty string that results by unescaping until the next special character. This is signaled by `isValue == true`.
     - `false`, an attempt to parse is requested. The next `value` passed to `cb` will be either:
       - One of the special characters `}`, `]`, `:`, `|` that may not start a valid WSON string. This is signaled by `isValue == false`.
       - The value of the next WSON string. This is signaled by `isValue == true`. If this sub-string is ill-formed, a `ParseError` will be thrown.
@@ -314,7 +314,7 @@ Returns `str` with encountered escape sequence replaced by their counterparts. I
 
 #### WSON.getTypeid(value)
 
-Returns a numeric type-id of `value`. This function is exposed as it may be usefull for extending WSON.
+Returns a numeric type-id of `value`. This function is exposed as it may be useful for extending WSON.
 
 |  value                 | typeid |
 |:----------------------:|:------:|
@@ -342,6 +342,3 @@ This may be thrown by `WSON.parse` and `WSON.parsePartial`. It provides these fi
 - `s`: the original ill-formed string.
 - `pos`: the position in `s` where passing has stumbled.
 - `cause`: some textual description of what caused to reject the string `s`.
-
-
-
