@@ -29,19 +29,16 @@
   },
   "license": "MIT",
   "dependencies": {
-    "benchmark": "^2.0.0",
-    "chai": "^3.4.1",
-    "lodash": "^4.0.0",
-    "mocha": "^2.3.4"
+    "lodash": "^4.14.0"
   },
   "devDependencies": {
-    "benchmark": "^1.0.0",
-    "chai": "^3.3.0",
+    "benchmark": "^2.1.1",
+    "chai": "^3.5.0",
     "coffee-script": "^1.10.0",
-    "microtime": "^2.0.0",
-    "mocha": "^2.3.3"
+    "microtime": "^2.1.1",
+    "mocha": "^2.5.3"
   },
   "optionalDependencies": {
-    "wson-addon": "^1.10.0"
+    "wson-addon": "^1.11.0"
   }
 }
