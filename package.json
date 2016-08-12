@@ -4,8 +4,8 @@
   "description": "A serializer/deserializer",
   "main": "./lib",
   "scripts": {
-    "test": "mocha --compilers coffee:coffee-script/register",
-    "build": "coffee -c -b -o lib src/*.coffee",
+    "test": "mocha --compilers js:babel-register",
+    "build": "rm -rf lib; babel -d lib src",
     "prepublish": "npm run build"
   },
   "keywords": [
@@ -32,13 +32,15 @@
     "lodash": "^4.14.0"
   },
   "devDependencies": {
+    "babel-cli": "^6.11.4",
+    "babel-preset-es2015": "^6.13.2",
+    "babel-register": "^6.11.6",
     "benchmark": "^2.1.1",
     "chai": "^3.5.0",
-    "coffee-script": "^1.10.0",
     "microtime": "^2.1.1",
-    "mocha": "^2.5.3"
+    "mocha": "^3.0.2"
   },
   "optionalDependencies": {
-    "wson-addon": "^1.11.0"
+    "wson-addon": "^2.0.0"
   }
 }
