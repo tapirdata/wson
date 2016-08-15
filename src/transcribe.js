@@ -1,15 +1,15 @@
 import * as errors from './errors';
 
-let regExpQuoteSet = (function(chars) {
+let regExpQuoteSet;
+{
   let o = {};
-  for (let i = 0; i < chars.length; i++) {
-    let c = chars[i];
+  for (const c of '-\\()+*.?[]^$') {
     o[c] = true;
   }
-  return o;
-})('-\\()+*.?[]^$');
+  regExpQuoteSet = o;
+}
 
-let quoteRegExp = function(char) {
+function quoteRegExp(char) {
   if (regExpQuoteSet[char]) {
     return '\\' + char;
   } else {
@@ -17,8 +17,7 @@ let quoteRegExp = function(char) {
   }
 };
 
-let charOfXar = {
-//xar: char
+const charOfXar = {
   o: '{',
   c: '}',
   a: '[',
@@ -29,46 +28,46 @@ let charOfXar = {
   q: '\`'
 };
 
-let prefix = '\`';
+const prefix = '\`';
 
-var charBrick = '';
-var splitBrick = '';
-var xarOfChar = {};
-for (let xar in charOfXar) {
-  let char = charOfXar[xar];
-  xarOfChar[char] = xar;
-  charBrick += quoteRegExp(char);
-  if (char !== prefix) {
-    splitBrick += quoteRegExp(char);
+let charBrick = '';
+let splitBrick = '';
+let xarOfChar = {};
+{
+  for (const xar in charOfXar) {
+    const char = charOfXar[xar];
+    xarOfChar[char] = xar;
+    charBrick += quoteRegExp(char);
+    if (char !== prefix) {
+      splitBrick += quoteRegExp(char);
+    }
   }
 }
 
-let charRe = new RegExp('[' + charBrick + ']', 'gm');
-let xarRe = new RegExp(quoteRegExp(prefix) + '(.?)', 'gm');
+const charRe = new RegExp('[' + charBrick + ']', 'gm');
+const xarRe = new RegExp(quoteRegExp(prefix) + '(.?)', 'gm');
 splitBrick = '([' + splitBrick + '])';
 
-export default (function() {
-  return {
-    prefix,
-    charOfXar,
-    xarOfChar,
-    charBrick,
-    charRe,
-    xarRe,
-    splitBrick,
-    unescape: function(s) {
-      return s.replace(xarRe, (all, xar, pos) => {
-        let char = charOfXar[xar];
-        if (char == null) {
-          throw new errors.ParseError(s, pos + 1); // , "unexpected escape '#{xar}'"
-        }
-        return char;
+export default {
+  // prefix,
+  // charOfXar,
+  // xarOfChar,
+  // charBrick,
+  // charRe,
+  // xarRe,
+  splitBrick,
+  unescape: function(s) {
+    return s.replace(xarRe, (all, xar, pos) => {
+      const char = charOfXar[xar];
+      if (char == null) {
+        throw new errors.ParseError(s, pos + 1); // , "unexpected escape '#{xar}'"
       }
-      );
-    },
-    escape: function(s) {
-      return s.replace(charRe, char => prefix + xarOfChar[char]);
+      return char;
     }
-  };
-})();
+    );
+  },
+  escape: function(s) {
+    return s.replace(charRe, char => prefix + xarOfChar[char]);
+  }
+};
 

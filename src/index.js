@@ -1,23 +1,28 @@
 import _ from 'lodash';
+import { ParseError, StringifyError } from './errors';
+import transcribe  from './transcribe';
+import Stringifier from './stringifier';
+import Parser from './parser';
 
+let addon = null
 try {
-  var addon = require('wson-addon');
+  addon = require('wson-addon');
 } catch (error) {
-  var addon = null;
 }
 
-import { ParseError, StringifyError } from './errors';
 
-let normConnectors = function(cons) {
+const normConnectors = function(cons) {
   if (_.isObject(cons) && !_.isEmpty(cons)) {
-    let connectors = {};
-    for (let name in cons) {
-      let con = cons[name];
+    const connectors = {};
+    for (const name of Object.keys(cons)) {
+      const con = cons[name];
+      let connector;
       if (_.isFunction(con)) {
-        var connector =
-          {by: con};
+        connector = {
+          by: con
+        };
       } else {
-        var connector = _.clone(con);
+        connector = _.clone(con);
       }
       connector.name = name;
       
@@ -30,17 +35,19 @@ let normConnectors = function(cons) {
         connector.hasCreate = true;
       } else {
         connector.hasCreate = false;
-        (function(connector) {
-          if (!_.isFunction(connector.precreate)) {
-            connector.precreate = () => Object.create(connector.by.prototype);
-          }
-          if (!_.isFunction(connector.postcreate)) {
-            return connector.postcreate = function(obj, args) {
-              let ret = connector.by.apply(obj, args);
-              if (Object(ret) === ret) { return ret; } else { return obj; }
-            };
-          }
-        })(connector);
+        if (!_.isFunction(connector.precreate)) {
+          connector.precreate = () => Object.create(connector.by.prototype);
+        }
+        if (!_.isFunction(connector.postcreate)) {
+          connector.postcreate = function(obj, args) {
+            const ret = connector.by.apply(obj, args);
+            if (Object(ret) === ret) {
+              return ret;
+            } else {
+              return obj;
+            }
+          };
+        }
       }
     }
     return connectors;
@@ -50,9 +57,9 @@ let normConnectors = function(cons) {
 
 class Wson {
 
-  constructor(options) {
-    if (!options) { options = {}; }
-    if ((options.version != null) && options.version !== 1) {
+  constructor(options = {}) {
+    const { version } = options;
+    if ((version != null) && version !== 1) {
       throw new Error("Only WSON version 1 is supported");
     }
 
@@ -66,38 +73,37 @@ class Wson {
       }
     }
 
-    let stringifyOptions = {};
-    let parseOptions = {};
+    const stringifyOptions = {};
+    const parseOptions = {};
+    let connectors;
     if (options.connectors) {
-      var connectors = normConnectors(options.connectors);
+      connectors = normConnectors(options.connectors);
       stringifyOptions.connectors = connectors;
       parseOptions.connectors = connectors;
     } else {
-      var connectors = null;
+      connectors = null;
     }
-    // @_connectors = connectors
 
     if (useAddon) {
-      var stringifier = new addon.Stringifier(StringifyError, stringifyOptions);
-      var parser = new addon.Parser(ParseError, parseOptions);
+      const stringifier = new addon.Stringifier(StringifyError, stringifyOptions);
+      const parser = new addon.Parser(ParseError, parseOptions);
 
       this.escape = s => stringifier.escape(s);
       this.unescape = s => parser.unescape(s);
       this.getTypeid = x => stringifier.getTypeid(x);
-      this.stringify = (x, options) => stringifier.stringify(x, __guard__(options, x1 => x1.haverefCb));
-      this.parse = (s, options) => parser.parse(s, __guard__(options, x => x.backrefCb));
+      this.stringify = (x, options) => stringifier.stringify(x, options ? options.haverefCb : null);
+      this.parse = (s, options) => parser.parse(s, options ? options.backrefCb : null);
       this.parsePartial = function(s, options) {
+        let howNext, cb, backrefCb;
         if (_.isObject(options)) {
-          var { howNext } = options;
-          var { cb }      = options;
-          var { backrefCb } = options;
+          ({ howNext, cb, backrefCb } = options);
         } else {
-          var howNext = arguments[1];
-          var cb      = arguments[2];
+          [, howNext, cb] = arguments;
         }
-        let safeCb = function() {
+        const safeCb = function() {
+          let result;
           try {
-            var result = cb.apply(null, arguments);
+            result = cb.apply(null, arguments);
           } catch (e) {
             if (e instanceof Error) {
               return e;
@@ -117,16 +123,13 @@ class Wson {
       this.connectorOfValue = value => stringifier.connectorOfValue(value);
 
     } else {
-      let transcribe = require('./transcribe').default;
-      let Stringifier = require('./stringifier').default;
-      let Parser = require('./parser').default;
-      var stringifier = new Stringifier(stringifyOptions);
-      var parser = new Parser(parseOptions);
+      const stringifier = new Stringifier(stringifyOptions);
+      const parser = new Parser(parseOptions);
 
       this.escape = s => transcribe.escape(s);
       this.unescape = s => transcribe.unescape(s);
       this.getTypeid = x => stringifier.getTypeid(x);
-      this.stringify = (x, options) => stringifier.stringify(x, null, __guard__(options, x1 => x1.haverefCb));
+      this.stringify = (x, options) => stringifier.stringify(x, null, options ? options.haverefCb : null);
       this.parse = (s, options) => parser.parse(s, options || {});
       this.parsePartial = function(s, options) {
         if (!_.isObject(options)) {
@@ -156,7 +159,3 @@ export default factory;
 export { Wson };
 export { ParseError };
 export { StringifyError };
-
-function __guard__(value, transform) {
-  return (typeof value !== 'undefined' && value !== null) ? transform(value) : undefined;
-}

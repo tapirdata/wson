@@ -1,9 +1,6 @@
 class WsonError extends Error {
   constructor() {
     super()
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, this.constructor);
-    }
   }
 }
 
@@ -48,7 +45,6 @@ class StringifyError extends WsonError {
 }
 
 
-export { ParseError };
-export { StringifyError };
+export { ParseError, StringifyError };
 
 

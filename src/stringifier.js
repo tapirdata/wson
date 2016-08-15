@@ -4,21 +4,19 @@ import errors from './errors';
 
 class Stringifier {
 
-  constructor(options) {
-    if (!options) { options = {}; }
+  constructor(options = {}) {
     this.connectors = options.connectors;
   }
 
 
   getBackref(x, haves, haverefCb) {
-    for (var idx = 0; idx < haves.length; idx++) {
-      let have = haves[idx];
+    for (const [idx, have] of haves.entries()) {
       if (have === x) {
         return haves.length - idx - 1;
       }
     }
     if (haverefCb != null) {
-      var idx = haverefCb(x);
+      const idx = haverefCb(x);
       if (idx != null) {
         return haves.length + idx;
       }
@@ -26,12 +24,10 @@ class Stringifier {
   }
 
   connectorOfValue(x) {
-    // console.log 'find connectors:', @connectors
-    let constr = x.constructor;
+    const constr = x.constructor;
     if (this.connectors && (constr != null) && constr !== Object) {
-      for (let name in this.connectors) {
-        // console.log 'find', connector, x
-        let connector = this.connectors[name];
+      for (const name of Object.keys(this.connectors)) {
+        const connector = this.connectors[name];
         if (connector.by === constr) {
           return connector;
         }
@@ -43,8 +39,7 @@ class Stringifier {
     haves.push(x);
     let result = '[';
     let first = true;
-    for (let i = 0; i < x.length; i++) {
-      let elem = x[i];
+    for (const elem of x) {
       if (first) {
         first = false;
       } else {
@@ -67,15 +62,14 @@ class Stringifier {
   stringifyObject(x, haves, haverefCb) {
     let connector = this.connectorOfValue(x);
     if (connector) {
-      // console.log 'x=', x, 'con=', connector
       return this.stringifyConnector(connector, x, haves, haverefCb);
     }
     haves.push(x);
-    let keys = _.keys(x).sort();
+    const keys = _.keys(x).sort();
     let result = '{';
     let first = true;
     for (let i = 0; i < keys.length; i++) {
-      let key = keys[i];
+      const key = keys[i];
       if (first) {
         first = false;
       } else {
@@ -95,9 +89,8 @@ class Stringifier {
   stringifyConnector(connector, x, haves, haverefCb) {
     haves.push(x);
     let result = `[:${transcribe.escape(connector.name)}`;
-    let args = connector.split(x);
-    for (let i = 0; i < args.length; i++) {
-      let elem = args[i];
+    const args = connector.split(x);
+    for (const elem of args) {
       result += '|';
       result += this.stringify(elem, haves, haverefCb);
     }
@@ -156,7 +149,7 @@ class Stringifier {
           return transcribe.escape(x);
         }
       default:
-        let backref = this.getBackref(x, haves, haverefCb);
+        const backref = this.getBackref(x, haves, haverefCb);
         if (backref != null) {
           return `|${backref}`;
         } else if (typeid === 24) {

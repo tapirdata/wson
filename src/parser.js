@@ -9,14 +9,11 @@ class Source {
     this.s = s;
     this.sLen = this.s.length;
     this.rest = this.s;
-    // @parts = @s.split transcribe.splitRe
-    // @partIdx = null
     this.splitRe = new RegExp(transcribe.splitBrick, 'g');
     this.pos = null;
     this.isEnd = false;
     this.next();
   }
-
 
   next() {
     if (this.pos != null) {
@@ -33,11 +30,11 @@ class Source {
         this.isText = false;
         this.nt = null;
       } else {
-        let m = this.splitRe.exec(this.rest);
-        let restPos = (this.pos + this.rest.length) - this.sLen;
+        const m = this.splitRe.exec(this.rest);
+        const restPos = (this.pos + this.rest.length) - this.sLen;
         if (m != null) {
           if (m.index > restPos) {
-            let partLen = m.index - restPos;
+            const partLen = m.index - restPos;
             this.isText = true;
             this.part = this.rest.slice(restPos, restPos + partLen);
             this.nt = m[0];
@@ -53,14 +50,12 @@ class Source {
     }
   }
 
-
   skip(n) {
     this.rest = this.s.slice(this.pos + n);
-    this.splitRe = new RegExp(transcribe.splitBrick, 'g');
     this.nt = null;
     this.part = '';
     this.pos += n;
-    return this.next();
+    this.next();
   }
 }
 
@@ -79,27 +74,30 @@ class State {
   }
 
   next() {
-    return this.source.next();
+    this.source.next();
   }
 
   scan() {
-    return (() => { let result = []; while (this.stage) {
+    let result = [];
+    while (this.stage) {
       if (this.source.isEnd) {
         this.throwError();
       }
+      let handler;
       if (this.source.isText) {
-        var handler = this.stage.text;
+        handler = this.stage.text;
       } else {
-        var handler = this.stage[this.source.part];
+        handler = this.stage[this.source.part];
       }
       if (!handler) {
-        var handler = this.stage.default;
+        handler = this.stage.default;
       }
       if (!handler) {
         this.throwError();
       }
       result.push(handler.call(this));
-    } return result; })();
+    } 
+    return result;
   }
 
   getText() {
@@ -115,22 +113,23 @@ class State {
 
 
   invalidLiteral(part) {
-    return this.throwError(`unexpected literal '${part}'`);
+    this.throwError(`unexpected literal '${part}'`);
   }
 
   invalidBackref(part, offset=0) {
-    return this.throwError(`unexpected backref '${part}'`, offset);
+    this.throwError(`unexpected backref '${part}'`, offset);
   }
 
 
   getLiteral() {
+    let value;
     if (this.source.isEnd || !this.source.isText) {
-      var value = '';
+      value = '';
     } else {
       let { part } = this.source;
       switch (part) {
         case 't':
-          var value = true;
+          value = true;
           break;
         case 'f':
           value = false;
@@ -164,7 +163,7 @@ class State {
   }
 
   getBackreffed(hereRefNum) {
-    let { part } = this.source;
+    const { part } = this.source;
     console.log ('getBackreffed', hereRefNum, this.source)
     if (this.source.isEnd || !this.source.isText) {
       this.invalidBackref(part);
@@ -176,11 +175,11 @@ class State {
     refNum += hereRefNum;
     let state = this;
     while (refNum > 0) {
-      let parentState = state.parent;
+      const parentState = state.parent;
       if (parentState != null) {
         state = parentState;
       } else if (state.backrefCb != null) {
-        let value = state.backrefCb(refNum - 1);
+        const value = state.backrefCb(refNum - 1);
         if (value != null) {
           this.next();
           return value;
@@ -228,52 +227,52 @@ State.prototype.stageValueStart = {
   text: function() {
     this.value = this.getText();
     this.next();
-    return this.stage = null;
+    this.stage = null;
   },
-  ['#']: function() {
+  '#': function() {
     this.next();
     this.value = this.getLiteral();
-    return this.stage = null;
+    this.stage = null;
   },
-  ['[']: function() {
+  '[': function() {
     this.next();
     this.fetchArray();
-    return this.stage = null;
+    this.stage = null;
   },
-  ['{']: function() {
+  '{': function() {
     this.next();
     this.fetchObject();
-    return this.stage = null;
+    this.stage = null;
   },
-  ['|']: function() {
+  '|': function() {
     this.next();
     this.value = this.getBackreffed(1);
-    return this.stage = null;
+    this.stage = null;
   },
-  ['default']: function() {
+  'default': function() {
     if (this.allowPartial) {
       this.isPartial = true;
-      return this.stage = null;
+      this.stage = null;
     } else {
-      return this.throwError();
+      this.throwError();
     }
   }
 }
 
 
 State.prototype.stageArrayStart = {
-  [']']: function() {
+  ']': function() {
     this.value = [];
     this.next();
-    return this.stage = null;
+    this.stage = null;
   },
-  [':']: function() {
+  ':': function() {
     this.next();
-    return this.stage = this.stageCustomStart;
+    this.stage = this.stageCustomStart;
   },
-  ['default']: function() {
+  'default': function() {
     this.value = [];
-    return this.stage = this.stageArrayNext;
+    this.stage = this.stageArrayNext;
   }
 }
 
@@ -282,54 +281,54 @@ State.prototype.stageArrayNext = {
   text: function() {
     this.value.push(this.getText());
     this.next();
-    return this.stage = this.stageArrayHave;
+    this.stage = this.stageArrayHave;
   },
-  ['#']: function() {
+  '#': function() {
     this.next();
     this.value.push(this.getLiteral());
-    return this.stage = this.stageArrayHave;
+    this.stage = this.stageArrayHave;
   },
-  ['[']: function() {
+  '[': function() {
     this.next();
-    let state = new State(this.source, this);
+    const state = new State(this.source, this);
     state.fetchArray();
     this.value.push(state.value);
-    return this.stage = this.stageArrayHave;
+    this.stage = this.stageArrayHave;
   },
-  ['{']: function() {
+  '{': function() {
     this.next();
-    let state = new State(this.source, this);
+    const state = new State(this.source, this);
     state.fetchObject();
     this.value.push(state.value);
-    return this.stage = this.stageArrayHave;
+    this.stage = this.stageArrayHave;
   },
-  ['|']: function() {
+  '|': function() {
     this.next();
     this.value.push(this.getBackreffed(0));
-    return this.stage = this.stageArrayHave;
+    this.stage = this.stageArrayHave;
   }
 };
 
 State.prototype.stageArrayHave = {
-  ['|']: function() {
+  '|': function() {
     this.next();
-    return this.stage = this.stageArrayNext;
+    this.stage = this.stageArrayNext;
   },
-  [']']: function() {
+  ']': function() {
     this.next();
-    return this.stage = null;
+    this.stage = null;
   }
 };
 
 State.prototype.stageObjectStart = {
-  ['}']: function() {
+  '}': function() {
     this.value = {};
     this.next();
-    return this.stage = null;
+    this.stage = null;
   },
-  ['default']: function() {
+  'default': function() {
     this.value = {};
-    return this.stage = this.stageObjectNext;
+    this.stage = this.stageObjectNext;
   }
 };
 
@@ -337,29 +336,29 @@ State.prototype.stageObjectNext = {
   text: function() {
     this.key = this.getText();
     this.next();
-    return this.stage = this.stageObjectHaveKey;
+    this.stage = this.stageObjectHaveKey;
   },
-  ['#']: function() {
+  '#': function() {
     this.next();
     this.key = '';
-    return this.stage = this.stageObjectHaveKey;
+    this.stage = this.stageObjectHaveKey;
   }
 };
 
 State.prototype.stageObjectHaveKey = {
-  [':']: function() {
+  ':': function() {
     this.next();
-    return this.stage = this.stageObjectHaveColon;
+    this.stage = this.stageObjectHaveColon;
   },
-  ['|']: function() {
+  '|': function() {
     this.next();
     this.value[this.key] = true;
-    return this.stage = this.stageObjectNext;
+    this.stage = this.stageObjectNext;
   },
-  ['}']: function() {
+  '}': function() {
     this.next();
     this.value[this.key] = true;
-    return this.stage = null;
+    this.stage = null;
   }
 };
 
@@ -367,49 +366,49 @@ State.prototype.stageObjectHaveColon = {
   text: function() {
     this.value[this.key] = this.getText();
     this.next();
-    return this.stage = this.stageObjectHaveValue;
+    this.stage = this.stageObjectHaveValue;
   },
-  ['#']: function() {
+  '#': function() {
     this.next();
     this.value[this.key] = this.getLiteral();
-    return this.stage = this.stageObjectHaveValue;
+    this.stage = this.stageObjectHaveValue;
   },
-  ['[']: function() {
+  '[': function() {
     this.next();
-    let state = new State(this.source, this);
+    const state = new State(this.source, this);
     state.fetchArray();
     this.value[this.key] = state.value;
-    return this.stage = this.stageObjectHaveValue;
+    this.stage = this.stageObjectHaveValue;
   },
-  ['{']: function() {
+  '{': function() {
     this.next();
-    let state = new State(this.source, this);
+    const state = new State(this.source, this);
     state.fetchObject();
     this.value[this.key] = state.value;
-    return this.stage = this.stageObjectHaveValue;
+    this.stage = this.stageObjectHaveValue;
   },
-  ['|']: function() {
+  '|': function() {
     this.next();
     this.value[this.key] = this.getBackreffed(0);
-    return this.stage = this.stageObjectHaveValue;
+    this.stage = this.stageObjectHaveValue;
   }
 };
 
 State.prototype.stageObjectHaveValue = {
-  ['|']: function() {
+  '|': function() {
     this.next();
-    return this.stage = this.stageObjectNext;
+    this.stage = this.stageObjectNext;
   },
-  ['}']: function() {
+  '}': function() {
     this.next();
-    return this.stage = null;
+    this.stage = null;
   }
 };
 
 State.prototype.stageCustomStart = {
   text: function() {
-    let cname = this.getText();
-    let connector = this.source.parser.connectorOfCname(cname);
+    const cname = this.getText();
+    const connector = this.source.parser.connectorOfCname(cname);
     if (!connector) {
       this.throwError(`no connector for '${cname}'`);
     }
@@ -421,7 +420,7 @@ State.prototype.stageCustomStart = {
     }
     this.connector = connector;
     this.args = [];
-    return this.stage = this.stageCustomHave;
+    this.stage = this.stageCustomHave;
   }
 };
 
@@ -429,45 +428,45 @@ State.prototype.stageCustomNext = {
   text: function() {
     this.args.push(this.getText());
     this.next();
-    return this.stage = this.stageCustomHave;
+    this.stage = this.stageCustomHave;
   },
-  ['#']: function() {
+  '#': function() {
     this.next();
     this.args.push(this.getLiteral());
-    return this.stage = this.stageCustomHave;
+    this.stage = this.stageCustomHave;
   },
-  ['[']: function() {
+  '[': function() {
     this.next();
-    let state = new State(this.source, this);
+    const state = new State(this.source, this);
     state.fetchArray();
     this.args.push(state.value);
-    return this.stage = this.stageCustomHave;
+    this.stage = this.stageCustomHave;
   },
-  ['{']: function() {
+  '{': function() {
     this.next();
-    let state = new State(this.source, this);
+    const state = new State(this.source, this);
     state.fetchObject();
     this.args.push(state.value);
-    return this.stage = this.stageCustomHave;
+    this.stage = this.stageCustomHave;
   },
-  ['|']: function() {
+  '|': function() {
     this.next();
     this.args.push(this.getBackreffed(0));
-    return this.stage = this.stageCustomHave;
+    this.stage = this.stageCustomHave;
   }
 };
 
 State.prototype.stageCustomHave = {
-  ['|']: function() {
+  '|': function() {
     this.next();
-    return this.stage = this.stageCustomNext;
+    this.stage = this.stageCustomNext;
   },
-  [']']: function() {
-    let { connector } = this;
+  ']': function() {
+    const { connector } = this;
     if (connector.hasCreate) {
       this.value = connector.create(this.args);
     } else {
-      let newValue = connector.postcreate(this.value, this.args);
+      const newValue = connector.postcreate(this.value, this.args);
       if (typeof newValue === 'object') {
         if (newValue !== this.value) {
           if (this.isBackreffed) {
@@ -478,7 +477,7 @@ State.prototype.stageCustomHave = {
       }
     }
     this.next();
-    return this.stage = null;
+    this.stage = null;
   }
 };
 
@@ -494,20 +493,22 @@ class Parser {
 
   parse(s, options) {
     assert(typeof s === 'string', `parse expects a string, got: ${s}`);
-    let source = new Source(this, s);
-    let state = new State(source);
+    const source = new Source(this, s);
+    const state = new State(source);
     state.backrefCb = options.backrefCb;
     return state.getValue();
   }
 
   parsePartial(s, options) {
     let { howNext } = options;
-    let { cb }      = options;
+    const { cb } = options;
     assert(typeof s === 'string', `parse expects a string, got: ${s}`);
-    let source = new Source(this, s);
+    const source = new Source(this, s);
+    let nextRaw;
     while (!source.isEnd) {
       if (typeof howNext === 'object') { // array
-        var [nextRaw, nSkip] = howNext;
+        let nSkip;
+        [nextRaw, nSkip] = howNext;
         if (nSkip > 0) {
           source.skip(nSkip);
           if (source.isEnd) {
@@ -515,19 +516,18 @@ class Parser {
           }
         }
       } else {
-        var nextRaw = howNext;
+        nextRaw = howNext;
       }
       if (nextRaw === true) {
-        let { isText } = source;
-        var { part } = source;
+        const { isText, part } = source;
         source.next();
         howNext = cb(isText, part, source.pos);
       } else if (nextRaw === false) {
-        let state = new State(source, null, true);
+        const state = new State(source, null, true);
         state.backrefCb = options.backrefCb;
         state.fetchValue();
         if (state.isPartial) {
-          var { part } = source;
+          const { part } = source;
           source.next();
           howNext = cb(false, part, source.pos);
         } else {
@@ -541,8 +541,9 @@ class Parser {
   }
 
   connectorOfCname(cname) {
+    let connector;
     if (this.connectors) {
-      var connector = this.connectors[cname];
+      connector = this.connectors[cname];
     }
     return connector;
   }
