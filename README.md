@@ -15,20 +15,21 @@ $ npm install wson
 If you have installed [node-gyp](https://www.npmjs.com/package/node-gyp) and its prerequisites, this will also install the optional package [wson-addon](https://www.npmjs.com/package/wson-addon), which provides a somewhat faster (some benchmarking shows a factors of about 2 for parsing and 1.5 for stringifiying) native C++ implementation of a WSON stringifier/parser.
 
 ```js
-WSON = require('wson')();
+import wsonFactory from 'wson';
+const WSON = wsonFactory();
 
-var entry = {
-  name: "otto",
+const entry = {
+  name: 'otto',
   size: 177.3,
-  completed: ["forth", "javascript", "c++", "haskell"],
+  completed: ['forth', 'javascript', "c++", 'haskell'],
   active: true
 };
 
-var s = WSON.stringify(entry);
+const s = WSON.stringify(entry);
 console.log(s);
 // '{active|completed:[forth|javascript|c++|haskell]|name:otto|size:#177.3}'
 
-var newEntry = WSON.parse(s);
+const newEntry = WSON.parse(s);
 // equivalent to entry
 
 ```
