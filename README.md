@@ -186,47 +186,46 @@ The WSON representation of a **custom object** is:
 
 Provide a `__wsonsplit__` method:
 ```js
-var wson = require('wson');
+import wsonFactory from 'wson';
 
-var Point = function(x, y) {this.x=x; this.y=y; }
+const Point = function(x, y) {this.x=x; this.y=y; }
 Point.prototype.__wsonsplit__ = function() {return [this.x, this.y]; }
 
-var WSON = wson({connectors: {Point: Point}});
+const WSON = wsonFactory({connectors: {Point: Point}});
 
-var point1 = new Point(3, 4);
+const point1 = new Point(3, 4);
 
-var s = WSON.stringify(point1);
+const s = WSON.stringify(point1);
 console.log('s=', s); // [:Point|#3|#4]
-var point2 = WSON.parse(s);
+const point2 = WSON.parse(s);
 ```
 
 Or equivalently specify `split` explicitly:
 ```js
-var wson = require('wson');
+import wsonFactory from 'wson';
 
+const Point = function(x, y) {this.x=x; this.y=y}
 
-var Point = function(x, y) {this.x=x; this.y=y}
-
-var WSON = wson({connectors: {
+const WSON = wsonFactory({connectors: {
   Point: {
     by: Point,
     split: function(point) {return [point.x, point.y]; }
   }
 }});
 
-var point1 = new Point(3, 4);
-var s = WSON.stringify(point1);
+const point1 = new Point(3, 4);
+const s = WSON.stringify(point1);
 console.log('s=', s); // [Point:#3|#4]
-var point2 = WSON.parse(s);
+const point2 = WSON.parse(s);
 ```
 
 Specify `split` and `postcreate` (use default `precreate`):
 ```js
-var wson = require('wson');
+import wsonFactory from 'wson';
 
-var Point = function(x, y) {this.x=x; this.y=y}
+const Point = function(x, y) {this.x=x; this.y=y}
 
-var WSON = wson({connectors: {
+const WSON = wsonFactory({connectors: {
   Point: {
     by: Point,
     // reverse order of args for some strange reason
@@ -235,15 +234,15 @@ var WSON = wson({connectors: {
   }
 }});
 
-var point1 = new Point(3, 4);
-var s = WSON.stringify(point1);
+const point1 = new Point(3, 4);
+const s = WSON.stringify(point1);
 console.log('s=', s); // [Point:#4|#3]
-var point2 = WSON.parse(s);
+const point2 = WSON.parse(s);
 ```
 
 Alternately you could specify `create` (with the lack of ability to use the constructor with `call` and `apply`. And: see Corner cases below):
 ```js
-var WSON = wson({connectors: {
+const WSON = wsonFactory({connectors: {
   Point: {
     by: Point,
     split: function(point) {return [point.y, point.x]; },
@@ -257,10 +256,10 @@ var WSON = wson({connectors: {
 You *can* use together **backrefs** and **custom objects**. For example this will work:
 
 ```js
-var pointCyc = new Point(5); // leave 'y' undefined for now
-var points = [pointCyc, pointCyc]
+const pointCyc = new Point(5); // leave 'y' undefined for now
+const points = [pointCyc, pointCyc]
 pointCyc.y = points;
-var s = WSON.stringify(pointCyc);
+const s = WSON.stringify(pointCyc);
 ```
 provided that:
 - You use 2-stage creation (don't use `create`).
@@ -268,7 +267,7 @@ provided that:
 
 ## API
 
-#### var WSON = wson(options)
+#### const WSON = wsonFactory(options)
 
 Creates a new WSON processor. Recognized options are:
 - `useAddon` (boolean, default: `undefined`):
