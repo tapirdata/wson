@@ -164,7 +164,7 @@ class State {
 
   getBackreffed(hereRefNum) {
     const { part } = this.source;
-    console.log ('getBackreffed', hereRefNum, this.source)
+    // console.log ('getBackreffed', hereRefNum, this.source)
     if (this.source.isEnd || !this.source.isText) {
       this.invalidBackref(part);
     }
