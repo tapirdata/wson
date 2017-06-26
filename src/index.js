@@ -6,7 +6,7 @@ import Parser from './parser';
 
 let addon = null
 try {
-  addon = require('wson-addon');
+  addon = require('wson-addon').default;
 } catch (error) {
 }
 
