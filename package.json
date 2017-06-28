@@ -3,6 +3,7 @@
   "version": "2.1.0",
   "description": "A serializer/deserializer",
   "main": "./lib",
+  "types": "./lib/index.d.ts",
   "scripts": {
     "lint": "tslint \"src/**/*.ts\" \"test/**/*.ts\"",
     "build": "tsc",
