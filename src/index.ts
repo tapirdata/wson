@@ -78,14 +78,14 @@ function normConnectors(cons: any) {
 
 export class Wson {
 
-  protected escape: (s: string) => string
-  protected unescape: (s: string) => string
-  protected getTypeid: (x: any) => number
-  protected stringify: (x: any, options?: any) => string
-  protected parse: (s: string, options?: any) => any
-  protected parsePartial: (s: string, options?: any) => any
-  protected connectorOfCname: (s: string) => any
-  protected connectorOfValue: (x: any) => any
+  public escape: (s: string) => string
+  public unescape: (s: string) => string
+  public getTypeid: (x: any) => number
+  public stringify: (x: any, options?: any) => string
+  public parse: (s: string, options?: any) => any
+  public parsePartial: (s: string, options?: any) => any
+  public connectorOfCname: (s: string) => any
+  public connectorOfValue: (x: any) => any
 
   constructor(wsonOptions: any = {}) {
     const { version } = wsonOptions
@@ -179,7 +179,7 @@ export class Wson {
 }
 
 export interface Factory {
-  (options: any): any
+  (options: any): Wson
   Wson: typeof Wson
   ParseError: typeof ParseError
   StringifyError: typeof StringifyError
