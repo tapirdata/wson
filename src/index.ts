@@ -26,30 +26,51 @@ function normConnectors(cons: any) {
         connector = _.clone(con)
       }
       connector.name = name
+      const by = connector.by
 
+      // normalize split
       if (!_.isFunction(connector.split)) {
-        connector.split = (x) => x.__wsonsplit__()
-      }
-      connectors[name] = connector
-
-      if (_.isFunction(connector.create)) {
-        connector.hasCreate = true
-      } else {
-        connector.hasCreate = false
-        if (!_.isFunction(connector.precreate)) {
-          connector.precreate = () => Object.create(connector.by.prototype)
+        if (_.isFunction(by.prototype.__wsonsplit__)) {
+          connector.split = (x: any) => x.__wsonsplit__()
+        } else {
+          connector.split = (x: any) => []
         }
-        if (!_.isFunction(connector.postcreate)) {
-          connector.postcreate = (obj, args) => {
-            const ret = connector.by.apply(obj, args)
-            if (Object(ret) === ret) {
-              return ret
+      }
+
+      let hasCreate = false
+      // normalize create
+      if (_.isFunction(connector.create)) {
+        hasCreate = true
+      } else if (_.isFunction(by.__wsoncreate__)) {
+        connector.create = (args: any[]) => by.__wsoncreate__(args)
+        hasCreate = true
+      } else {
+        const connectorHasPostcreate = _.isFunction(connector.postcreate)
+        const protoHasPostcreate = _.isFunction(by.prototype.__wsonpostcreate__)
+        if (connectorHasPostcreate || protoHasPostcreate) {
+          // normalize precreate
+          connector.hasCreate = false
+          if (!_.isFunction(connector.precreate)) {
+            if (_.isFunction(by.__wsonprecreate__)) {
+              connector.precreate = () => by.__wsonprecreate__()
             } else {
-              return obj
+              connector.precreate = () => Object.create(by.prototype)
             }
           }
+          // normalize precreate
+          if (!connectorHasPostcreate) {
+            connector.postcreate = (x: any, args: any[]) => {
+              const x1 = x.__wsonpostcreate__(args)
+              return _.isObject(x1) ? x1 : x
+            }
+          }
+        } else { // no postcreate
+          connector.create = (args: any[]) => new by(...args)
+          hasCreate = true
         }
       }
+      connector.hasCreate = hasCreate
+      connectors[name] = connector
     }
     return connectors
   }

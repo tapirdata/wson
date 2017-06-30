@@ -1,4 +1,4 @@
-import { Foo, Point, Polygon } from "./extdefs"
+import { Foo, Point, Polygon, Role } from "./extdefs"
 import { Pair } from "./helpers"
 
 const cycArr0: any = ["a"]; cycArr0.push(cycArr0)
@@ -222,6 +222,10 @@ const pairs: Pair[] = [
   {
     x: cycPoint,
     s: "[:Point||0|#9]",
+  },
+  {
+    x: new Role("beff", true),
+    s: "[:Role|beff|#t]",
   },
   // fail
   {

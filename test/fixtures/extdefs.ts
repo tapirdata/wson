@@ -1,23 +1,25 @@
 // tslint:disable:max-classes-per-file
 
-class Point {
+export class Point {
 
   public x?: number
   public y?: number
 
-  constructor(...args: number[]) {
-    this.initialize(...args)
+  constructor(x: number, y: number) {
+    this.__wsonpostcreate__([x, y])
   }
 
-  public initialize(x?: number, y?: number) {
-    this.x = x
-    this.y = y
+  public __wsonsplit__() {
+    return [this.x, this.y]
   }
 
-  public __wsonsplit__() { return [this.x, this.y] }
+  public __wsonpostcreate__(args: number[]) {
+    [this.x, this.y] = args
+  }
+
 }
 
-class Polygon {
+export class Polygon {
 
   public points: Point[]
 
@@ -26,7 +28,7 @@ class Polygon {
   }
 }
 
-class Foo {
+export class Foo {
 
   public x: any
   public y: any
@@ -37,4 +39,18 @@ class Foo {
   }
 }
 
-export { Foo, Point, Polygon }
+export class Role {
+
+  public name: string
+  public isAdmin: boolean
+
+  constructor(name: string, isAdmin: boolean = false) {
+    this.name = name
+    this.isAdmin = isAdmin
+  }
+
+  public __wsonsplit__() {
+    return [this.name, this.isAdmin]
+  }
+
+}
