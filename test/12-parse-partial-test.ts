@@ -20,7 +20,7 @@ for (const setup of setups) {
         return nrs[nrIdx++]
       }
 
-      wson.parsePartial(s, {howNext: nrs[nrIdx++], cb, backrefCb})
+      wson.parsePartial(s as string, {howNext: nrs[nrIdx++], cb, backrefCb})
 
       return result
     }

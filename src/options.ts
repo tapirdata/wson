@@ -1,6 +1,7 @@
 
-export type Cb = (err?: any, val?: any) => void
-export type HaverefCb = (X: any) => number | null
+export type AnyCb = (...args: any[]) => any
+export type BackrefCb = (err?: any, val?: any) => void
+export type HaverefCb = (x: any) => number | null
 
 export interface Connector {
   by: any

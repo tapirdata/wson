@@ -14,7 +14,7 @@ function saveRepr(x: any) {
 
 interface Pair {
   x?: any
-  s?: string
+  s: string
   failPos?: number
   stringifyFailPos?: number
   parseFailPos?: number

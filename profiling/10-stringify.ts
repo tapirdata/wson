@@ -1,32 +1,31 @@
-import Benchmark from 'benchmark';
-import Wson from '../src';
+import Benchmark = require("benchmark")
+import wsonFactory from "../src"
 
-let wsonJs = Wson({useAddon: false});
-let wsonAddon = Wson({useAddon: true});
+const wsonJs = wsonFactory({useAddon: false})
+const wsonAddon = wsonFactory({useAddon: true})
 
-let suite = new Benchmark.Suite();
+const suite = new Benchmark.Suite()
 
-let x = {
+const x = {
   a: 42,
-  b: 'foobar',
+  b: "foobar",
   c: [1, 4, 9, 16],
   rest: {
     x: true,
     y: false,
-    z: ['foo', 'bar', null, 'baz']
-  }
-};
+    z: ["foo", "bar", null, "baz"],
+  },
+}
 
 // x = ['foo', 'bar', 123, true, ['a', 'b']]
 // x = {a: true, b: true, c:true, d: true}
 
-suite.add('JSON.stringify', () => JSON.stringify(x));
-suite.add('WSON-js.stringify', () => wsonJs.stringify(x));
-suite.add('WSON-addon.stringify', () => wsonAddon.stringify(x));
+suite.add("JSON.stringify", () => JSON.stringify(x))
+suite.add("WSON-js.stringify", () => wsonJs.stringify(x))
+suite.add("WSON-addon.stringify", () => wsonAddon.stringify(x))
 
-suite.on('cycle', event => console.log(String(event.target))
-);
-// suite.on 'complete', ->
-//   console.log 'Fastest is ' + @filter('fastest').pluck('name')
+suite.on("cycle", (event: any) => {
+  console.log(String(event.target))
+})
 
-suite.run({async: true});
+suite.run({async: true})

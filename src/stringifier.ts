@@ -1,6 +1,6 @@
 import _ = require("lodash")
 import { StringifyError } from "./errors"
-import { Cb, Connector, HaverefCb } from "./options"
+import { Connector, HaverefCb } from "./options"
 import transcribe from "./transcribe"
 
 class Stringifier {

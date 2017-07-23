@@ -1,31 +1,31 @@
-import Benchmark from 'benchmark';
-import Wson from '../src';
+import Benchmark = require("benchmark")
+import wsonFactory from "../src"
 
-let suite = new Benchmark.Suite();
+const wsonJs = wsonFactory({useAddon: false})
+const wsonAddon = wsonFactory({useAddon: true})
 
-let x = {
+const suite = new Benchmark.Suite()
+
+const x = {
   a: 42,
-  b: 'foobar',
+  b: "foobar",
   c: [1, 4, 9, 16],
   rest: {
     x: true,
     y: false,
-    z: ['foo', 'bar', null, 'baz']
-  }
-};
+    z: ["foo", "bar", null, "baz"],
+  },
+}
 
-let wsonJs = Wson({useAddon: false});
-let wsonAddon = Wson({useAddon: true});
+const sj = JSON.stringify(x)
+const st = wsonJs.stringify(x)
 
-let sj = JSON.stringify(x);
-let st = wsonJs.stringify(x);
+suite.add("JSON.parse", () => JSON.parse(sj))
+suite.add("WSON-js.parse", () => wsonJs.parse(st))
+suite.add("WSON-addon.parse", () => wsonAddon.parse(st))
 
-suite.add('JSON.parse', () => JSON.parse(sj));
-suite.add('WSON-js.parse', () => wsonJs.parse(st));
-suite.add('WSON-addon.parse', () => wsonAddon.parse(st));
+suite.on("cycle", (event: any) => {
+  console.log(String(event.target))
+})
 
-suite.on('cycle', event => console.log(String(event.target))
-);
-
-suite.run({async: true});
-
+suite.run({async: true})

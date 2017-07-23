@@ -1,6 +1,6 @@
 import _ = require("lodash")
 import { ParseError, StringifyError } from "./errors"
-import { Cb, Connector } from "./options"
+import { AnyCb, BackrefCb, Connector } from "./options"
 import Parser from "./parser"
 import Stringifier from "./stringifier"
 import transcribe from "./transcribe"
@@ -12,6 +12,8 @@ try {
 } catch (error) {
   addon = null
 }
+
+
 
 function normConnectors(cons: any) {
   if (_.isObject(cons) && !_.isEmpty(cons)) {
@@ -124,14 +126,15 @@ export class Wson {
       this.getTypeid = (x: any) => stringifier.getTypeid(x)
       this.stringify = (x: any, options: any) => stringifier.stringify(x, options ? options.haverefCb : null)
       this.parse = (s: string, options: any) => parser.parse(s, options ? options.backrefCb : null)
-      this.parsePartial = (s: string, options: any) => {
+      this.parsePartial = (s: string, options: any, cb1?: AnyCb) => {
         let howNext: any
-        let cb: (...args: any[]) => any
-        let backrefCb: Cb | undefined
+        let cb: AnyCb
+        let backrefCb: BackrefCb | undefined
         if (_.isObject(options)) {
           ({ howNext, cb, backrefCb } = options)
         } else {
-          [, howNext, cb] = arguments
+          howNext = options
+          cb = cb1 as AnyCb
         }
         const safeCb = (...args: any[]) => {
           let result
@@ -164,11 +167,11 @@ export class Wson {
       this.getTypeid = (x) => stringifier.getTypeid(x)
       this.stringify = (x, options) => stringifier.stringify(x, undefined, options ? options.haverefCb : null)
       this.parse = (s, options) => parser.parse(s, options || {})
-      this.parsePartial = (s, options) => {
+      this.parsePartial = (s: string, options: any, cb1?: AnyCb) => {
         if (!_.isObject(options)) {
           options = {
-            howNext: arguments[1],
-            cb:      arguments[2],
+            howNext: options,
+            cb:      cb1,
           }
         }
         return parser.parsePartial(s, options)
