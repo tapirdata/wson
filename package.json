@@ -7,7 +7,7 @@
   "scripts": {
     "lint": "tslint \"src/**/*.ts\" \"test/**/*.ts\"",
     "build": "tsc",
-    "prepareOnly": "npm run build",
+    "prepublishOnly": "npm run build",
     "install": "npm run build",
     "test": "mocha --compilers ts:ts-node/register ./test"
   },
