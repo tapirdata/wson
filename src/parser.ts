@@ -78,6 +78,262 @@ class Source {
   }
 }
 
+const stageValueStart = {
+  "text"(this: State) {
+    this.value = this.getText()
+    this.next()
+    this.stage = null
+  },
+  ["#"](this: State) {
+    this.next()
+    this.value = this.getLiteral()
+    this.stage = null
+  },
+  "["(this: State) {
+    this.next()
+    this.fetchArray()
+    this.stage = null
+  },
+  "{"(this: State) {
+    this.next()
+    this.fetchObject()
+    this.stage = null
+  },
+  "|"(this: State) {
+    this.next()
+    this.value = this.getBackreffed(1)
+    this.stage = null
+  },
+  "default"(this: State) {
+    if (this.allowPartial) {
+      this.isPartial = true
+      this.stage = null
+    } else {
+      this.throwError()
+    }
+  },
+}
+
+const stageArrayStart = {
+  "]"(this: State) {
+    this.value = []
+    this.next()
+    this.stage = null
+  },
+  ":"(this: State) {
+    this.next()
+    this.stage = stageCustomStart
+  },
+  "default"(this: State) {
+    this.value = []
+    this.stage = stageArrayNext
+  },
+}
+
+const stageArrayNext = {
+  "text"(this: State) {
+    this.value.push(this.getText())
+    this.next()
+    this.stage = stageArrayHave
+  },
+  "#"(this: State) {
+    this.next()
+    this.value.push(this.getLiteral())
+    this.stage = stageArrayHave
+  },
+  "["(this: State) {
+    this.next()
+    const state = new State(this.source, this)
+    state.fetchArray()
+    this.value.push(state.value)
+    this.stage = stageArrayHave
+  },
+  "{"(this: State) {
+    this.next()
+    const state = new State(this.source, this)
+    state.fetchObject()
+    this.value.push(state.value)
+    this.stage = stageArrayHave
+  },
+  "|"(this: State) {
+    this.next()
+    this.value.push(this.getBackreffed(0))
+    this.stage = stageArrayHave
+  },
+}
+
+const stageArrayHave = {
+  "|"(this: State) {
+    this.next()
+    this.stage = stageArrayNext
+  },
+  "]"(this: State) {
+    this.next()
+    this.stage = null
+  },
+}
+
+const stageObjectStart = {
+  "}"(this: State) {
+    this.value = {}
+    this.next()
+    this.stage = null
+  },
+  "default"(this: State) {
+    this.value = {}
+    this.stage = stageObjectNext
+  },
+}
+
+const stageObjectNext = {
+  "text"(this: State) {
+    this.key = this.getText()
+    this.next()
+    this.stage = stageObjectHaveKey
+  },
+  "#"(this: State) {
+    this.next()
+    this.key = ""
+    this.stage = stageObjectHaveKey
+  },
+}
+
+const stageObjectHaveKey = {
+  ":"(this: State) {
+    this.next()
+    this.stage = stageObjectHaveColon
+  },
+  "|"(this: State) {
+    this.next()
+    this.value[this.key] = true
+    this.stage = stageObjectNext
+  },
+  "}"(this: State) {
+    this.next()
+    this.value[this.key] = true
+    this.stage = null
+  },
+}
+
+const stageObjectHaveColon = {
+  "text"(this: State) {
+    this.value[this.key] = this.getText()
+    this.next()
+    this.stage = stageObjectHaveValue
+  },
+  "#"(this: State) {
+    this.next()
+    this.value[this.key] = this.getLiteral()
+    this.stage = stageObjectHaveValue
+  },
+  "["(this: State) {
+    this.next()
+    const state = new State(this.source, this)
+    state.fetchArray()
+    this.value[this.key] = state.value
+    this.stage = stageObjectHaveValue
+  },
+  "{"(this: State) {
+    this.next()
+    const state = new State(this.source, this)
+    state.fetchObject()
+    this.value[this.key] = state.value
+    this.stage = stageObjectHaveValue
+  },
+  "|"(this: State) {
+    this.next()
+    this.value[this.key] = this.getBackreffed(0)
+    this.stage = stageObjectHaveValue
+  },
+}
+
+const stageObjectHaveValue = {
+  "|"(this: State) {
+    this.next()
+    this.stage = stageObjectNext
+  },
+  "}"(this: State) {
+    this.next()
+    this.stage = null
+  },
+}
+
+const stageCustomStart = {
+  text(this: State) {
+    const cname = this.getText()
+    const connector = this.source.parser.connectorOfCname(cname)
+    if (!connector) {
+      this.throwError(`no connector for '${cname}'`)
+    }
+    this.next()
+    if (connector.hasCreate) {
+      this.vetoBackref = true
+    } else {
+      this.value = connector.precreate()
+    }
+    this.connector = connector
+    this.args = []
+    this.stage = stageCustomHave
+  },
+}
+
+const stageCustomNext = {
+  "text"(this: State) {
+    this.args.push(this.getText())
+    this.next()
+    this.stage = stageCustomHave
+  },
+  "#"(this: State) {
+    this.next()
+    this.args.push(this.getLiteral())
+    this.stage = stageCustomHave
+  },
+  "["(this: State) {
+    this.next()
+    const state = new State(this.source, this)
+    state.fetchArray()
+    this.args.push(state.value)
+    this.stage = stageCustomHave
+  },
+  "{"(this: State) {
+    this.next()
+    const state = new State(this.source, this)
+    state.fetchObject()
+    this.args.push(state.value)
+    this.stage = stageCustomHave
+  },
+  "|"(this: State) {
+    this.next()
+    this.args.push(this.getBackreffed(0))
+    this.stage = stageCustomHave
+  },
+}
+
+const stageCustomHave = {
+  "|"(this: State) {
+    this.next()
+    this.stage = stageCustomNext
+  },
+  "]"(this: State) {
+    const { connector } = this
+    if (connector.hasCreate) {
+      this.value = connector.create(this.args)
+    } else {
+      const newValue = connector.postcreate(this.value, this.args)
+      if (typeof newValue === "object") {
+        if (newValue !== this.value) {
+          if (this.isBackreffed) {
+            this.throwError("backreffed value is replaced by postcreate")
+          }
+          this.value = newValue
+        }
+      }
+    }
+    this.next()
+    this.stage = null
+  },
+}
+
 class State {
 
   public source: Source
@@ -86,9 +342,12 @@ class State {
   public isBackreffed: boolean
   public isPartial: boolean
   public backrefCb: (ref: number) => any
+  public key: any
   public value: any
-  protected stage: Stage
-  protected vetoBackref?: boolean
+  public args: any
+  public connector: any
+  public stage: Stage
+  public vetoBackref?: boolean
 
   constructor(source: Source, parent: State | null, allowPartial: boolean= false) {
     this.source = source
@@ -226,17 +485,17 @@ class State {
   }
 
   public fetchValue() {
-    this.stage = this.stageValueStart
+    this.stage = stageValueStart
     return this.scan()
   }
 
   public fetchArray() {
-    this.stage = this.stageArrayStart
+    this.stage = stageArrayStart
     return this.scan()
   }
 
   public fetchObject() {
-    this.stage = this.stageObjectStart
+    this.stage = stageObjectStart
     return this.scan()
   }
 
@@ -247,262 +506,6 @@ class State {
     }
     return this.value
   }
-
-  private get stageValueStart() { return {
-    "text"() {
-      this.value = this.getText()
-      this.next()
-      this.stage = null
-    },
-    ["#"]() {
-      this.next()
-      this.value = this.getLiteral()
-      this.stage = null
-    },
-    "["() {
-      this.next()
-      this.fetchArray()
-      this.stage = null
-    },
-    "{"() {
-      this.next()
-      this.fetchObject()
-      this.stage = null
-    },
-    "|"() {
-      this.next()
-      this.value = this.getBackreffed(1)
-      this.stage = null
-    },
-    "default"() {
-      if (this.allowPartial) {
-        this.isPartial = true
-        this.stage = null
-      } else {
-        this.throwError()
-      }
-    },
-  } as any }
-
-  private get stageArrayStart() { return {
-    "]"() {
-      this.value = []
-      this.next()
-      this.stage = null
-    },
-    ":"() {
-      this.next()
-      this.stage = this.stageCustomStart
-    },
-    "default"() {
-      this.value = []
-      this.stage = this.stageArrayNext
-    },
-  } as any }
-
-  private get stageArrayNext() { return {
-    "text"() {
-      this.value.push(this.getText())
-      this.next()
-      this.stage = this.stageArrayHave
-    },
-    "#"() {
-      this.next()
-      this.value.push(this.getLiteral())
-      this.stage = this.stageArrayHave
-    },
-    "["() {
-      this.next()
-      const state = new State(this.source, this)
-      state.fetchArray()
-      this.value.push(state.value)
-      this.stage = this.stageArrayHave
-    },
-    "{"() {
-      this.next()
-      const state = new State(this.source, this)
-      state.fetchObject()
-      this.value.push(state.value)
-      this.stage = this.stageArrayHave
-    },
-    "|"() {
-      this.next()
-      this.value.push(this.getBackreffed(0))
-      this.stage = this.stageArrayHave
-    },
-  } as any }
-
-  private get stageArrayHave() { return {
-    "|"() {
-      this.next()
-      this.stage = this.stageArrayNext
-    },
-    "]"() {
-      this.next()
-      this.stage = null
-    },
-  } as any }
-
-  private get stageObjectStart() { return {
-    "}"() {
-      this.value = {}
-      this.next()
-      this.stage = null
-    },
-    "default"() {
-      this.value = {}
-      this.stage = this.stageObjectNext
-    },
-  } as any }
-
-  private get stageObjectNext() { return {
-    "text"() {
-      this.key = this.getText()
-      this.next()
-      this.stage = this.stageObjectHaveKey
-    },
-    "#"() {
-      this.next()
-      this.key = ""
-      this.stage = this.stageObjectHaveKey
-    },
-  } as any }
-
-  private get stageObjectHaveKey() { return {
-    ":"() {
-      this.next()
-      this.stage = this.stageObjectHaveColon
-    },
-    "|"() {
-      this.next()
-      this.value[this.key] = true
-      this.stage = this.stageObjectNext
-    },
-    "}"() {
-      this.next()
-      this.value[this.key] = true
-      this.stage = null
-    },
-  } as any }
-
-  private get stageObjectHaveColon() { return {
-    "text"() {
-      this.value[this.key] = this.getText()
-      this.next()
-      this.stage = this.stageObjectHaveValue
-    },
-    "#"() {
-      this.next()
-      this.value[this.key] = this.getLiteral()
-      this.stage = this.stageObjectHaveValue
-    },
-    "["() {
-      this.next()
-      const state = new State(this.source, this)
-      state.fetchArray()
-      this.value[this.key] = state.value
-      this.stage = this.stageObjectHaveValue
-    },
-    "{"() {
-      this.next()
-      const state = new State(this.source, this)
-      state.fetchObject()
-      this.value[this.key] = state.value
-      this.stage = this.stageObjectHaveValue
-    },
-    "|"() {
-      this.next()
-      this.value[this.key] = this.getBackreffed(0)
-      this.stage = this.stageObjectHaveValue
-    },
-  } as any }
-
-  private get stageObjectHaveValue() { return {
-    "|"() {
-      this.next()
-      this.stage = this.stageObjectNext
-    },
-    "}"() {
-      this.next()
-      this.stage = null
-    },
-  } as any }
-
-  private get stageCustomStart() { return {
-    text() {
-      const cname = this.getText()
-      const connector = this.source.parser.connectorOfCname(cname)
-      if (!connector) {
-        this.throwError(`no connector for '${cname}'`)
-      }
-      this.next()
-      if (connector.hasCreate) {
-        this.vetoBackref = true
-      } else {
-        this.value = connector.precreate()
-      }
-      this.connector = connector
-      this.args = []
-      this.stage = this.stageCustomHave
-    },
-  } as any }
-
-  private get stageCustomNext() { return {
-    "text"() {
-      this.args.push(this.getText())
-      this.next()
-      this.stage = this.stageCustomHave
-    },
-    "#"() {
-      this.next()
-      this.args.push(this.getLiteral())
-      this.stage = this.stageCustomHave
-    },
-    "["() {
-      this.next()
-      const state = new State(this.source, this)
-      state.fetchArray()
-      this.args.push(state.value)
-      this.stage = this.stageCustomHave
-    },
-    "{"() {
-      this.next()
-      const state = new State(this.source, this)
-      state.fetchObject()
-      this.args.push(state.value)
-      this.stage = this.stageCustomHave
-    },
-    "|"() {
-      this.next()
-      this.args.push(this.getBackreffed(0))
-      this.stage = this.stageCustomHave
-    },
-  } as any }
-
-  private get stageCustomHave() { return {
-    "|"() {
-      this.next()
-      this.stage = this.stageCustomNext
-    },
-    "]"() {
-      const { connector } = this
-      if (connector.hasCreate) {
-        this.value = connector.create(this.args)
-      } else {
-        const newValue = connector.postcreate(this.value, this.args)
-        if (typeof newValue === "object") {
-          if (newValue !== this.value) {
-            if (this.isBackreffed) {
-              this.throwError("backreffed value is replaced by postcreate")
-            }
-            this.value = newValue
-          }
-        }
-      }
-      this.next()
-      this.stage = null
-    },
-  } as any }
 
 }
 

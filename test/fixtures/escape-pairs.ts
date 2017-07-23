@@ -1,6 +1,7 @@
-import { Pair } from "./helpers"
 
-const pairs: [null | string, string][] = [
+type Pair = [null | string, string]
+
+const pairs: Pair[] = [
   ["",    ""],
   ["abc", "abc"],
   ["a:bc", "a`ibc"],

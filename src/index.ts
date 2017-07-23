@@ -13,8 +13,6 @@ try {
   addon = null
 }
 
-
-
 function normConnectors(cons: any) {
   if (_.isObject(cons) && !_.isEmpty(cons)) {
     const connectors: { [name: string]: any } = {}
