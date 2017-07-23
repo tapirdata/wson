@@ -33,7 +33,15 @@ const newEntry = WSON.parse(s)
 // equivalent to entry
 
 ```
-## Motivation (why just another format?)
+**Hint**: If you're using [webpack](https://webpack.js.org/) to bundle this package for browser usage, you will get Errors as webpack fails to bundle the native addon. To prevent these Errors you have to exclude the native addon in your your `webppack.config.js`:
+
+```js
+externals: {
+  'wson-addon': true
+}
+```
+
+## Motivation (why yet another format?)
 
 We demanded a format that:
 - is deterministic (stringification does not depend on key insertion order or unjustified assumptions about the js-engine).
@@ -362,3 +370,4 @@ This may be thrown by `WSON.parse` and `WSON.parsePartial`. It provides these fi
 - `s`: the original ill-formed string.
 - `pos`: the position in `s` where passing has stumbled.
 - `cause`: some textual description of what caused to reject the string `s`.
+

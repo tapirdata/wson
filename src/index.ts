@@ -1,16 +1,17 @@
 import _ = require("lodash")
-import addon from "wson-addon"
 import { ParseError, StringifyError } from "./errors"
 import { Cb, Connector } from "./options"
 import Parser from "./parser"
 import Stringifier from "./stringifier"
 import transcribe from "./transcribe"
 
-// let addon = null
-// try {
-//   addon = require('wson-addon').default;
-// } catch (error) {
-// }
+let addon: any
+try {
+  // tslint:disable-next-line:no-var-requires
+  addon = require("wson-addon").default
+} catch (error) {
+  addon = null
+}
 
 function normConnectors(cons: any) {
   if (_.isObject(cons) && !_.isEmpty(cons)) {
@@ -179,13 +180,13 @@ export class Wson {
 }
 
 export interface Factory {
-  (options: any): Wson
+  (options?: any): Wson
   Wson: typeof Wson
   ParseError: typeof ParseError
   StringifyError: typeof StringifyError
 }
 
-const factory = ((createOptions: any) => {
+const factory = ((createOptions?: any) => {
   return new Wson(createOptions)
 }) as Factory
 
