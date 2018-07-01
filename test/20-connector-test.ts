@@ -1,5 +1,5 @@
-import _ = require("lodash")
 import { expect } from "chai"
+import _ = require("lodash")
 
 import { Point } from "./fixtures/extdefs"
 import setups from "./fixtures/setups"

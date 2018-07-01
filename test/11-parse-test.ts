@@ -1,5 +1,5 @@
-import _ = require("lodash")
 import { expect } from "chai"
+import _ = require("lodash")
 
 import { saveRepr } from "./fixtures/helpers"
 import setups from "./fixtures/setups"

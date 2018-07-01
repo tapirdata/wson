@@ -32,7 +32,7 @@ class Source {
     this.splitRe = new RegExp(transcribe.splitBrick, "g")
     this.pos = 0
     this.isEnd = false
-    this.part = ''
+    this.part = ""
     this.nt = null
     this.isText = false
     this.next()
