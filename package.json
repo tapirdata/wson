@@ -31,22 +31,22 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@types/lodash": "^4.14.71",
-    "lodash": "^4.17.4"
+    "@types/lodash": "^4.14.110",
+    "lodash": "^4.17.10"
   },
   "devDependencies": {
-    "@types/benchmark": "^1.0.30",
-    "@types/chai": "^4.0.1",
-    "@types/mocha": "^2.2.41",
-    "@types/node": "^8.0.17",
+    "@types/benchmark": "^1.0.31",
+    "@types/chai": "^4.1.4",
+    "@types/mocha": "^5.2.4",
+    "@types/node": "^10.5.1",
     "benchmark": "^2.1.4",
-    "chai": "^4.1.0",
-    "mocha": "^3.4.2",
-    "ts-node": "^3.3.0",
-    "tslint": "^5.5.0",
-    "typescript": "^2.4.2"
+    "chai": "^4.1.2",
+    "mocha": "^5.2.0",
+    "ts-node": "^7.0.0",
+    "tslint": "^5.10.0",
+    "typescript": "^2.9.2"
   },
   "optionalDependencies": {
-    "wson-addon": "^2.1.2"
+    "wson-addon": "^2.2.0"
   }
 }

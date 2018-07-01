@@ -30,7 +30,11 @@ class Source {
     this.sLen = this.s.length
     this.rest = this.s
     this.splitRe = new RegExp(transcribe.splitBrick, "g")
+    this.pos = 0
     this.isEnd = false
+    this.part = ''
+    this.nt = null
+    this.isText = false
     this.next()
   }
 
@@ -341,7 +345,7 @@ class State {
   public allowPartial: boolean
   public isBackreffed: boolean
   public isPartial: boolean
-  public backrefCb: (ref: number) => any
+  public backrefCb?: (ref: number) => any
   public key: any
   public value: any
   public args: any
@@ -353,6 +357,7 @@ class State {
     this.source = source
     this.parent = parent
     this.allowPartial = allowPartial
+    this.isPartial = false
     this.isBackreffed = false
   }
 
