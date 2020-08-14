@@ -2,6 +2,8 @@
 
 import { ParseError } from "./errors"
 import transcribe from "./transcribe"
+import { BackrefCb } from "./types"
+import { ParseOptions, ParsePartialOptions } from "./options"
 
 function assert(cond: boolean, message: string) {
   if (!cond) {
@@ -345,7 +347,7 @@ class State {
   public allowPartial: boolean
   public isBackreffed: boolean
   public isPartial: boolean
-  public backrefCb?: (ref: number) => any
+  public backrefCb: BackrefCb | null
   public key: any
   public value: any
   public args: any
@@ -358,6 +360,7 @@ class State {
     this.parent = parent
     this.allowPartial = allowPartial
     this.isPartial = false
+    this.backrefCb = null
     this.isBackreffed = false
   }
 
@@ -522,22 +525,20 @@ class Parser {
     this.connectors = options.connectors
   }
 
-  public parse(s: string, options?: any) {
+  public parse(s: string, { backrefCb = null }: ParseOptions = {}) {
     assert(typeof s === "string", `parse expects a string, got: ${s}`)
     const source = new Source(this, s)
     const state = new State(source, null)
-    state.backrefCb = options.backrefCb
+    state.backrefCb = backrefCb
     return state.getValue()
   }
 
-  public parsePartial(s: string, options?: any) {
-    let { howNext } = options
-    const { cb } = options
+  public parsePartial(s: string, { howNext, cb, backrefCb }: ParsePartialOptions) {
     assert(typeof s === "string", `parse expects a string, got: ${s}`)
     const source = new Source(this, s)
     let nextRaw
     while (!source.isEnd) {
-      if (typeof howNext === "object") { // array
+      if (Array.isArray(howNext)) {
         let nSkip
         [nextRaw, nSkip] = howNext
         if (nSkip > 0) {
@@ -555,7 +556,7 @@ class Parser {
         howNext = cb(isText, part, source.pos)
       } else if (nextRaw === false) {
         const state = new State(source, null, true)
-        state.backrefCb = options.backrefCb
+        state.backrefCb = backrefCb || null;
         state.fetchValue()
         if (state.isPartial) {
           const { part } = source

@@ -12,8 +12,6 @@
 $ npm install wson
 ```
 
-If you have installed [node-gyp](https://www.npmjs.com/package/node-gyp) and its prerequisites, this will also install the optional package [wson-addon](https://www.npmjs.com/package/wson-addon), which provides a somewhat faster (some benchmarking shows a factors of about 3 for parsing) native C++ implementation of a WSON stringifier/parser.
-
 ```js
 import wsonFactory from 'wson'
 const WSON = wsonFactory()
@@ -33,14 +31,16 @@ const newEntry = WSON.parse(s)
 // equivalent to entry
 
 ```
-**Hint**: If you're using [webpack](https://webpack.js.org/) to bundle this package for browser usage, you will get Errors as webpack fails to bundle the native addon. To prevent these Errors you have to exclude the native addon in your your `webppack.config.js`:
+
+There is somewhat faster native C++ implementation of a WSON-parser and -stringifyer: [wson-addon](https://www.npmjs.com/package/wson-addon).
+Since version 2.6.0 of this module the optional dependency to `wson-addon` been removed. Now the native implementation can be attached manually
+by using the option `addon`:
 
 ```js
-externals: {
-  'wson-addon': true
-}
+import wsonFactory from 'wson'
+import addon from 'wson-addon'
+const WSON = wsonFactory({ addon })
 ```
-
 ## Motivation (why yet another format?)
 
 We demanded a format that:
@@ -293,6 +293,7 @@ provided that:
 #### const WSON = wsonFactory(options)
 
 Creates a new WSON processor. Recognized options are:
+- `addon` (optional native module)
 - `useAddon` (boolean, default: `undefined`):
   - `false`: An installed `wson-addon` is ignored.
   - `true`: The addon is forced. An exception is thrown if the addon is missing.

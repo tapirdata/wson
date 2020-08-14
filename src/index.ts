@@ -1,35 +1,22 @@
 import * as _ from "lodash"
 import { ParseError, StringifyError } from "./errors"
-import { AnyCb, BackrefCb, Connector, ParseOptions, ParsePartialOptions, StringifyOptions, WsonOptions } from "./options"
+import { PartialCb, BackrefCb, Connector } from "./types"
 import Parser from "./parser"
 import Stringifier from "./stringifier"
 import transcribe from "./transcribe"
-
-/*
-let addon: any
-try {
-  // tslint:disable-next-line:no-var-requires
-  addon = require("wson-addon").default
-} catch (error) {
-  addon = null
-}
-*/
+import { StringifyOptions, ParseOptions, ParsePartialOptions, WsonOptions } from "./options"
 
 function normConnectors(cons?: Record<string, any>) {
   if (_.isObject(cons) && !_.isEmpty(cons)) {
-    const connectors: Record<string, any> = {}
+    const connectors: Record<string, Connector<any>> = {}
     for (const name of Object.keys(cons)) {
       const con = cons[name]
-      let connector: Connector
-      if (_.isFunction(con)) {
-        connector = {
-          by: con,
-        } as Connector
-      } else {
-        connector = _.clone(con)
-      }
+      const connector: Partial<Connector<any>> =
+        _.isFunction(con)
+        ? { by: con } 
+        : _.clone(con)
       connector.name = name
-      const by = connector.by
+      const { by } = connector
 
       // normalize split
       if (!_.isFunction(connector.split)) {
@@ -73,14 +60,13 @@ function normConnectors(cons?: Record<string, any>) {
         }
       }
       connector.hasCreate = hasCreate
-      connectors[name] = connector
+      connectors[name] = connector as Connector<any>
     }
     return connectors
   }
 }
 
 export class Wson {
-
   public escape: (s: string) => string
   public unescape: (s: string) => string
   public getTypeid: (x: any) => number
@@ -99,7 +85,7 @@ export class Wson {
       useAddon = useAddon !== false
     } else {
       if (useAddon === true) {
-        throw new Error("wson-addon is not installed")
+        throw new Error("wson-addon is not supplied")
       }
     }
 
@@ -112,28 +98,28 @@ export class Wson {
     }
 
     if (useAddon) {
-      const stringifier = new addon.Stringifier(StringifyError, stringifyOptions)
-      const parser = new addon.Parser(ParseError, parseOptions)
+      const stringifier = new addon!.Stringifier(StringifyError, stringifyOptions)
+      const parser = new addon!.Parser(ParseError, parseOptions)
 
       this.escape = (s: string) => stringifier.escape(s)
       this.unescape = (s: string) => parser.unescape(s)
       this.getTypeid = (x: any) => stringifier.getTypeid(x)
-      this.stringify = (x: any, options?: StringifyOptions) => stringifier.stringify(x, options ? options.haverefCb : null)
-      this.parse = (s: string, options?: ParseOptions) => parser.parse(s, options ? options.backrefCb : null)
-      this.parsePartial = (s: string, options: ParsePartialOptions, cb1?: AnyCb) => {
+      this.stringify = (x: any, options?: StringifyOptions) => stringifier.stringify(x, options?.haverefCb)
+      this.parse = (s: string, options?: ParseOptions) => parser.parse(s, options?.backrefCb)
+      this.parsePartial = (s: string, options: ParsePartialOptions, cb1?: PartialCb) => {
         let howNext: any
-        let cb: AnyCb
-        let backrefCb: BackrefCb | undefined
+        let cb: PartialCb
+        let backrefCb: BackrefCb | null = null
         if (_.isObject(options)) {
-          ({ howNext, cb, backrefCb } = options)
+          ({ howNext, cb, backrefCb = null } = options)
         } else {
           howNext = options
-          cb = cb1 as AnyCb
+          cb = cb1 as PartialCb
         }
-        const safeCb = (...args: any[]) => {
+        const safeCb = (isText: boolean, part: string, pos: number) => {
           let result
           try {
-            result = cb(...args)
+            result = cb(isText, part, pos)
           } catch (e) {
             if (e instanceof Error) {
               return e
@@ -161,7 +147,7 @@ export class Wson {
       this.getTypeid = (x) => stringifier.getTypeid(x)
       this.stringify = (x, options?: StringifyOptions) => stringifier.stringify(x, undefined, options ? options.haverefCb : null)
       this.parse = (s, options?: ParseOptions) => parser.parse(s, options || {})
-      this.parsePartial = (s: string, options: ParsePartialOptions, cb1?: AnyCb) => {
+      this.parsePartial = (s: string, options: ParsePartialOptions, cb1?: PartialCb) => {
         if (!_.isObject(options)) {
           if (cb1 == null) {
             throw new Error("no callback specified")

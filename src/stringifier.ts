@@ -1,11 +1,11 @@
 import * as _ from "lodash"
 import { StringifyError } from "./errors"
-import { Connector, HaverefCb } from "./options"
+import { Connector, HaverefCb } from "./types"
 import transcribe from "./transcribe"
 
 class Stringifier {
 
-  private connectors: { [name: string]: Connector }
+  private connectors: Record<string, Connector<any>>
 
   constructor(options: any = {}) {
     this.connectors = options.connectors
@@ -148,7 +148,7 @@ class Stringifier {
     return result + "}"
   }
 
-  protected stringifyConnector(connector: Connector, x: any, haves: any[], haverefCb?: HaverefCb | null) {
+  protected stringifyConnector(connector: Connector<any>, x: any, haves: any[], haverefCb?: HaverefCb | null) {
     haves.push(x)
     let result = `[:${transcribe.escape(connector.name as string)}`
     const args: any[] = connector.split(x)
