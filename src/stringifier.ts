@@ -1,4 +1,4 @@
-import _ = require("lodash")
+import * as _ from "lodash"
 import { StringifyError } from "./errors"
 import { Connector, HaverefCb } from "./options"
 import transcribe from "./transcribe"
@@ -38,7 +38,7 @@ class Stringifier {
     }
   }
 
-  public stringify(x: any, haves: any[]= [], haverefCb?: HaverefCb): string {
+  public stringify(x: any, haves: any[]= [], haverefCb?: HaverefCb | null): string {
     const typeid = this.getTypeid(x)
     switch (typeid) {
       case 0:
@@ -83,7 +83,7 @@ class Stringifier {
     }
   }
 
-  protected getBackref(x: any, haves: any[], haverefCb?: HaverefCb): number | null {
+  protected getBackref(x: any, haves: any[], haverefCb?: HaverefCb | null): number | null {
     for (const [idx, have] of haves.entries()) {
       if (have === x) {
         return haves.length - idx - 1
@@ -98,7 +98,7 @@ class Stringifier {
     return null
   }
 
-  protected stringifyArray(x: any, haves: any[], haverefCb?: HaverefCb) {
+  protected stringifyArray(x: any, haves: any[], haverefCb?: HaverefCb | null) {
     haves.push(x)
     let result = "["
     let first = true
@@ -122,7 +122,7 @@ class Stringifier {
     }
   }
 
-  protected stringifyObject(x: any, haves: any[], haverefCb?: HaverefCb) {
+  protected stringifyObject(x: any, haves: any[], haverefCb?: HaverefCb | null) {
     const connector = this.connectorOfValue(x)
     if (connector) {
       return this.stringifyConnector(connector, x, haves, haverefCb)
@@ -148,7 +148,7 @@ class Stringifier {
     return result + "}"
   }
 
-  protected stringifyConnector(connector: Connector, x: any, haves: any[], haverefCb?: HaverefCb) {
+  protected stringifyConnector(connector: Connector, x: any, haves: any[], haverefCb?: HaverefCb | null) {
     haves.push(x)
     let result = `[:${transcribe.escape(connector.name as string)}`
     const args: any[] = connector.split(x)

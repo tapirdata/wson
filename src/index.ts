@@ -1,10 +1,11 @@
-import _ = require("lodash")
+import * as _ from "lodash"
 import { ParseError, StringifyError } from "./errors"
-import { AnyCb, BackrefCb, Connector } from "./options"
+import { AnyCb, BackrefCb, Connector, ParseOptions, ParsePartialOptions, StringifyOptions, WsonOptions } from "./options"
 import Parser from "./parser"
 import Stringifier from "./stringifier"
 import transcribe from "./transcribe"
 
+/*
 let addon: any
 try {
   // tslint:disable-next-line:no-var-requires
@@ -12,10 +13,11 @@ try {
 } catch (error) {
   addon = null
 }
+*/
 
-function normConnectors(cons: any) {
+function normConnectors(cons?: Record<string, any>) {
   if (_.isObject(cons) && !_.isEmpty(cons)) {
-    const connectors: { [name: string]: any } = {}
+    const connectors: Record<string, any> = {}
     for (const name of Object.keys(cons)) {
       const con = cons[name]
       let connector: Connector
@@ -82,19 +84,16 @@ export class Wson {
   public escape: (s: string) => string
   public unescape: (s: string) => string
   public getTypeid: (x: any) => number
-  public stringify: (x: any, options?: any) => string
-  public parse: (s: string, options?: any) => any
-  public parsePartial: (s: string, options?: any) => any
+  public stringify: (x: any, options?: StringifyOptions) => string
+  public parse: (s: string, options?: ParseOptions) => any
+  public parsePartial: (s: string, options: ParsePartialOptions) => any
   public connectorOfCname: (s: string) => any
   public connectorOfValue: (x: any) => any
 
-  constructor(wsonOptions: any = {}) {
-    const { version } = wsonOptions
+  constructor({connectors, addon, useAddon, version }: WsonOptions = {}) {
     if ((version != null) && version !== 1) {
       throw new Error("Only WSON version 1 is supported")
     }
-
-    let { useAddon } = wsonOptions
 
     if (addon) {
       useAddon = useAddon !== false
@@ -106,13 +105,10 @@ export class Wson {
 
     const stringifyOptions: any = {}
     const parseOptions: any = {}
-    let connectors
-    if (wsonOptions.connectors) {
-      connectors = normConnectors(wsonOptions.connectors)
+    if (connectors) {
+      connectors = normConnectors(connectors)
       stringifyOptions.connectors = connectors
       parseOptions.connectors = connectors
-    } else {
-      connectors = null
     }
 
     if (useAddon) {
@@ -122,9 +118,9 @@ export class Wson {
       this.escape = (s: string) => stringifier.escape(s)
       this.unescape = (s: string) => parser.unescape(s)
       this.getTypeid = (x: any) => stringifier.getTypeid(x)
-      this.stringify = (x: any, options: any) => stringifier.stringify(x, options ? options.haverefCb : null)
-      this.parse = (s: string, options: any) => parser.parse(s, options ? options.backrefCb : null)
-      this.parsePartial = (s: string, options: any, cb1?: AnyCb) => {
+      this.stringify = (x: any, options?: StringifyOptions) => stringifier.stringify(x, options ? options.haverefCb : null)
+      this.parse = (s: string, options?: ParseOptions) => parser.parse(s, options ? options.backrefCb : null)
+      this.parsePartial = (s: string, options: ParsePartialOptions, cb1?: AnyCb) => {
         let howNext: any
         let cb: AnyCb
         let backrefCb: BackrefCb | undefined
@@ -163,13 +159,16 @@ export class Wson {
       this.escape = (s) => transcribe.escape(s)
       this.unescape = (s) => transcribe.unescape(s)
       this.getTypeid = (x) => stringifier.getTypeid(x)
-      this.stringify = (x, options) => stringifier.stringify(x, undefined, options ? options.haverefCb : null)
-      this.parse = (s, options) => parser.parse(s, options || {})
-      this.parsePartial = (s: string, options: any, cb1?: AnyCb) => {
+      this.stringify = (x, options?: StringifyOptions) => stringifier.stringify(x, undefined, options ? options.haverefCb : null)
+      this.parse = (s, options?: ParseOptions) => parser.parse(s, options || {})
+      this.parsePartial = (s: string, options: ParsePartialOptions, cb1?: AnyCb) => {
         if (!_.isObject(options)) {
+          if (cb1 == null) {
+            throw new Error("no callback specified")
+          }
           options = {
             howNext: options,
-            cb:      cb1,
+            cb: cb1,
           }
         }
         return parser.parsePartial(s, options)
@@ -181,13 +180,13 @@ export class Wson {
 }
 
 export interface Factory {
-  (options?: any): Wson
+  (options?: WsonOptions): Wson
   Wson: typeof Wson
   ParseError: typeof ParseError
   StringifyError: typeof StringifyError
 }
 
-const factory = ((createOptions?: any) => {
+const factory = ((createOptions?: WsonOptions) => {
   return new Wson(createOptions)
 }) as Factory
 
@@ -197,3 +196,4 @@ factory.StringifyError = StringifyError
 
 export default factory
 export { ParseError, StringifyError }
+export { ParseOptions, StringifyOptions, WsonOptions }

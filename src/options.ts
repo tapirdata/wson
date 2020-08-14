@@ -12,3 +12,23 @@ export interface Connector {
   name?: string
   hasCreate?: boolean
 }
+
+export interface WsonOptions {
+  version?: number
+  addon?: any
+  useAddon?: boolean
+  connectors?: Record<string, any> | null
+}
+
+export interface StringifyOptions {
+  haverefCb?: HaverefCb
+}
+
+export interface ParseOptions {
+  backrefCb?: BackrefCb
+}
+
+export interface ParsePartialOptions extends ParseOptions {
+  howNext: any
+  cb: AnyCb
+}

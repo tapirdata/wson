@@ -1,22 +1,18 @@
 language: node_js
-branches:
-  except:
-    - /^v[0-9]/
+dist: bionic
 node_js:
-  - "10.5"
-  - "8.1"
-  - "7.10"
-before_install:
-  - if [[ `npm -v` < 5* ]]; then npm i -g npm@5; fi
+  - "14.8"
+  - "12.18"
 install:
   - npm install
+    npm install --no-save wson-addon
 env:
-  - CXX=g++-4.8
+  - CXX=g++-7
 addons:
   apt:
     sources:
     - ubuntu-toolchain-r-test
     packages:
-    - g++-4.8
+    - g++-7
 
 
