@@ -556,7 +556,7 @@ class Parser {
         howNext = cb(isText, part, source.pos)
       } else if (nextRaw === false) {
         const state = new State(source, null, true)
-        state.backrefCb = backrefCb || null;
+        state.backrefCb = backrefCb || null
         state.fetchValue()
         if (state.isPartial) {
           const { part } = source

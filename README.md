@@ -31,10 +31,8 @@ const newEntry = WSON.parse(s)
 // equivalent to entry
 
 ```
-
-There is somewhat faster native C++ implementation of a WSON-parser and -stringifyer: [wson-addon](https://www.npmjs.com/package/wson-addon).
-Since version 2.6.0 of this module the optional dependency to `wson-addon` been removed. Now the native implementation can be attached manually
-by using the option `addon`:
+There is a somewhat faster native C++ implementation of a WSON-parser and WSON-stringifyer: [wson-addon](https://www.npmjs.com/package/wson-addon).
+Since version 2.6.0 of the `wson`-module the optional dependency to `wson-addon` been removed. Now the native implementation can be attached manually by using the option `addon`:
 
 ```js
 import wsonFactory from 'wson'
@@ -61,7 +59,7 @@ This is an informal description of the WSON-Syntax. There is also an EBNF-file i
 
 #### Escaping
 
-There 8 special characters: `{`, `}`, `[`, `]`, `#`, `:`, `|`, `` ` ``. If they occur in strings the will be escaped using these counterparts:
+There are 8 special characters: `{`, `}`, `[`, `]`, `#`, `:`, `|`, `` ` ``. If they occur in strings the will be escaped using these counterparts:
 
 | original | escaped |
 |:--------:|:-------:|
@@ -74,12 +72,12 @@ There 8 special characters: `{`, `}`, `[`, `]`, `#`, `:`, `|`, `` ` ``. If they 
 |   \|     |   `p    |
 |   \`     |   `q    |
 
-The special characters are chosen to be expectable rare in natural language texts to minimize the need for escaping. E.g. delimiter is `|` instead of `,`.
+The special characters have been chosen to be expectable rare in natural language texts to minimize the need for escaping. E.g. delimiter is `|` instead of `,`.
 
 
 #### Strings
 
-Strings are stringified verbatim (without quotes). If they have special characters in them, they got escaped. The empty string is stringified as `#`.
+Strings are stringified verbatim (without any quotes). If they have special characters in them, they got escaped. The empty string is stringified as `#`.
 
 ###### Examples:
 

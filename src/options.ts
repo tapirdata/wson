@@ -1,5 +1,5 @@
-import { Addon } from "./addon";
-import { HaverefCb, BackrefCb, partialCb, HowNext } from "./types";
+import { Addon } from "./addon"
+import { HaverefCb, BackrefCb, PartialCb, HowNext } from "./types"
 
 export interface WsonOptions {
   version?: number
@@ -18,5 +18,5 @@ export interface ParseOptions {
 
 export interface ParsePartialOptions extends ParseOptions {
   howNext: HowNext
-  cb: partialCb
+  cb: PartialCb
 }

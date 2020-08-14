@@ -13,7 +13,7 @@ function normConnectors(cons?: Record<string, any>) {
       const con = cons[name]
       const connector: Partial<Connector<any>> =
         _.isFunction(con)
-        ? { by: con } 
+        ? { by: con }
         : _.clone(con)
       connector.name = name
       const { by } = connector

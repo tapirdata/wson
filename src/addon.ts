@@ -1,4 +1,4 @@
-import { Connector, HaverefCb, BackrefCb, PartialCb, HowNext } from "./types";
+import { Connector, HaverefCb, BackrefCb, PartialCb, HowNext } from "./types"
 
 type AddonErrorClass = any
 
