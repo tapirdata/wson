@@ -63,6 +63,4 @@ export function escape(s: string) {
   return s.replace(charRe, (char) => prefix + xarOfChar[char])
 }
 
-const splitRe = new RegExp(splitBrick)
-
-export { splitBrick, splitRe }
+export const splitRe = new RegExp(splitBrick)
