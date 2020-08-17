@@ -1,8 +1,8 @@
 import { expect } from "chai"
 
-import pairs from "./fixtures/escape-pairs"
-import setups from "./fixtures/setups"
-import wsonFactory from "./wsonFactory"
+import { pairs } from "./fixtures/escape-pairs"
+import { setups } from "./fixtures/setups"
+import { wsonFactory } from "./wsonFactory"
 
 for (const setup of setups) {
   describe(setup.name, () => {

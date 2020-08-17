@@ -2,8 +2,8 @@ import { expect } from "chai"
 import * as _ from "lodash"
 
 import { Point } from "./fixtures/extdefs"
-import setups from "./fixtures/setups"
-import wsonFactory from "./wsonFactory"
+import { setups } from "./fixtures/setups"
+import { wsonFactory } from "./wsonFactory"
 
 for (const setup of setups) {
   describe(setup.name, () => {

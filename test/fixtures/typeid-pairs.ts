@@ -1,5 +1,5 @@
 
-export default [
+export const pairs = [
   [undefined,      1],
   [null,           2],
   [false,          4],

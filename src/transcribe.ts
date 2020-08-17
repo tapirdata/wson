@@ -48,25 +48,21 @@ const charRe = new RegExp("[" + charBrick + "]", "gm")
 const xarRe = new RegExp(quoteRegExp(prefix) + "(.?)", "gm")
 splitBrick = "([" + splitBrick + "])"
 
-export default {
-  // prefix,
-  // charOfXar,
-  // xarOfChar,
-  // charBrick,
-  // charRe,
-  // xarRe,
-  splitBrick,
-  unescape(s: string) {
-    return s.replace(xarRe, (all, xar, pos) => {
-      const char = charOfXar[xar]
-      if (char == null) {
-        throw new ParseError(s, pos + 1, "") // , "unexpected escape '#{xar}'"
-      }
-      return char
-    },
-    )
+export function unescape(s: string) {
+  return s.replace(xarRe, (all, xar, pos) => {
+    const char = charOfXar[xar]
+    if (char == null) {
+      throw new ParseError(s, pos + 1, "") // , "unexpected escape '#{xar}'"
+    }
+    return char
   },
-  escape(s: string) {
-    return s.replace(charRe, (char) => prefix + xarOfChar[char])
-  },
+  )
 }
+
+export function escape(s: string) {
+  return s.replace(charRe, (char) => prefix + xarOfChar[char])
+}
+
+const splitRe = new RegExp(splitBrick)
+
+export { splitBrick, splitRe }

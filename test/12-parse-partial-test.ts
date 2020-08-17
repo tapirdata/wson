@@ -1,9 +1,9 @@
 import { expect } from "chai"
 
 import { saveRepr } from "./fixtures/helpers"
-import pairs from "./fixtures/partial-pairs"
-import setups from "./fixtures/setups"
-import wsonFactory from "./wsonFactory"
+import { pairs } from "./fixtures/partial-pairs"
+import { setups } from "./fixtures/setups"
+import { wsonFactory } from "./wsonFactory"
 
 for (const setup of setups) {
   describe(setup.name, () => {

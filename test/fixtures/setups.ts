@@ -19,7 +19,7 @@ const connectors = {
   Role,
 }
 
-export default [
+export const setups = [
   {name: "WSON-js", options: {addon, useAddon: false, connectors}},
   {name: "WSON-addon", options: {addon, useAddon: true, connectors}},
 ]

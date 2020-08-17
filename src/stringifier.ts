@@ -1,7 +1,7 @@
 import * as _ from "lodash"
 import { StringifyError } from "./errors"
 import { Connector, HaverefCb } from "./types"
-import transcribe from "./transcribe"
+import { escape } from "./transcribe"
 
 class Stringifier {
 
@@ -57,7 +57,7 @@ class Stringifier {
         if (x.length === 0) {
           return "#"
         } else {
-          return transcribe.escape(x)
+          return escape(x)
         }
       default:
         const backref = this.getBackref(x, haves, haverefCb)
@@ -116,7 +116,7 @@ class Stringifier {
 
   protected stringifyKey(x?: string) {
     if (x) {
-      return transcribe.escape(x)
+      return escape(x)
     } else {
       return "#"
     }
@@ -150,7 +150,7 @@ class Stringifier {
 
   protected stringifyConnector(connector: Connector<any>, x: any, haves: any[], haverefCb?: HaverefCb | null) {
     haves.push(x)
-    let result = `[:${transcribe.escape(connector.name as string)}`
+    let result = `[:${escape(connector.name as string)}`
     const args: any[] = connector.split(x)
     for (const elem of args) {
       result += "|"

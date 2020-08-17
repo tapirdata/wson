@@ -1,7 +1,7 @@
 // tslint:disable:max-classes-per-file
 
 import { ParseError } from "./errors"
-import transcribe from "./transcribe"
+import { unescape, splitRe } from "./transcribe"
 import { BackrefCb } from "./types"
 import { ParseOptions, ParsePartialOptions } from "./options"
 
@@ -14,28 +14,23 @@ function assert(cond: boolean, message: string) {
 type Stage = any
 
 class Source {
-
   public parser: Parser
   public s: string
   public sLen: number
-  public rest: string
-  public splitRe: RegExp
   public pos: number
   public isEnd: boolean
   public part: string
-  public nt: string | null
+  public nextChar: string | null
   public isText: boolean
 
   constructor(parser: Parser, s: string) {
     this.parser = parser
     this.s = s
-    this.sLen = this.s.length
-    this.rest = this.s
-    this.splitRe = new RegExp(transcribe.splitBrick, "g")
+    this.sLen = s.length
     this.pos = 0
     this.isEnd = false
     this.part = ""
-    this.nt = null
+    this.nextChar = null
     this.isText = false
     this.next()
   }
@@ -50,25 +45,25 @@ class Source {
     if (this.pos >= this.sLen) {
       this.isEnd = true
     } else {
-      if (this.nt != null) {
-        this.part = this.nt
+      if (this.nextChar != null) {
+        this.part = this.nextChar
         this.isText = false
-        this.nt = null
+        this.nextChar = null
       } else {
-        const m = this.splitRe.exec(this.rest)
-        const restPos = (this.pos + this.rest.length) - this.sLen
+        const rest =  this.s.slice(this.pos)
+        const m = splitRe.exec(rest)
         if (m != null) {
-          if (m.index > restPos) {
-            const partLen = m.index - restPos
+          if (m.index > 0) {
+            const partLen = m.index
             this.isText = true
-            this.part = this.rest.slice(restPos, restPos + partLen)
-            this.nt = m[0]
+            this.part = this.s.slice(this.pos, this.pos + partLen)
+            this.nextChar = m[0]
           } else {
             this.isText = false
             this.part = m[0]
           }
         } else {
-          this.part = this.rest.slice(restPos)
+          this.part = rest
           this.isText = true
         }
       }
@@ -76,8 +71,7 @@ class Source {
   }
 
   public skip(n: number) {
-    this.rest = this.s.slice(this.pos + n)
-    this.nt = null
+    this.nextChar = null
     this.part = ""
     this.pos += n
     this.next()
@@ -397,7 +391,7 @@ class State {
 
   public getText() {
     try {
-      return transcribe.unescape(this.source.part)
+      return unescape(this.source.part)
     } catch (err) {
       if (err.name === "ParseError") {
         this.throwError(err.cause, err.pos)

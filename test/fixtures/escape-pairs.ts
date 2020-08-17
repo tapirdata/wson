@@ -11,4 +11,4 @@ const pairs: Pair[] = [
   [null, "ab`xc"],
 ]
 
-export default pairs
+export { pairs }

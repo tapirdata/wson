@@ -2,9 +2,9 @@ import { expect } from "chai"
 import * as _ from "lodash"
 
 import { saveRepr } from "./fixtures/helpers"
-import setups from "./fixtures/setups"
-import pairs from "./fixtures/stringify-pairs"
-import wsonFactory from "./wsonFactory"
+import { setups } from "./fixtures/setups"
+import { pairs } from "./fixtures/stringify-pairs"
+import { wsonFactory } from "./wsonFactory"
 
 for (const setup of setups) {
   describe(setup.name, () => {

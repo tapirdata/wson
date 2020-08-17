@@ -3,7 +3,7 @@ import { ParseError, StringifyError } from "./errors"
 import { PartialCb, BackrefCb, Connector } from "./types"
 import Parser from "./parser"
 import Stringifier from "./stringifier"
-import transcribe from "./transcribe"
+import { escape, unescape } from "./transcribe"
 import { StringifyOptions, ParseOptions, ParsePartialOptions, WsonOptions } from "./options"
 
 function normConnectors(cons?: Record<string, any>) {
@@ -142,8 +142,8 @@ export class Wson {
       const stringifier = new Stringifier(stringifyOptions)
       const parser = new Parser(parseOptions)
 
-      this.escape = (s) => transcribe.escape(s)
-      this.unescape = (s) => transcribe.unescape(s)
+      this.escape = (s) => escape(s)
+      this.unescape = (s) => unescape(s)
       this.getTypeid = (x) => stringifier.getTypeid(x)
       this.stringify = (x, options?: StringifyOptions) => stringifier.stringify(x, undefined, options ? options.haverefCb : null)
       this.parse = (s, options?: ParseOptions) => parser.parse(s, options || {})

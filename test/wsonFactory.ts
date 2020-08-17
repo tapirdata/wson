@@ -1,3 +1,2 @@
-import factory from "../src/"
-
-export default factory
+import wsonFactory from "../src/"
+export { wsonFactory }

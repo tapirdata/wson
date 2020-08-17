@@ -85,6 +85,11 @@ const pairs: Pair[] = [
     ],
     nrs: [false, true, true, true, true, false, true, true, true, true, false, true],
   },
+  {
+    s: "1#",
+    col: [false, '#', 2],
+    nrs: [[true, 1]],
+  },
 ]
 
-export default pairs
+export { pairs }

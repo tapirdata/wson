@@ -362,4 +362,4 @@ const pairs: Pair[] = [
   },
 ]
 
-export default pairs
+export { pairs }
