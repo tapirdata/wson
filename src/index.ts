@@ -176,10 +176,17 @@ const factory = ((createOptions?: WsonOptions) => {
   return new Wson(createOptions)
 }) as Factory
 
+// legacy
 factory.Wson = Wson
 factory.ParseError = ParseError
 factory.StringifyError = StringifyError
 
 export default factory
-export { ParseError, StringifyError }
-export { ParseOptions, StringifyOptions, WsonOptions }
+export {
+  Connector,
+  ParseError,
+  ParseOptions,
+  StringifyError,
+  StringifyOptions,
+  WsonOptions
+}
