@@ -1,8 +1,8 @@
 import * as _ from "lodash"
 import { ParseError, StringifyError } from "./errors"
 import { PartialCb, BackrefCb, Connector } from "./types"
-import Parser from "./parser"
-import Stringifier from "./stringifier"
+import { Parser } from "./parser"
+import { Stringifier } from "./stringifier"
 import { escape, unescape } from "./transcribe"
 import { StringifyOptions, ParseOptions, ParsePartialOptions, WsonOptions } from "./options"
 

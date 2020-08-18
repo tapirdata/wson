@@ -1,6 +1,6 @@
 import util = require("util")
 
-function saveRepr(x: any) {
+export function saveRepr(x: any) {
   try {
     return util.inspect(x, {depth: null})
   } catch (error0)  {
@@ -12,7 +12,7 @@ function saveRepr(x: any) {
   }
 }
 
-interface Pair {
+export interface Pair {
   x?: any
   s: string
   failPos?: number
@@ -23,5 +23,3 @@ interface Pair {
   nrs?: any
   col?: any
 }
-
-export { saveRepr, Pair }

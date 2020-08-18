@@ -26,7 +26,7 @@ const haverefCb = (item: any) => {
   return null
 }
 
-const pairs: Pair[] = [
+export const pairs: Pair[] = [
   {
     x: "abc",
     s: "abc",
@@ -361,5 +361,3 @@ const pairs: Pair[] = [
     parseFailPos: 11,
   },
 ]
-
-export { pairs }

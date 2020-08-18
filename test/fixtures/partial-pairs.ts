@@ -1,6 +1,6 @@
 import { Pair } from "./helpers"
 
-const pairs: Pair[] = [
+export const pairs: Pair[] = [
   {
     s: "",
     col: [],
@@ -91,5 +91,3 @@ const pairs: Pair[] = [
     nrs: [[true, 1]],
   },
 ]
-
-export { pairs }

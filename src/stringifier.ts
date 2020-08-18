@@ -3,7 +3,7 @@ import { StringifyError } from "./errors"
 import { Connector, HaverefCb } from "./types"
 import { escape } from "./transcribe"
 
-class Stringifier {
+export class Stringifier {
 
   private connectors: Record<string, Connector<any>>
 
@@ -161,6 +161,3 @@ class Stringifier {
   }
 
 }
-
-// Stringifier.norm = normConnectors
-export default Stringifier

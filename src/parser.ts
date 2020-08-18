@@ -511,7 +511,7 @@ class State {
 
 }
 
-class Parser {
+export class Parser {
 
   protected connectors: any
 
@@ -575,5 +575,4 @@ class Parser {
   }
 }
 
-export default Parser
 export { Source }
