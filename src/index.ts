@@ -124,7 +124,7 @@ export class Wson {
             if (e instanceof Error) {
               return e
             } else {
-              return new Error(e)
+              return new Error(JSON.stringify(e))
             }
           }
           if (result === true || result === false || _.isArray(result)) {

@@ -1,5 +1,6 @@
 import { expect } from "chai"
 
+import { ParseError } from "../src"
 import { saveRepr } from "./fixtures/helpers"
 import { pairs } from "./fixtures/partial-pairs"
 import { setups } from "./fixtures/setups"
@@ -33,7 +34,10 @@ for (const setup of setups) {
             try {
               collectPartial(pair.s, pair.nrs, pair.backrefCb)
             } catch (someE) {
-              e = someE
+              e = someE as ParseError
+            }
+            if (!(e instanceof ParseError)) {
+              throw new Error('ParseError expected')
             }
             expect(e.name).to.be.equal("ParseError")
             expect(e.pos).to.be.equal(pair.failPos)

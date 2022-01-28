@@ -1,6 +1,7 @@
 import { expect } from "chai"
 import * as _ from "lodash"
 
+import { ParseError } from "../src"
 import { saveRepr } from "./fixtures/helpers"
 import { setups } from "./fixtures/setups"
 import { pairs } from "./fixtures/stringify-pairs"
@@ -20,7 +21,10 @@ for (const setup of setups) {
             try {
               wson.parse(pair.s, {backrefCb: pair.backrefCb})
             } catch (someE) {
-              e = someE
+              e = someE as ParseError
+            }
+            if (!(e instanceof ParseError)) {
+              throw new Error('ParseError expected')
             }
             expect(e.name).to.be.equal("ParseError")
             expect(e.pos).to.be.equal(pair.parseFailPos)

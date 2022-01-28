@@ -393,7 +393,7 @@ class State {
     try {
       return unescape(this.source.part)
     } catch (err) {
-      if (err.name === "ParseError") {
+      if (err instanceof ParseError && err.name === "ParseError") {
         this.throwError(err.cause, err.pos)
       }
       throw err
