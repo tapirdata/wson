@@ -1,25 +1,33 @@
-import { Foo, Point, Polygon, Role } from "./extdefs"
-import addon from "wson-addon"
+import addon from 'wson-addon';
+import { Foo, FooArgs, Point, Polygon, Role } from './extdefs';
+import { PreBag } from '../../src/types';
+import { WsonOptions } from '../../src/options';
 
-const connectors = {
+const connectors: PreBag = {
   Point,
   Polygon: {
     by: Polygon,
-    split(p: Polygon) { return p.points },
-    create(points: Point[]) { return new Polygon(points) },
+    split(p: Polygon): Point[] {
+      return p.points;
+    },
+    create(points: Point[]): Polygon {
+      return new Polygon(points);
+    },
   },
   Foo: {
     by: Foo,
-    split(foo: Foo) { return [foo.y, foo.x] },
-    postcreate(obj: Foo, args: any[]) {
-      obj.y = args[0]
-      obj.x = args[1]
+    split(foo: Foo): FooArgs {
+      return [foo.y, foo.x];
+    },
+    postcreate(obj: Foo, args: FooArgs[]): void {
+      obj.y = args[0];
+      obj.x = args[1];
     },
   },
   Role,
-}
+};
 
-export const setups = [
-  {name: "WSON-js", options: {addon, useAddon: false, connectors}},
-  {name: "WSON-addon", options: {addon, useAddon: true, connectors}},
-]
+export const setups: { name: string; options: WsonOptions }[] = [
+  { name: 'WSON-js', options: { addon, useAddon: false, connectors } },
+  { name: 'WSON-addon', options: { addon, useAddon: true, connectors } },
+];

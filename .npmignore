@@ -3,4 +3,3 @@ test/
 profiling/
 build/
 .npmignore
-.travis.yml

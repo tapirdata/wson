@@ -1,56 +1,48 @@
-// tslint:disable:max-classes-per-file
-
+export type PointArgs = [number | undefined, number | undefined];
 export class Point {
+  public x?: number;
+  public y?: number;
 
-  public x?: number
-  public y?: number
-
-  constructor(x: number = 0, y: number = 0) {
-    this.__wsonpostcreate__([x, y])
+  constructor(...args: PointArgs) {
+    this.__wsonpostcreate__(args);
   }
 
-  public __wsonsplit__() {
-    return [this.x, this.y]
+  public __wsonsplit__(): PointArgs {
+    return [this.x, this.y];
   }
 
-  public __wsonpostcreate__(args: number[]) {
-    [this.x, this.y] = args
+  public __wsonpostcreate__(args: PointArgs): void {
+    [this.x, this.y] = args;
   }
-
 }
 
 export class Polygon {
-
-  public points: Point[]
+  public points: Point[];
 
   constructor(points?: Point[]) {
-    this.points = points || []
+    this.points = points || [];
   }
 }
+
+export type FooValue = unknown;
+export type FooArgs = [FooValue, FooValue];
 
 export class Foo {
-
-  public x: any
-  public y: any
-
-  constructor(x: any, y: any) {
-    this.x = x
-    this.y = y
-  }
+  constructor(public x: FooValue, public y: FooValue) {}
 }
 
+export type RoleArgs = [string, boolean];
+
 export class Role {
+  public name: string;
+  public isAdmin: boolean;
 
-  public name: string
-  public isAdmin: boolean
-
-  constructor(name: string, isAdmin: boolean = false) {
-    this.name = name
-    this.isAdmin = isAdmin
+  constructor(name: string, isAdmin = false) {
+    this.name = name;
+    this.isAdmin = isAdmin;
   }
 
-  public __wsonsplit__() {
-    return [this.name, this.isAdmin]
+  public __wsonsplit__(): RoleArgs {
+    return [this.name, this.isAdmin];
   }
-
 }

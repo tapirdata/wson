@@ -1,25 +1,27 @@
-import util = require("util")
+import util = require('util');
 
-export function saveRepr(x: any) {
+import { HowNext, Value } from '../../src/types';
+
+export function safeRepr(x: unknown): string {
   try {
-    return util.inspect(x, {depth: null})
-  } catch (error0)  {
+    return util.inspect(x, { depth: null });
+  } catch (error0) {
     try {
-      return JSON.stringify(x)
+      return JSON.stringify(x);
     } catch (error1) {
-      return String(x)
+      return String(x);
     }
   }
 }
 
 export interface Pair {
-  x?: any
-  s: string
-  failPos?: number
-  stringifyFailPos?: number
-  parseFailPos?: number
-  backrefCb?: (refNum: number) => any
-  haverefCb?: (item: any) => number | null
-  nrs?: any
-  col?: any
+  x?: Value;
+  s?: string;
+  failPos?: number;
+  stringifyFailPos?: number;
+  parseFailPos?: number;
+  backrefCb?: (refNum: number) => Value;
+  haverefCb?: (item: Value) => number | null;
+  nrs?: HowNext[];
+  col?: unknown[];
 }

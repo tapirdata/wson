@@ -1,2 +1,2 @@
-import wsonFactory from "../src/"
-export { wsonFactory }
+import wsonFactory from '../src/';
+export { wsonFactory };
