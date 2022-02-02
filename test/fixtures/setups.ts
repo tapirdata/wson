@@ -1,9 +1,8 @@
 import addon from 'wson-addon';
 import { Foo, FooArgs, Point, Polygon, Role } from './extdefs';
-import { PreBag } from '../../src/types';
 import { WsonOptions } from '../../src/options';
 
-const connectors: PreBag = {
+const connectors = {
   Point,
   Polygon: {
     by: Polygon,
@@ -19,7 +18,7 @@ const connectors: PreBag = {
     split(foo: Foo): FooArgs {
       return [foo.y, foo.x];
     },
-    postcreate(obj: Foo, args: FooArgs[]): void {
+    postcreate(obj: Foo, args: FooArgs): void {
       obj.y = args[0];
       obj.x = args[1];
     },

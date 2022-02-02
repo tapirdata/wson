@@ -34,7 +34,7 @@ interface WsonPrototype<T, A extends AnyArgs> {
   __wsonpostcreate__?: () => T | undefined | null;
 }
 
-function normConnector<T, A extends AnyArgs>(name: string, pre: object): Connector<T, A> {
+function makeConnector<T, A extends AnyArgs>(name: string, pre: object): Connector<T, A> {
   const preConnector: PreConnector<T, A> | null = _.isFunction(pre) ? null : (pre as PreConnector<T, A>);
   const by: WsonClass<T, A> = preConnector ? preConnector.by : (pre as WsonClass<T, A>);
   const prototype = by.prototype as WsonPrototype<T, A>;
@@ -88,6 +88,7 @@ function normConnector<T, A extends AnyArgs>(name: string, pre: object): Connect
     }
   }
   return {
+    ...preConnector, // copy any extra attributes (e.g. 'diffKeys' for 'wson-diff')
     name,
     by,
     split,
@@ -126,7 +127,7 @@ export class Wson {
 
     let connectors: ConnectorBag;
     if (pres != null) {
-      connectors = _.mapValues(pres, (pre, name) => normConnector(name, pre));
+      connectors = _.mapValues(pres, (pre, name) => makeConnector(name, pre));
       stringifyOptions.connectors = connectors;
       parseOptions.connectors = connectors;
     }

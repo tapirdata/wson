@@ -50,12 +50,13 @@ export interface Connector<T = unknown, A extends AnyArgs = AnyArgs> {
 
 export type ConnectorBag = Record<string, Connector>;
 
-export type PreConnector<T = unknown, A extends AnyArgs = AnyArgs> = Omit<Connector<T, A>, 'split'> & {
+export type PreConnector<T = unknown, A extends AnyArgs = AnyArgs> = Omit<Connector<T, A>, 'split' | 'postcreate'> & {
   split?: (x: T) => A;
+  postcreate?: Postcreator<T, A>;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type PreBag = Record<string, PreConnector<any, any[]> | WsonClass<any, any[]>>;
+export type PreBag = Record<string, PreConnector<any, any> | WsonClass<any, any>>;
 
 export interface FactoryOptions {
   connectors?: Record<string, Connector<Value>>;
